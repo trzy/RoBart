@@ -1,0 +1,529 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
+		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
+		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
+		CCA9A1032C62D35F00B0401C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A1022C62D35F00B0401C /* Preview Assets.xcassets */; };
+		CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A10A2C62D73500B0401C /* ARSessionManager.swift */; };
+		CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A10C2C62D77A00B0401C /* MotionEstimator.swift */; };
+		CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A10F2C62D7F600B0401C /* UtilNamespace.swift */; };
+		CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1112C62D81900B0401C /* HexDump.swift */; };
+		CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1132C62D8A200B0401C /* float+Extensions.swift */; };
+		CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1152C62D8BA00B0401C /* simd_float3+Extensions.swift */; };
+		CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1172C62D8D700B0401C /* simd_quatf+Extensions.swift */; };
+		CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1192C62D90500B0401C /* simd_float4x4+Extensions.swift */; };
+		CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A11B2C62D95900B0401C /* SceneMeshRenderer.swift */; };
+		CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A11E2C62D9A900B0401C /* ARViewContainer.swift */; };
+		CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1222C62DB4600B0401C /* OnTouch.swift */; };
+		CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1242C62DBE900B0401C /* TriangleShape.swift */; };
+		CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */; };
+		CCA9A12A2C62E05700B0401C /* MotorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1292C62E05700B0401C /* MotorController.swift */; };
+		CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */; };
+		CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */; };
+		CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */; };
+		CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */; };
+		CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */; };
+		CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */; };
+		CCA9A13B2C62E36800B0401C /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A13A2C62E36800B0401C /* Messages.swift */; };
+		CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13D2C62E5A900B0401C /* RealityKit.framework */; };
+		CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13F2C62E5B800B0401C /* ARKit.framework */; };
+		CCA9A1422C62F83400B0401C /* MotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1412C62F83400B0401C /* MotorControlView.swift */; };
+		CCA9A1442C62FAC500B0401C /* DirectionalMotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */; };
+		CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1452C62FD1300B0401C /* Clamp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
+		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CCA9A1022C62D35F00B0401C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		CCA9A10A2C62D73500B0401C /* ARSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARSessionManager.swift; sourceTree = "<group>"; };
+		CCA9A10C2C62D77A00B0401C /* MotionEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionEstimator.swift; sourceTree = "<group>"; };
+		CCA9A10F2C62D7F600B0401C /* UtilNamespace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilNamespace.swift; sourceTree = "<group>"; };
+		CCA9A1112C62D81900B0401C /* HexDump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexDump.swift; sourceTree = "<group>"; };
+		CCA9A1132C62D8A200B0401C /* float+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "float+Extensions.swift"; sourceTree = "<group>"; };
+		CCA9A1152C62D8BA00B0401C /* simd_float3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float3+Extensions.swift"; sourceTree = "<group>"; };
+		CCA9A1172C62D8D700B0401C /* simd_quatf+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_quatf+Extensions.swift"; sourceTree = "<group>"; };
+		CCA9A1192C62D90500B0401C /* simd_float4x4+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float4x4+Extensions.swift"; sourceTree = "<group>"; };
+		CCA9A11B2C62D95900B0401C /* SceneMeshRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMeshRenderer.swift; sourceTree = "<group>"; };
+		CCA9A11E2C62D9A900B0401C /* ARViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewContainer.swift; sourceTree = "<group>"; };
+		CCA9A1222C62DB4600B0401C /* OnTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnTouch.swift; sourceTree = "<group>"; };
+		CCA9A1242C62DBE900B0401C /* TriangleShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriangleShape.swift; sourceTree = "<group>"; };
+		CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerMotorControlView.swift; sourceTree = "<group>"; };
+		CCA9A1292C62E05700B0401C /* MotorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotorController.swift; sourceTree = "<group>"; };
+		CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncBluetoothManager.swift; sourceTree = "<group>"; };
+		CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryCodable.swift; sourceTree = "<group>"; };
+		CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryEncoder.swift; sourceTree = "<group>"; };
+		CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryCodingError.swift; sourceTree = "<group>"; };
+		CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryDecoder.swift; sourceTree = "<group>"; };
+		CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryMessage.swift; sourceTree = "<group>"; };
+		CCA9A13A2C62E36800B0401C /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
+		CCA9A13D2C62E5A900B0401C /* RealityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealityKit.framework; path = System/Library/Frameworks/RealityKit.framework; sourceTree = SDKROOT; };
+		CCA9A13F2C62E5B800B0401C /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
+		CCA9A1412C62F83400B0401C /* MotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotorControlView.swift; sourceTree = "<group>"; };
+		CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionalMotorControlView.swift; sourceTree = "<group>"; };
+		CCA9A1452C62FD1300B0401C /* Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clamp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CCA9A0F52C62D35E00B0401C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */,
+				CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CCA9A0EF2C62D35E00B0401C = {
+			isa = PBXGroup;
+			children = (
+				CCA9A0FA2C62D35E00B0401C /* RoBart */,
+				CCA9A0F92C62D35E00B0401C /* Products */,
+				CCA9A13C2C62E5A800B0401C /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		CCA9A0F92C62D35E00B0401C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A0F82C62D35E00B0401C /* RoBart.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CCA9A0FA2C62D35E00B0401C /* RoBart */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A10E2C62D7D700B0401C /* Util */,
+				CCA9A1092C62D71B00B0401C /* AR */,
+				CCA9A12B2C62E07F00B0401C /* Networking */,
+				CCA9A1282C62E02A00B0401C /* Motors */,
+				CCA9A11D2C62D98A00B0401C /* Views */,
+				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
+				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
+				CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */,
+				CCA9A1012C62D35F00B0401C /* Preview Content */,
+			);
+			path = RoBart;
+			sourceTree = "<group>";
+		};
+		CCA9A1012C62D35F00B0401C /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1022C62D35F00B0401C /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		CCA9A1092C62D71B00B0401C /* AR */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A10A2C62D73500B0401C /* ARSessionManager.swift */,
+				CCA9A10C2C62D77A00B0401C /* MotionEstimator.swift */,
+				CCA9A11B2C62D95900B0401C /* SceneMeshRenderer.swift */,
+			);
+			path = AR;
+			sourceTree = "<group>";
+		};
+		CCA9A10E2C62D7D700B0401C /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A10F2C62D7F600B0401C /* UtilNamespace.swift */,
+				CCA9A1112C62D81900B0401C /* HexDump.swift */,
+				CCA9A1132C62D8A200B0401C /* float+Extensions.swift */,
+				CCA9A1152C62D8BA00B0401C /* simd_float3+Extensions.swift */,
+				CCA9A1172C62D8D700B0401C /* simd_quatf+Extensions.swift */,
+				CCA9A1192C62D90500B0401C /* simd_float4x4+Extensions.swift */,
+				CCA9A1452C62FD1300B0401C /* Clamp.swift */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		CCA9A11D2C62D98A00B0401C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1202C62DA1600B0401C /* AR */,
+				CCA9A1212C62DADF00B0401C /* MotorControl */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		CCA9A1202C62DA1600B0401C /* AR */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A11E2C62D9A900B0401C /* ARViewContainer.swift */,
+			);
+			path = AR;
+			sourceTree = "<group>";
+		};
+		CCA9A1212C62DADF00B0401C /* MotorControl */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1222C62DB4600B0401C /* OnTouch.swift */,
+				CCA9A1242C62DBE900B0401C /* TriangleShape.swift */,
+				CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */,
+				CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */,
+				CCA9A1412C62F83400B0401C /* MotorControlView.swift */,
+			);
+			path = MotorControl;
+			sourceTree = "<group>";
+		};
+		CCA9A1282C62E02A00B0401C /* Motors */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1292C62E05700B0401C /* MotorController.swift */,
+				CCA9A13A2C62E36800B0401C /* Messages.swift */,
+			);
+			path = Motors;
+			sourceTree = "<group>";
+		};
+		CCA9A12B2C62E07F00B0401C /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A12C2C62E08E00B0401C /* Serialization */,
+				CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		CCA9A12C2C62E08E00B0401C /* Serialization */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */,
+				CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */,
+				CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */,
+				CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */,
+				CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */,
+			);
+			path = Serialization;
+			sourceTree = "<group>";
+		};
+		CCA9A13C2C62E5A800B0401C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A13F2C62E5B800B0401C /* ARKit.framework */,
+				CCA9A13D2C62E5A900B0401C /* RealityKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CCA9A0F72C62D35E00B0401C /* RoBart */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CCA9A1062C62D35F00B0401C /* Build configuration list for PBXNativeTarget "RoBart" */;
+			buildPhases = (
+				CCA9A0F42C62D35E00B0401C /* Sources */,
+				CCA9A0F52C62D35E00B0401C /* Frameworks */,
+				CCA9A0F62C62D35E00B0401C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RoBart;
+			productName = Robart;
+			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CCA9A0F02C62D35E00B0401C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					CCA9A0F72C62D35E00B0401C = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = CCA9A0F32C62D35E00B0401C /* Build configuration list for PBXProject "RoBart" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CCA9A0EF2C62D35E00B0401C;
+			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CCA9A0F72C62D35E00B0401C /* RoBart */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CCA9A0F62C62D35E00B0401C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCA9A1032C62D35F00B0401C /* Preview Assets.xcassets in Resources */,
+				CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CCA9A0F42C62D35E00B0401C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */,
+				CCA9A13B2C62E36800B0401C /* Messages.swift in Sources */,
+				CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */,
+				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
+				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
+				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
+				CCA9A1422C62F83400B0401C /* MotorControlView.swift in Sources */,
+				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
+				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
+				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
+				CCA9A12A2C62E05700B0401C /* MotorController.swift in Sources */,
+				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,
+				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
+				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
+				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
+				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
+				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
+				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
+				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
+				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
+				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
+				CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */,
+				CCA9A1442C62FAC500B0401C /* DirectionalMotorControlView.swift in Sources */,
+				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,
+				CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */,
+				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CCA9A1042C62D35F00B0401C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CCA9A1052C62D35F00B0401C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CCA9A1072C62D35F00B0401C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Robart/Preview Content\"";
+				DEVELOPMENT_TEAM = 7T2874S592;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CCA9A1082C62D35F00B0401C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Robart/Preview Content\"";
+				DEVELOPMENT_TEAM = 7T2874S592;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CCA9A0F32C62D35E00B0401C /* Build configuration list for PBXProject "RoBart" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CCA9A1042C62D35F00B0401C /* Debug */,
+				CCA9A1052C62D35F00B0401C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CCA9A1062C62D35F00B0401C /* Build configuration list for PBXNativeTarget "RoBart" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CCA9A1072C62D35F00B0401C /* Debug */,
+				CCA9A1082C62D35F00B0401C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CCA9A0F02C62D35E00B0401C /* Project object */;
+}
