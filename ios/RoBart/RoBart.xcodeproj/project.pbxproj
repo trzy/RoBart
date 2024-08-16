@@ -35,7 +35,7 @@
 		CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13D2C62E5A900B0401C /* RealityKit.framework */; };
 		CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13F2C62E5B800B0401C /* ARKit.framework */; };
 		CCA9A1422C62F83400B0401C /* MotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1412C62F83400B0401C /* MotorControlView.swift */; };
-		CCA9A1442C62FAC500B0401C /* DirectionalMotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */; };
+		CCA9A1442C62FAC500B0401C /* DPadMotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DPadMotorControlView.swift */; };
 		CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1452C62FD1300B0401C /* Clamp.swift */; };
 /* End PBXBuildFile section */
 
@@ -69,7 +69,7 @@
 		CCA9A13D2C62E5A900B0401C /* RealityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealityKit.framework; path = System/Library/Frameworks/RealityKit.framework; sourceTree = SDKROOT; };
 		CCA9A13F2C62E5B800B0401C /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 		CCA9A1412C62F83400B0401C /* MotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotorControlView.swift; sourceTree = "<group>"; };
-		CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionalMotorControlView.swift; sourceTree = "<group>"; };
+		CCA9A1432C62FAC500B0401C /* DPadMotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPadMotorControlView.swift; sourceTree = "<group>"; };
 		CCA9A1452C62FD1300B0401C /* Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clamp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -174,7 +174,7 @@
 				CCA9A1222C62DB4600B0401C /* OnTouch.swift */,
 				CCA9A1242C62DBE900B0401C /* TriangleShape.swift */,
 				CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */,
-				CCA9A1432C62FAC500B0401C /* DirectionalMotorControlView.swift */,
+				CCA9A1432C62FAC500B0401C /* DPadMotorControlView.swift */,
 				CCA9A1412C62F83400B0401C /* MotorControlView.swift */,
 			);
 			path = MotorControl;
@@ -311,7 +311,7 @@
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
 				CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */,
-				CCA9A1442C62FAC500B0401C /* DirectionalMotorControlView.swift in Sources */,
+				CCA9A1442C62FAC500B0401C /* DPadMotorControlView.swift in Sources */,
 				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,
 				CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */,
 				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
