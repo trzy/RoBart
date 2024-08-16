@@ -1,5 +1,5 @@
 //
-//  PerMotorControlView.swift
+//  DPadMotorControlView.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 8/6/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PerMotorControlView: View {
+struct DPadMotorControlView: View {
     @State private var speed: Float = 0.0
     @State private var leftSpeed: Float = 0.0
     @State private var rightSpeed: Float = 0.0
@@ -18,13 +18,15 @@ struct PerMotorControlView: View {
 
     var body: some View {
         VStack {
-            Text("Per-Motor")
+            Text("D-Pad")
                 .font(.largeTitle)
 
             Spacer()
 
             HStack {
-                // Left motor forward
+                Spacer()
+
+                // Forward
                 Button(action: {}, label: {
                     TriangleShape(direction: .up)
                         .fill(Color.green)
@@ -32,36 +34,72 @@ struct PerMotorControlView: View {
                 .padding()
                 .onTouchDown {
                     print("Left motor: \(leftSpeed)")
-                    _leftThrottle = leftSpeed
-                    sendToMotors()
-                }
-                .onTouchUp {
-                    print("Left motor: 0")
-                    _leftThrottle = 0
-                    sendToMotors()
-                }
-
-                // Right motor forward
-                Button(action: {}, label: {
-                    TriangleShape(direction: .up)
-                        .fill(Color.green)
-                })
-                .padding()
-                .onTouchDown {
                     print("Right motor: \(rightSpeed)")
+                    _leftThrottle = leftSpeed
                     _rightThrottle = rightSpeed
                     sendToMotors()
                 }
                 .onTouchUp {
+                    print("Left motor: 0")
                     print("Right motor: 0")
+                    _leftThrottle = 0
+                    _rightThrottle = 0
+                    sendToMotors()
+                }
+
+                Spacer()
+            }
+            .frame(maxWidth: 200)
+
+            HStack {
+                // Turn left
+                Button(action: {}, label: {
+                    TriangleShape(direction: .left)
+                        .fill(Color.green)
+                })
+                .padding()
+                .onTouchDown {
+                    print("Left motor: -\(leftSpeed)")
+                    print("Right motor: \(rightSpeed)")
+                    _leftThrottle = -leftSpeed
+                    _rightThrottle = rightSpeed
+                    sendToMotors()
+                }
+                .onTouchUp {
+                    print("Left motor: 0")
+                    print("Right motor: 0")
+                    _leftThrottle = 0
+                    _rightThrottle = 0
+                    sendToMotors()
+                }
+
+                // Turn right
+                Button(action: {}, label: {
+                    TriangleShape(direction: .right)
+                        .fill(Color.green)
+                })
+                .padding()
+                .onTouchDown {
+                    print("Left motor: \(leftSpeed)")
+                    print("Right motor: -\(rightSpeed)")
+                    _leftThrottle = leftSpeed
+                    _rightThrottle = -rightSpeed
+                    sendToMotors()
+                }
+                .onTouchUp {
+                    print("Left motor: 0")
+                    print("Right motor: 0")
+                    _leftThrottle = 0
                     _rightThrottle = 0
                     sendToMotors()
                 }
             }
-            .frame(maxHeight: 200)
+            .frame(maxWidth: 350, maxHeight: 200)
 
             HStack {
-                // Left motor backward
+                Spacer()
+
+                // Backward
                 Button(action: {}, label: {
                     TriangleShape(direction: .down)
                         .fill(Color.green)
@@ -69,33 +107,22 @@ struct PerMotorControlView: View {
                 .padding()
                 .onTouchDown {
                     print("Left motor: -\(leftSpeed)")
-                    _leftThrottle = -leftSpeed
-                    sendToMotors()
-                }
-                .onTouchUp {
-                    print("Left motor: 0")
-                    _leftThrottle = 0
-                    sendToMotors()
-                }
-
-                // Right motor backward
-                Button(action: {}, label: {
-                    TriangleShape(direction: .down)
-                        .fill(Color.green)
-                })
-                .padding()
-                .onTouchDown {
                     print("Right motor: -\(rightSpeed)")
+                    _leftThrottle = -leftSpeed
                     _rightThrottle = -rightSpeed
                     sendToMotors()
                 }
                 .onTouchUp {
+                    print("Left motor: 0")
                     print("Right motor: 0")
+                    _leftThrottle = 0
                     _rightThrottle = 0
                     sendToMotors()
                 }
+
+                Spacer()
             }
-            .frame(maxHeight: 200)
+            .frame(maxWidth: 200)
 
             // Unified speed for both left and right motors
             VStack {
@@ -183,5 +210,5 @@ struct PerMotorControlView: View {
 }
 
 #Preview {
-    PerMotorControlView()
+    DPadMotorControlView()
 }
