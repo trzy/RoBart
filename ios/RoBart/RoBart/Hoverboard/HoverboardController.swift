@@ -1,5 +1,5 @@
 //
-//  MotorController.swift
+//  HoverboardController.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 8/6/24.
@@ -7,12 +7,12 @@
 
 import CoreBluetooth
 
-enum MotorCommand {
+enum HoverboardCommand {
     case drive(leftThrottle: Float, rightThrottle: Float)
 }
 
-class MotorController {
-    static let shared = MotorController()
+class HoverboardController {
+    static let shared = HoverboardController()
 
     private let _ble = AsyncBluetoothManager(
         service: CBUUID(string: "df72a6f9-a217-11ee-a726-a4b1c10ba08a"),
@@ -40,7 +40,7 @@ class MotorController {
         return shared.isConnected
     }
 
-    static func send(_ command: MotorCommand) {
+    static func send(_ command: HoverboardCommand) {
         shared.send(command)
     }
 
@@ -71,7 +71,7 @@ class MotorController {
         }
     }
 
-    func send(_ command: MotorCommand) {
+    func send(_ command: HoverboardCommand) {
         switch command {
         case .drive(let leftThrottle, let rightThrottle):
             _leftMotorThrottle = leftThrottle
@@ -99,11 +99,11 @@ class MotorController {
 
     private func sendUpdateToBoard() {
         guard let connection = _connection else { return }
-        let message = MotorMessage(leftMotorThrottle: _leftMotorThrottle, rightMotorThrottle: _rightMotorThrottle)
+        let message = HoverboardMotorMessage(leftMotorThrottle: _leftMotorThrottle, rightMotorThrottle: _rightMotorThrottle)
         connection.send(message)
     }
 }
 
 fileprivate func log(_ message: String) {
-    print("[MotorController] \(message)")
+    print("[HoverboardController] \(message)")
 }

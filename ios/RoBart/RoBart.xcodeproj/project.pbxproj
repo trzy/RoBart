@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
+		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
+		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
+		CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB72C76F577003BFA0B /* Client.swift */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -24,14 +28,14 @@
 		CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1222C62DB4600B0401C /* OnTouch.swift */; };
 		CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1242C62DBE900B0401C /* TriangleShape.swift */; };
 		CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */; };
-		CCA9A12A2C62E05700B0401C /* MotorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1292C62E05700B0401C /* MotorController.swift */; };
+		CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1292C62E05700B0401C /* HoverboardController.swift */; };
 		CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */; };
 		CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */; };
 		CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */; };
 		CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */; };
 		CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */; };
 		CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */; };
-		CCA9A13B2C62E36800B0401C /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A13A2C62E36800B0401C /* Messages.swift */; };
+		CCA9A13B2C62E36800B0401C /* HoverboardMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A13A2C62E36800B0401C /* HoverboardMessages.swift */; };
 		CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13D2C62E5A900B0401C /* RealityKit.framework */; };
 		CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCA9A13F2C62E5B800B0401C /* ARKit.framework */; };
 		CCA9A1422C62F83400B0401C /* MotorControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1412C62F83400B0401C /* MotorControlView.swift */; };
@@ -40,6 +44,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
+		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
+		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
+		CC7C1CB72C76F577003BFA0B /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -58,14 +67,14 @@
 		CCA9A1222C62DB4600B0401C /* OnTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnTouch.swift; sourceTree = "<group>"; };
 		CCA9A1242C62DBE900B0401C /* TriangleShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriangleShape.swift; sourceTree = "<group>"; };
 		CCA9A1262C62DBFB00B0401C /* PerMotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerMotorControlView.swift; sourceTree = "<group>"; };
-		CCA9A1292C62E05700B0401C /* MotorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotorController.swift; sourceTree = "<group>"; };
+		CCA9A1292C62E05700B0401C /* HoverboardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverboardController.swift; sourceTree = "<group>"; };
 		CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncBluetoothManager.swift; sourceTree = "<group>"; };
 		CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryCodable.swift; sourceTree = "<group>"; };
 		CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryEncoder.swift; sourceTree = "<group>"; };
 		CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryCodingError.swift; sourceTree = "<group>"; };
 		CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryDecoder.swift; sourceTree = "<group>"; };
 		CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBinaryMessage.swift; sourceTree = "<group>"; };
-		CCA9A13A2C62E36800B0401C /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
+		CCA9A13A2C62E36800B0401C /* HoverboardMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverboardMessages.swift; sourceTree = "<group>"; };
 		CCA9A13D2C62E5A900B0401C /* RealityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealityKit.framework; path = System/Library/Frameworks/RealityKit.framework; sourceTree = SDKROOT; };
 		CCA9A13F2C62E5B800B0401C /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 		CCA9A1412C62F83400B0401C /* MotorControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotorControlView.swift; sourceTree = "<group>"; };
@@ -86,6 +95,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CC7C1CAE2C76F2D6003BFA0B /* Binary */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */,
+				CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */,
+				CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */,
+				CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */,
+				CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */,
+			);
+			path = Binary;
+			sourceTree = "<group>";
+		};
+		CC7C1CAF2C76F2E8003BFA0B /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */,
+			);
+			path = JSON;
+			sourceTree = "<group>";
+		};
+		CC7C1CB42C76F493003BFA0B /* RemoteControl */ = {
+			isa = PBXGroup;
+			children = (
+				CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */,
+				CC7C1CB72C76F577003BFA0B /* Client.swift */,
+			);
+			path = RemoteControl;
+			sourceTree = "<group>";
+		};
 		CCA9A0EF2C62D35E00B0401C = {
 			isa = PBXGroup;
 			children = (
@@ -106,10 +144,12 @@
 		CCA9A0FA2C62D35E00B0401C /* RoBart */ = {
 			isa = PBXGroup;
 			children = (
+				CC7C1CB92C76F7B1003BFA0B /* Info.plist */,
 				CCA9A10E2C62D7D700B0401C /* Util */,
 				CCA9A1092C62D71B00B0401C /* AR */,
 				CCA9A12B2C62E07F00B0401C /* Networking */,
-				CCA9A1282C62E02A00B0401C /* Motors */,
+				CCA9A1282C62E02A00B0401C /* Hoverboard */,
+				CC7C1CB42C76F493003BFA0B /* RemoteControl */,
 				CCA9A11D2C62D98A00B0401C /* Views */,
 				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
 				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
@@ -180,13 +220,13 @@
 			path = MotorControl;
 			sourceTree = "<group>";
 		};
-		CCA9A1282C62E02A00B0401C /* Motors */ = {
+		CCA9A1282C62E02A00B0401C /* Hoverboard */ = {
 			isa = PBXGroup;
 			children = (
-				CCA9A1292C62E05700B0401C /* MotorController.swift */,
-				CCA9A13A2C62E36800B0401C /* Messages.swift */,
+				CCA9A1292C62E05700B0401C /* HoverboardController.swift */,
+				CCA9A13A2C62E36800B0401C /* HoverboardMessages.swift */,
 			);
-			path = Motors;
+			path = Hoverboard;
 			sourceTree = "<group>";
 		};
 		CCA9A12B2C62E07F00B0401C /* Networking */ = {
@@ -194,6 +234,7 @@
 			children = (
 				CCA9A12C2C62E08E00B0401C /* Serialization */,
 				CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */,
+				CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -201,11 +242,8 @@
 		CCA9A12C2C62E08E00B0401C /* Serialization */ = {
 			isa = PBXGroup;
 			children = (
-				CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */,
-				CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */,
-				CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */,
-				CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */,
-				CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */,
+				CC7C1CAE2C76F2D6003BFA0B /* Binary */,
+				CC7C1CAF2C76F2E8003BFA0B /* JSON */,
 			);
 			path = Serialization;
 			sourceTree = "<group>";
@@ -290,16 +328,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */,
-				CCA9A13B2C62E36800B0401C /* Messages.swift in Sources */,
+				CCA9A13B2C62E36800B0401C /* HoverboardMessages.swift in Sources */,
 				CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */,
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
+				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
+				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,
+				CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */,
 				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
+				CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */,
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* MotorControlView.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
-				CCA9A12A2C62E05700B0401C /* MotorController.swift in Sources */,
+				CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */,
 				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,
 				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
@@ -451,6 +493,7 @@
 				DEVELOPMENT_TEAM = 7T2874S592;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RoBart/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -482,6 +525,7 @@
 				DEVELOPMENT_TEAM = 7T2874S592;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RoBart/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

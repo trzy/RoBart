@@ -9,11 +9,13 @@ import SwiftUI
 
 @main
 struct RoBartApp: App {
+    private let _client = Client()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .task {
-                    await MotorController.shared.runTask()
+                    await HoverboardController.shared.runTask()
                 }
         }
     }

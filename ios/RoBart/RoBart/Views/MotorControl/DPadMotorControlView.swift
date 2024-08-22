@@ -205,7 +205,7 @@ struct DPadMotorControlView: View {
     }
 
     private func sendToMotors() {
-        MotorController.shared.send(.drive(leftThrottle: _leftThrottle, rightThrottle: _rightThrottle))
+        HoverboardController.shared.send(.drive(leftThrottle: _leftThrottle, rightThrottle: _rightThrottle))
     }
 }
 
