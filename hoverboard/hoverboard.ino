@@ -225,6 +225,19 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
         Serial.printf("Error: motor_message has incorrect length (%d)\n", length);
       }
       break;
+    
+    case PingMessage:
+      if (length == sizeof(ping_message))
+      {
+        const ping_message *msg = reinterpret_cast<const ping_message *>(data);
+        const pong_message response_msg(msg->timestamp);
+        bluetooth_send(reinterpret_cast<const uint8_t *>(&response_msg), sizeof(response_msg));
+      }
+      else
+      {
+        Serial.printf("Error: ping_message has incorrect length (%d)\n", length);
+      }
+      break;
 
     default:
       // Ignore
