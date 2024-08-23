@@ -22,7 +22,9 @@
 // Add new messages to end. Do not reorder. Leave deprecated messages in place but rename them.
 enum MotorMessageID: uint8_t
 {
-  MotorMessage = 0x10 // direct motor control
+  PingMessage = 0x01,   // ping with sender timestamp
+  PongMessage = 0x02,   // pong message with timestamp from ping
+  MotorMessage = 0x10   // direct motor control
 };
 
 struct message_header
@@ -36,6 +38,32 @@ struct message_header
   {
   }
 };
+
+struct ping_message: public message_header
+{
+  const double timestamp;
+
+  ping_message(double timestamp)
+    : message_header(MotorMessageID::PingMessage, uint8_t(sizeof(*this))),
+      timestamp(timestamp)
+  {
+  }
+};
+
+VALIDATE_MESSAGE_SIZE(ping_message);
+
+struct pong_message: public message_header
+{
+  const double timestamp;
+
+  pong_message(double timestamp)
+    : message_header(MotorMessageID::PongMessage, uint8_t(sizeof(*this))),
+      timestamp(timestamp)
+  {
+  }
+};
+
+VALIDATE_MESSAGE_SIZE(pong_message);
 
 struct motor_message: public message_header
 {

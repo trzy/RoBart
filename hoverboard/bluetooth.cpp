@@ -60,9 +60,9 @@ bool bluetooth_is_connected()
   return Bluefruit.connected();
 }
 
-bool bluetooth_send(uint8_t *buffer, uint16_t num_bytes)
+bool bluetooth_send(const uint8_t *buffer, uint16_t num_bytes)
 {
-  return s_tx.notify((void *) buffer, num_bytes);
+  return s_tx.notify((const void *) buffer, num_bytes);
 }
 
 bool bluetooth_send(const char *str)
