@@ -44,7 +44,7 @@ class Client {
         case DriveForDurationMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: DriveForDurationMessage.self) else { break }
             guard HoverboardController.isConnected else {
-                connection.send(LogMessage(text: "Motor controller not connected!"))
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
                 break
             }
 
@@ -54,7 +54,7 @@ class Client {
             HoverboardController.send(.drive(leftThrottle: speed, rightThrottle: speed))
             let initialPos = ARSessionManager.shared.transform.position
 
-            await sleep(seconds: msg.seconds)
+            await sleep(seconds: Double(msg.seconds))
             await stop()
 
             let finalPos = ARSessionManager.shared.transform.position
@@ -65,7 +65,7 @@ class Client {
         case DriveForDistanceMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: DriveForDistanceMessage.self) else { break }
             guard HoverboardController.isConnected else {
-                connection.send(LogMessage(text: "Motor controller not connected!"))
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
                 break
             }
 
@@ -86,6 +86,15 @@ class Client {
             let distanceTraveled = "Distance traveled: \((ARSessionManager.shared.transform.position - initialPos).xzProjected.distance) m"
             connection.send(LogMessage(text: distanceTraveled))
 
+        case HoverboardRTTMeasurementMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: HoverboardRTTMeasurementMessage.self) else { break }
+            guard HoverboardController.isConnected else {
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
+                break
+            }
+            let responseMsg = await performRTTMeasurements(message: msg)
+            connection.send(responseMsg)
+
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")
             break
@@ -96,8 +105,41 @@ class Client {
         HoverboardController.send(.drive(leftThrottle: 0, rightThrottle: 0))
     }
 
-    private func sleep(seconds: Float) async {
-        try? await Task.sleep(for: .seconds(Double(seconds)))
+    private func sleep(seconds: Double) async {
+        try? await Task.sleep(for: .seconds(seconds))
+    }
+
+    private func performRTTMeasurements(message msg: HoverboardRTTMeasurementMessage) async -> HoverboardRTTMeasurementMessage {
+        // Perform a series of RTT measurements for the server to analyze. We sleep in between
+        // successive samples in order to capture a representative variance in RTT.
+        let (hoverboardMessages, handle) = HoverboardController.shared.hoverboardMessages.subscribe()
+        var rttSeconds: [Double] = []
+
+        for i in 0..<msg.numSamples {
+            // Send ping
+            let sentAt = Date.timeIntervalSinceReferenceDate
+            HoverboardController.shared.send(.message(HoverboardPingMessage(timestamp: sentAt)))
+
+            // Wait for pong
+            while true {
+                if let data = await hoverboardMessages.first(where: { _ in true}),
+                   let pong = HoverboardPongMessage.deserialize(from: data) {
+                    let receivedAt = Date.timeIntervalSinceReferenceDate
+                    rttSeconds.append(receivedAt - pong.timestamp)
+                    break
+                }
+            }
+
+            // Delay until next test
+            if i < (msg.numSamples - 1) {
+                await sleep(seconds: msg.delay)
+            }
+        }
+
+        HoverboardController.shared.hoverboardMessages.unsubscribe(handle)
+
+        // Response to send back to server
+        return HoverboardRTTMeasurementMessage(numSamples: msg.numSamples, delay: msg.delay, rttSeconds: rttSeconds)
     }
 }
 

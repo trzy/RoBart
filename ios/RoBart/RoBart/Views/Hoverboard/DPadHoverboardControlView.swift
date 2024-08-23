@@ -1,5 +1,5 @@
 //
-//  DPadMotorControlView.swift
+//  DPadHoverboardControlView.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 8/6/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DPadMotorControlView: View {
+struct DPadHoverboardControlView: View {
     @State private var speed: Float = 0.0
     @State private var leftSpeed: Float = 0.0
     @State private var rightSpeed: Float = 0.0
@@ -210,5 +210,5 @@ struct DPadMotorControlView: View {
 }
 
 #Preview {
-    DPadMotorControlView()
+    DPadHoverboardControlView()
 }

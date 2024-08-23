@@ -58,14 +58,10 @@ fileprivate struct Header: Codable {
         return UInt32(numBytes) - Self.headerSize
     }
 
-    static func extractHeaderAndBody(from data: Data) -> (header: Header, body: Data) {
-        do {
-            let header = try Header(from: SimpleBinaryDecoder(data))
-            let body = header.bodySize == 0 ? Data() : data.advanced(by: Int(Header.headerSize))
-            return (header: header, body: body)
-        } catch {
-            fatalError("Failed to deserialize header: \(error.localizedDescription)")
-        }
+    static func extractHeaderAndBody(from data: Data) throws -> (header: Header, body: Data) {
+        let header = try Header(from: SimpleBinaryDecoder(data))
+        let body = header.bodySize == 0 ? Data() : data.advanced(by: Int(Header.headerSize))
+        return (header: header, body: body)
     }
 
     static func deserialize(from data: Data) -> Header {
@@ -111,19 +107,23 @@ extension SimpleBinaryMessage {
         }
     }
 
-    static func deserialize(from data: Data) -> Self {
-        let (header, body) = Header.extractHeaderAndBody(from: data)
-        return Self.deserialize(header: header, body: body)
+    static func deserialize(from data: Data) -> Self? {
+        do {
+            let (header, body) = try Header.extractHeaderAndBody(from: data)
+            return Self.deserialize(header: header, body: body)
+        } catch {
+            return nil
+        }
     }
 
-    static fileprivate func deserialize(header: Header, body: Data) -> Self {
+    static fileprivate func deserialize(header: Header, body: Data) -> Self? {
         do {
             if header.id != Self.id {
-                fatalError("Cannot deserialize message of id=\(String(format: "0x%02x", Self.id)) because its header contains id=\(header.id)")
+                return nil
             }
             return try Self.self(from: SimpleBinaryDecoder(body))
         } catch {
-            fatalError("Failed to deserialize message (id=\(String(format: "0x%02x", Self.id))): \(error.localizedDescription)")
+            return nil
         }
     }
 }

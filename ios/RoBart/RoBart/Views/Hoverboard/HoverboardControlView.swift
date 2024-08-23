@@ -1,5 +1,5 @@
 //
-//  MotorControlView.swift
+//  HoverboardControlView.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 8/6/24.
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-struct MotorControlView: View {
+struct HoverboardControlView: View {
     var body: some View {
         TabView {
-            DPadMotorControlView()
+            DPadHoverboardControlView()
                 .tabItem {
                     Label("Directional", systemImage: "dpad")
                 }
@@ -23,5 +23,5 @@ struct MotorControlView: View {
 }
 
 #Preview {
-    MotorControlView()
+    HoverboardControlView()
 }
