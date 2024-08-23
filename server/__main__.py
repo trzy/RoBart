@@ -12,6 +12,7 @@ import platform
 import sys
 from typing import Any, Dict, List, Tuple, Type
 
+import numpy as np
 from pydantic import BaseModel
 
 from .networking import Server, Session, handler, MessageHandler
@@ -38,6 +39,11 @@ class DriveForDistanceMessage(BaseModel):
     reverse: bool
     meters: float
     speed: float
+
+class HoverboardRTTMeasurementMessage(BaseModel):
+    numSamples: int
+    delay: float
+    rttSeconds: List[float]
 
 
 ####################################################################################################
@@ -71,6 +77,25 @@ class RoBartDebugServer(MessageHandler):
     @handler(LogMessage)
     async def handle_LogMessage(self, session: Session, msg: LogMessage, timestamp: float):
         print(f"\niPhone: {msg.text}")
+    
+    @handler(HoverboardRTTMeasurementMessage)
+    async def handle_HoverboardRTTMeasurementMessage(self, session: Session, msg: HoverboardRTTMeasurementMessage, timestamp: float):
+        samples = np.array(msg.rttSeconds) * 1e3    # to ms
+        mean = np.mean(samples)
+        min = np.min(samples)
+        max = np.max(samples)
+        p99 = np.quantile(samples, 0.99)
+        p95 = np.quantile(samples, 0.95)
+        p90 = np.quantile(samples, 0.90)
+        print("\niOS <-> Hoverboard RTT")
+        print("----------------------")
+        print(f"Mean = {mean}")
+        print(f"Min  = {min}")
+        print(f"90%  = {p90}")
+        print(f"95%  = {p95}")
+        print(f"99%  = {p99}")
+        print(f"Max  = {max}")
+        print("")
 
 
 ####################################################################################################
@@ -100,6 +125,10 @@ class CommandConsole:
             Param(name="direction", type=str, values=[ "f", "forward", "b", "backward" ], default="f"),
             Param(name="speed", type=float, range=(0, 0.05), default=0.03)
         ],
+        "rtt_test": [
+            Param(name="samples", type=int, default=1000),
+            Param(name="delay_ms", type=float, default=16.67)
+        ]
     }
 
     def __init__(self, tasks: List[asyncio.Task], server: RoBartDebugServer):
@@ -146,6 +175,11 @@ class CommandConsole:
                     meters = args["amount"] * (0.01 if args["units"] == "cm" else 1.0)
                     await self.send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
                 print("Sent drive command")
+            elif command == "rtt_test":
+                num_samples = args["samples"]
+                delay = args["delay_ms"] * 1e-3
+                await self.send(HoverboardRTTMeasurementMessage(numSamples=num_samples, delay=delay, rttSeconds=[]))
+                print("Sent hoverboard RTT test request")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
     
