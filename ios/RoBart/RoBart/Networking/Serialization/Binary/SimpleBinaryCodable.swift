@@ -117,6 +117,21 @@ extension Float: SimpleBinaryCodable {
     }
 }
 
+extension Double: SimpleBinaryCodable {
+    func write(to writer: SimpleBinaryEncoder) throws {
+        var value = self
+        withUnsafePointer(to: &value) {
+            writer.append(UnsafeBufferPointer(start: $0, count: 1))
+        }
+    }
+
+    static func read(from reader: SimpleBinaryDecoder) throws -> Double {
+        var value = Double(0)
+        try reader.readBytes(to: &value)
+        return value
+    }
+}
+
 extension Bool: SimpleBinaryCodable {
     func write(to writer: SimpleBinaryEncoder) throws {
         var value: UInt8 = self ? 1 : 0
