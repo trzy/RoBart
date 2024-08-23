@@ -36,10 +36,14 @@ extension Util {
         /// to unsubscribe if the stream was terminated (read to completion).
         /// - Parameter handle: Subscription handle.
         func unsubscribe(_ handle: UUID) {
+            // Get continuation, if it exists, and then release lock before calling finish() to
+            // avoid a deadlock with onTermination above.
+            var continuation: AsyncStream<T>.Continuation?
             _lock.lock()
-            _continuations[handle]?.finish()
+            continuation = _continuations[handle]
             _continuations.removeValue(forKey: handle)
             _lock.unlock()
+            continuation?.finish()
         }
 
         /// Send item to all current subscribers.
