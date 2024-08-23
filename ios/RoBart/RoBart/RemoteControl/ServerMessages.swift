@@ -28,3 +28,9 @@ struct DriveForDistanceMessage: JSONMessage {
     let meters: Float
     let speed: Float
 }
+
+struct HoverboardRTTMeasurementMessage: JSONMessage {
+    let numSamples: Int         // number of samples to take
+    let delay: Double           // seconds to sleep between consecutive samples
+    let rttSeconds: [Double]    // resulting times (sent back as response)
+}

@@ -8,11 +8,14 @@
 import CoreBluetooth
 
 enum HoverboardCommand {
+    case message(_ message: SimpleBinaryMessage)
     case drive(leftThrottle: Float, rightThrottle: Float)
 }
 
 class HoverboardController {
     static let shared = HoverboardController()
+
+    let hoverboardMessages = Util.AsyncStreamMulticaster<Data>()
 
     private let _ble = AsyncBluetoothManager(
         service: CBUUID(string: "df72a6f9-a217-11ee-a726-a4b1c10ba08a"),
@@ -56,7 +59,8 @@ class HoverboardController {
                 sendUpdateToBoard() // initial state
                 do {
                     for try await data in connection.receivedData {
-                        Util.hexDump(data)
+                        // Send received message to any subscribers
+                        hoverboardMessages.broadcast(data)
                     }
                 } catch let error as AsyncBluetoothManager.StreamError {
                     log("Disconnected: \(error.localizedDescription)")
@@ -73,12 +77,17 @@ class HoverboardController {
 
     func send(_ command: HoverboardCommand) {
         switch command {
+        case .message(let message):
+            // Send message immediately
+            _connection?.send(message)
+
         case .drive(let leftThrottle, let rightThrottle):
+            // Set new motor throttle values and send immediately
             _leftMotorThrottle = leftThrottle
             _rightMotorThrottle = rightThrottle
             log("Left=\(_leftMotorThrottle), Right=\(_rightMotorThrottle)")
+            sendUpdateToBoard()
         }
-        sendUpdateToBoard()
     }
 
     private func findDevice() async -> CBPeripheral {

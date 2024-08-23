@@ -16,7 +16,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink {
-                        MotorControlView()
+                        HoverboardControlView()
                     } label: {
                         Image(systemName: "car.front.waves.down")
                             .imageScale(.large)
