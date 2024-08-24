@@ -1,7 +1,6 @@
 /*
  * hoverboard.ino
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Hoverboard controller for Adafruit Feather nRF52832 board. Listens for commands from iOS via
@@ -12,27 +11,24 @@
 #include "messages.hpp"
 #include "cooperative_task.hpp"
 #include "bluetooth.hpp"
+#include <algorithm>
 #include <cmath>
-
-
-/***************************************************************************************************
- Pins
-***************************************************************************************************/
-
-constexpr uint32_t PIN_LEFT_DIR = 2;     // A0
-constexpr uint32_t PIN_LEFT_BRAKE = 3;   // A1
-constexpr uint32_t PIN_LEFT_STOP = 4;    // A2
-constexpr uint32_t PIN_LEFT_PWM = 5;     // A3
-
-constexpr uint32_t PIN_RIGHT_DIR = 11;
-constexpr uint32_t PIN_RIGHT_BRAKE = 7;
-constexpr uint32_t PIN_RIGHT_STOP = 15;
-constexpr uint32_t PIN_RIGHT_PWM = 16;
+#include <limits>
 
 
 /***************************************************************************************************
  Motor Control
 ***************************************************************************************************/
+
+constexpr uint32_t PIN_LEFT_DIR = 2;    // pin A0
+constexpr uint32_t PIN_LEFT_BRAKE = 3;  // pin A1
+constexpr uint32_t PIN_LEFT_STOP = 4;   // pin A2
+constexpr uint32_t PIN_LEFT_PWM = 5;    // pin A3
+
+constexpr uint32_t PIN_RIGHT_DIR = 11;  // pin 11
+constexpr uint32_t PIN_RIGHT_BRAKE = 7; // pin 7
+constexpr uint32_t PIN_RIGHT_STOP = 15; // pin 15
+constexpr uint32_t PIN_RIGHT_PWM = 16;  // pin 16
 
 constexpr float PWM_FREQUENCY = 20000.0f;
 static nRF52_PWM *s_pwm_left = nullptr;
@@ -139,6 +135,16 @@ static void stop(MotorSide motor, bool active)
   }
 }
 
+static void cut_motor_power()
+{
+  speed(Left, 0.0f);
+  speed(Right, 0.0f);
+  stop(Left, true);
+  stop(Right, true);
+  brake(Left, false);
+  brake(Right, false);
+}
+
 static void init_motors()
 {
   pinMode(PIN_LEFT_PWM, OUTPUT);
@@ -166,8 +172,59 @@ static void init_motors()
 
 
 /***************************************************************************************************
+ Watchdog 
+
+ Cut the motors after a certain period of inactivity (i.e., incoming control messages).
+***************************************************************************************************/
+
+static bool s_watchdog_enabled = true;
+static unsigned long s_watchdog_milliseconds = 2000;
+static unsigned long s_watchdog_last_message_received_at = 0;
+
+/*
+ * Indicates to the watchdog that the remote side is still actively controlling the hoverboard.
+ * Call this whenever a motor control message is received.
+ */
+static void reset_watchdog_timeout()
+{
+  s_watchdog_last_message_received_at = millis();
+}
+
+static void update_watchdog_settings(const config_message *msg)
+{
+  s_watchdog_enabled = msg->watchdog_enabled != 0;
+  double max_millis = double(std::numeric_limits<unsigned long>::max());
+  double millis = std::min(msg->watchdog_seconds * 1e3, max_millis);  // clamp to max
+  s_watchdog_milliseconds = (unsigned long) millis;                   // convert to integer
+  reset_watchdog_timeout();
+  Serial.printf("Watchdog settings updated: enabled=%d, milliseconds=%d\n", s_watchdog_enabled, s_watchdog_milliseconds);
+}
+
+/*
+ * Checks for watchdog timeout and cuts motor power if necessary. Call this periodically.
+ */
+static void watchdog_tick()
+{
+  if (!s_watchdog_enabled)
+  {
+    return;
+  }
+
+  unsigned long now = millis();
+  unsigned long millis_since_last_message = now - s_watchdog_last_message_received_at;
+  if (millis_since_last_message >= s_watchdog_milliseconds)
+  {
+    cut_motor_power();
+    Serial.println("Watchdog has cut motor power");
+  }
+}
+
+
+/***************************************************************************************************
  Bluetooth Communication
 ***************************************************************************************************/
+
+static bool s_connected = false;
 
 static void on_peripheral_connect(uint16_t connection_handle)
 {
@@ -175,17 +232,14 @@ static void on_peripheral_connect(uint16_t connection_handle)
   char central_name[32] = { 0 };
   connection->getPeerName(central_name, sizeof(central_name));
   Serial.printf("Connected to %s\n", central_name);
+  s_connected = true;
 }
 
 static void on_peripheral_disconnect(uint16_t connection_handle, uint8_t reason)
 {
   Serial.printf("Disconnected: code 0x%02x\n", reason);
-
-  // Stop the motors to prevent a runaway RoBart!
-  speed(Left, 0.0f);
-  speed(Right, 0.0f);
-  stop(Left, true);
-  stop(Right, true);
+  cut_motor_power();  // stop the motors to prevent a runaway RoBart!
+  s_connected = false;
 }
 
 static void on_received(uint16_t connection_handle, BLECharacteristic *characteristic, uint8_t *data, uint16_t length)
@@ -201,11 +255,36 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
     MotorMessageID id = MotorMessageID(data[1]);
     switch (id)
     {
+    case PingMessage:
+      if (length == sizeof(ping_message))
+      {
+        const ping_message *msg = reinterpret_cast<const ping_message *>(data);
+        const pong_message response_msg(msg->timestamp);
+        bluetooth_send(reinterpret_cast<const uint8_t *>(&response_msg), sizeof(response_msg));
+      }
+      else
+      {
+        Serial.printf("Error: ping_message has incorrect length (%d)\n", length);
+      }
+      break;
+
+    case ConfigMessage:
+      if (length == sizeof(config_message))
+      {
+        const config_message *msg = reinterpret_cast<const config_message *>(data);
+        update_watchdog_settings(msg);
+      }
+      else
+      {
+        Serial.printf("Error: config_message has incorrect length (%d)\n", length);
+      }
+      break;
+
     case MotorMessage:
       if (length == sizeof(motor_message))
       {
-        const float epsilon = 1e-3f;
         const motor_message *msg = reinterpret_cast<const motor_message *>(data);
+        const float epsilon = 1e-3f;
         bool left_forward = msg->left_motor_throttle >= 0;
         float left_magnitude = fabs(msg->left_motor_throttle);
         bool left_stopped = left_magnitude < 1e-3f;
@@ -219,23 +298,12 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
         direction(Right, right_forward);
         speed(Left, left_magnitude);
         speed(Right, right_magnitude);
+
+        reset_watchdog_timeout();
       }
       else
       {
         Serial.printf("Error: motor_message has incorrect length (%d)\n", length);
-      }
-      break;
-    
-    case PingMessage:
-      if (length == sizeof(ping_message))
-      {
-        const ping_message *msg = reinterpret_cast<const ping_message *>(data);
-        const pong_message response_msg(msg->timestamp);
-        bluetooth_send(reinterpret_cast<const uint8_t *>(&response_msg), sizeof(response_msg));
-      }
-      else
-      {
-        Serial.printf("Error: ping_message has incorrect length (%d)\n", length);
       }
       break;
 
@@ -255,6 +323,12 @@ static util::cooperative_task<util::millisecond::resolution> s_led_blinker;
 
 static void blink_led(util::time::duration<util::microsecond::resolution> delta, size_t count)
 {
+  // Blink when disconnected
+  if (s_connected)
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+    return;
+  }
   static const bool sequence[] = { true, false, false };
   bool on = sequence[count % (sizeof(sequence) / sizeof(bool))];
   digitalWrite(LED_BUILTIN, on ? HIGH : LOW);
@@ -271,41 +345,6 @@ void setup()
 
 void loop()
 {
-  //test_sequence();
+  watchdog_tick();
   s_led_blinker.tick();
-}
-
-// For each side, go from 0 to a maximum speed in steps, then backwards.
-static void test_sequence()
-{
-  for (int side = 0; side < 2; side++)
-  {
-    MotorSide motor = side == 0 ? Left : Right;
-    MotorSide other_motor = side == 0 ? Right : Left;
-
-    stop(motor, false);
-    stop(other_motor, true);
-
-    for (int dir = 0; dir < 2; dir++)
-    {
-      bool forward = dir == 0;
-
-      direction(motor, forward);
-
-      // Ramp up from 0 -> max
-      float target_throttle = 0.35f;
-      int num_steps = 10;
-      for (int i = 0; i < num_steps; i++)
-      {
-        float throttle = float(i) * (target_throttle / float(num_steps));
-        speed(motor, throttle);
-        delay(1000);
-      }
-
-      // Stop for a while
-      stop(motor, true);
-      delay(3000);
-      stop(motor, false);
-    }
-  }
 }
