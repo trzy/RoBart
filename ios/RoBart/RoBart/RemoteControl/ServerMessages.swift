@@ -29,6 +29,11 @@ struct DriveForDistanceMessage: JSONMessage {
     let speed: Float
 }
 
+struct WatchdogSettingsMessage: JSONMessage {
+    let enabled: Bool
+    let timeoutSeconds: Double
+}
+
 struct HoverboardRTTMeasurementMessage: JSONMessage {
     let numSamples: Int         // number of samples to take
     let delay: Double           // seconds to sleep between consecutive samples
