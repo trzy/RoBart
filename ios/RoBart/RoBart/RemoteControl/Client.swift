@@ -86,6 +86,15 @@ class Client {
             let distanceTraveled = "Distance traveled: \((ARSessionManager.shared.transform.position - initialPos).xzProjected.distance) m"
             connection.send(LogMessage(text: distanceTraveled))
 
+        case WatchdogSettingsMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: WatchdogSettingsMessage.self) else { break }
+            guard HoverboardController.isConnected else {
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
+                break
+            }
+            let configMsg = HoverboardConfigMessage(watchdogEnabled: msg.enabled, watchdogSeconds: msg.timeoutSeconds)
+            HoverboardController.send(.message(configMsg))
+
         case HoverboardRTTMeasurementMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: HoverboardRTTMeasurementMessage.self) else { break }
             guard HoverboardController.isConnected else {
