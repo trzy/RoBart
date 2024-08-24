@@ -40,6 +40,9 @@ class DriveForDistanceMessage(BaseModel):
     meters: float
     speed: float
 
+class RotateMessage(BaseModel):
+    degrees: float
+
 class WatchdogSettingsMessage(BaseModel):
     enabled: bool
     timeoutSeconds: float
@@ -129,6 +132,9 @@ class CommandConsole:
             Param(name="direction", type=str, values=[ "f", "forward", "b", "backward" ], default="f"),
             Param(name="speed", type=float, range=(0, 0.05), default=0.03)
         ],
+        "rot": [
+            Param(name="degrees", type=float, range=(-360,360))
+        ],
         "watchdog": [
             Param(name="timeout_sec", type=float)
         ],
@@ -182,6 +188,9 @@ class CommandConsole:
                     meters = args["amount"] * (0.01 if args["units"] == "cm" else 1.0)
                     await self.send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
                 print("Sent drive command")
+            elif command == "rot":
+                await self.send(RotateMessage(degrees=args["degrees"]))
+                print("Sent rotate command")
             elif command == "watchdog":
                 timeout = max(0, args["timeout_sec"])
                 enabled = timeout > 0
