@@ -40,6 +40,10 @@ class DriveForDistanceMessage(BaseModel):
     meters: float
     speed: float
 
+class WatchdogSettingsMessage(BaseModel):
+    enabled: bool
+    timeoutSeconds: float
+
 class HoverboardRTTMeasurementMessage(BaseModel):
     numSamples: int
     delay: float
@@ -57,19 +61,19 @@ class RoBartDebugServer(MessageHandler):
         super().__init__()
         self.sessions = set()
         self._server = Server(port=port, message_handler=self)
-    
+
     async def run(self):
         await self._server.run()
-    
+
     async def on_connect(self, session: Session):
         print("Connection from: %s" % session.remote_endpoint)
         await session.send(HelloMessage(message = "Hello from RoBart Python server running on %s %s" % (platform.system(), platform.release())))
         self.sessions.add(session)
-    
+
     async def on_disconnect(self, session: Session):
         print("Disconnected from: %s" % session.remote_endpoint)
         self.sessions.remove(session)
-    
+
     @handler(HelloMessage)
     async def handle_HelloMessage(self, session: Session, msg: HelloMessage, timestamp: float):
         print("Hello received: %s" % msg.message)
@@ -77,7 +81,7 @@ class RoBartDebugServer(MessageHandler):
     @handler(LogMessage)
     async def handle_LogMessage(self, session: Session, msg: LogMessage, timestamp: float):
         print(f"\niPhone: {msg.text}")
-    
+
     @handler(HoverboardRTTMeasurementMessage)
     async def handle_HoverboardRTTMeasurementMessage(self, session: Session, msg: HoverboardRTTMeasurementMessage, timestamp: float):
         samples = np.array(msg.rttSeconds) * 1e3    # to ms
@@ -89,12 +93,12 @@ class RoBartDebugServer(MessageHandler):
         p90 = np.quantile(samples, 0.90)
         print("\niOS <-> Hoverboard RTT")
         print("----------------------")
-        print(f"Mean = {mean}")
-        print(f"Min  = {min}")
-        print(f"90%  = {p90}")
-        print(f"95%  = {p95}")
-        print(f"99%  = {p99}")
-        print(f"Max  = {max}")
+        print(f"Mean = {mean:.1f} ms")
+        print(f"Min  = {min:.1f} ms")
+        print(f"90%  = {p90:.1f} ms")
+        print(f"95%  = {p95:.1f} ms")
+        print(f"99%  = {p99:.1f} ms")
+        print(f"Max  = {max:.1f} ms")
         print("")
 
 
@@ -112,18 +116,21 @@ class CommandConsole:
         values: List[str] = None        # if not None, a list of allowed values
         range: Tuple[Any, Any] = None   # if type == int or float, range of acceptable values
         default: Any = None             # if not None, this is an optional param with a default value
-    
+
     _commands: Dict[str, List[Param]] = {
         "q": [],
         "quit": [],
         "exit": [],
-        "h": [],
+        "?": [],
         "help": [],
         "drive": [
             Param(name="amount", type=float),
             Param(name="units", type=str, values=[ "s", "m", "cm" ]),
             Param(name="direction", type=str, values=[ "f", "forward", "b", "backward" ], default="f"),
             Param(name="speed", type=float, range=(0, 0.05), default=0.03)
+        ],
+        "watchdog": [
+            Param(name="timeout_sec", type=float)
         ],
         "rtt_test": [
             Param(name="samples", type=int, default=1000),
@@ -165,7 +172,7 @@ class CommandConsole:
             # Handle command
             if command == "q" or command == "quit" or command == "exit":
                 self._cancel_tasks()
-            elif command == "h" or command == "help":
+            elif command == "?" or command == "help":
                 self._print_help()
             elif command == "drive":
                 reverse = True if args["direction"][0] == "b" else False
@@ -175,6 +182,14 @@ class CommandConsole:
                     meters = args["amount"] * (0.01 if args["units"] == "cm" else 1.0)
                     await self.send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
                 print("Sent drive command")
+            elif command == "watchdog":
+                timeout = max(0, args["timeout_sec"])
+                enabled = timeout > 0
+                await self.send(WatchdogSettingsMessage(enabled=enabled, timeoutSeconds=timeout))
+                if not enabled:
+                    print("Sent request to disable watchdog")
+                else:
+                    print(f"Sent request to update watchdog timeout to {timeout} sec")
             elif command == "rtt_test":
                 num_samples = args["samples"]
                 delay = args["delay_ms"] * 1e-3
@@ -182,7 +197,7 @@ class CommandConsole:
                 print("Sent hoverboard RTT test request")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
-    
+
     def _print_help(self):
         print("Commands:")
         print("---------")
@@ -192,7 +207,7 @@ class CommandConsole:
             print(f"{command}{' ' * padding}\t", end="")
             param_names = [ self._param_description(param=param) for param in params ]
             print(" ".join(param_names))
-    
+
     @staticmethod
     def _param_description(param: Param) -> str:
         return "".join([
@@ -211,7 +226,7 @@ class CommandConsole:
         await asyncio.to_thread(print_prompt)
         line = (await asyncio.to_thread(sys.stdin.readline)).rstrip('\n').strip()
         return line.split()
-    
+
     def _parse_args(self, command: str, args: List[str]) -> Dict[str, Any] | None:
         parsed_args: Dict[str, Any] = {}
         params = self._commands.get(command)
@@ -233,7 +248,7 @@ class CommandConsole:
                     return None
                 parsed_args[param.name] = value
         return parsed_args
-    
+
     @staticmethod
     def _try_parse_value(arg: str, param: Param) -> Any | None:
         if param.values is not None and len(param.values) > 0:
@@ -285,4 +300,3 @@ if __name__ == "__main__":
         print("\nExited normally")
     except:
         print("\nExited due to uncaught exception")
-    
