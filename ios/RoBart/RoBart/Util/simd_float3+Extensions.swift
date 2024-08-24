@@ -40,6 +40,10 @@ extension simd_float3 {
         return unsignedAngle * sign
     }
 
+    func rotated(by degrees: Float, about axis: simd_float3) -> simd_float3 {
+        return simd_quatf(angle: degrees * .deg2Rad, axis: axis.normalized).act(self)
+    }
+
     var normalized: simd_float3 {
         return simd_normalize(self)
     }
