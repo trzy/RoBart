@@ -1,7 +1,6 @@
 /*
  * cooperative_task.hpp
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Cooperative multitasking. Simply create a task and call tick() periodically.
@@ -29,7 +28,7 @@ namespace util
   class cooperative_task
   {
   public:
-    void tick(int now_micros)
+    void tick(int64_t now_micros)
     {
       if (!m_task_cb)
       {
@@ -74,7 +73,7 @@ namespace util
     std::function<void(util::time::duration<util::microsecond::resolution>, size_t)> m_task_cb;
     util::time::duration<util::microsecond::resolution> m_period = 0;
     util::time::duration<util::microsecond::resolution> m_delta = 0;
-    int m_last_time;
+    int64_t m_last_time;
     size_t m_count = 0;
   };
 } // util

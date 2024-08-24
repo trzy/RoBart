@@ -1,7 +1,6 @@
 /*
  * time.hpp
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Time point and duration data structures that are slightly more ergonomic than their STL

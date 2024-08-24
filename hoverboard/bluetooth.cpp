@@ -1,7 +1,6 @@
 /*
  * bluetooth.cpp
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Bluetooth (BLE) communication with iOS.

@@ -1,7 +1,6 @@
 /*
  * bluetooth.hpp
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Header for Bluetooth (BLE) communication.

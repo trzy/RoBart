@@ -1,7 +1,6 @@
 /*
  * messages.hpp
  * RoBart
- *
  * Bart Trzynadlowski, 2024
  *
  * Defines messages exchanged with iOS. Must be kept in sync with iOS project.
@@ -24,6 +23,7 @@ enum MotorMessageID: uint8_t
 {
   PingMessage = 0x01,   // ping with sender timestamp
   PongMessage = 0x02,   // pong message with timestamp from ping
+  ConfigMessage = 0x03, // configuration
   MotorMessage = 0x10   // direct motor control
 };
 
@@ -64,6 +64,21 @@ struct pong_message: public message_header
 };
 
 VALIDATE_MESSAGE_SIZE(pong_message);
+
+struct config_message: public message_header
+{
+  const uint8_t watchdog_enabled;
+  const double watchdog_seconds;
+
+  config_message(uint8_t watchdog_enabled, double watchdog_seconds)
+    : message_header(MotorMessageID::ConfigMessage, uint8_t(sizeof(*this))),
+      watchdog_enabled(watchdog_enabled),
+      watchdog_seconds(watchdog_seconds)
+  {
+  }
+};
+
+VALIDATE_MESSAGE_SIZE(config_message);
 
 struct motor_message: public message_header
 {
