@@ -47,6 +47,15 @@ class WatchdogSettingsMessage(BaseModel):
     enabled: bool
     timeoutSeconds: float
 
+class ThrottleMessage(BaseModel):
+    throttle: float
+
+class PIDGainsMessage(BaseModel):
+    whichPID: str
+    Kp: float
+    Ki: float
+    Kd: float
+
 class HoverboardRTTMeasurementMessage(BaseModel):
     numSamples: int
     delay: float
@@ -140,6 +149,15 @@ class CommandConsole:
         "watchdog": [
             Param(name="timeout_sec", type=float)
         ],
+        "throttle": [
+            Param(name="throttle", type=float, range=(0,0.25))
+        ],
+        "pid": [
+            Param(name="which_pid", type=str, values=[ "o", "orientation", "a", "angularVelocity" ]),
+            Param(name="Kp", type=float),
+            Param(name="Ki", type=float),
+            Param(name="Kd", type=float)
+        ],
         "rtt_test": [
             Param(name="samples", type=int, default=1000),
             Param(name="delay_ms", type=float, default=16.67)
@@ -204,6 +222,14 @@ class CommandConsole:
                     print("Sent request to disable watchdog")
                 else:
                     print(f"Sent request to update watchdog timeout to {timeout} sec")
+            elif command == "throttle":
+                await self.send(ThrottleMessage(throttle=args["throttle"]))
+                print("Sent throttle value update")
+            elif command == "pid":
+                pid_names = { "o": "orientation", "orientation": "orientation", "a": "angularVelocity", "angularVelocity": "angularVelocity" }
+                which_pid = pid_names[args["which_pid"]]
+                await self.send(PIDGainsMessage(whichPID=which_pid, Kp=args["Kp"], Ki=args["Ki"], Kd=args["Kd"]))
+                print(f"Sent PID gain parametrs for \"{which_pid}\" controller")
             elif command == "rtt_test":
                 num_samples = args["samples"]
                 delay = args["delay_ms"] * 1e-3
