@@ -132,6 +132,8 @@ class CommandConsole:
             Param(name="direction", type=str, values=[ "f", "forward", "b", "backward" ], default="f"),
             Param(name="speed", type=float, range=(0, 0.05), default=0.03)
         ],
+        "s": [],
+        "stop": [],
         "rot": [
             Param(name="degrees", type=float, range=(-360,360))
         ],
@@ -188,6 +190,9 @@ class CommandConsole:
                     meters = args["amount"] * (0.01 if args["units"] == "cm" else 1.0)
                     await self.send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
                 print("Sent drive command")
+            elif command == "s" or command == "stop":
+                await self.send(DriveForDurationMessage(reverse=False, seconds=1e-3, speed=0))
+                print("Sent stop command")
             elif command == "rot":
                 await self.send(RotateMessage(degrees=args["degrees"]))
                 print("Sent rotate command")
