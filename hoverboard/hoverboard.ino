@@ -210,12 +210,21 @@ static void watchdog_tick()
     return;
   }
 
+  static bool printed_message = false;
   unsigned long now = millis();
   unsigned long millis_since_last_message = now - s_watchdog_last_message_received_at;
   if (millis_since_last_message >= s_watchdog_milliseconds)
   {
     cut_motor_power();
-    Serial.println("Watchdog has cut motor power");
+    if (!printed_message)
+    {
+      Serial.println("Watchdog has cut motor power");
+      printed_message = true;
+    }
+  }
+  else
+  {
+    printed_message = false;
   }
 }
 
