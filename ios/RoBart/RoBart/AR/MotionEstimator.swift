@@ -10,12 +10,15 @@ import ARKit
 class MotionEstimator {
     private static let _numSamples = 5
     private var _velocitySamples = Array(repeating: Vector3.zero, count: _numSamples)
+    private var _angularVelocitySamples = Array(repeating: Float(0), count: _numSamples)
     private var _dtSamples = Array(repeating: Float.zero, count: _numSamples)
     private var _prevPosition: Vector3?
+    private var _prevForward: Vector3?
     private var _prevFrameTime: TimeInterval = 0
     private var _velocityEstimate = Vector3.zero
     private var _prevVelocityEstimate = Vector3.zero
     private var _accelerationEstimate = Vector3.zero
+    private var _angularVelocityEstimate: Float = 0
     private var _totalSampleCount = 0
 
     var velocity: Vector3 {
@@ -30,23 +33,32 @@ class MotionEstimator {
         return _accelerationEstimate.xzProjected
     }
 
+    var angularVelocity: Float {
+        return _angularVelocityEstimate
+    }
+
     func update(_ frame: ARFrame) {
-        let currentPosition = ARSessionManager.shared.transform.position
+        let currentPosition = frame.camera.transform.position
+        let currentForward = -frame.camera.transform.forward    // forward points out of screen, -forward for direction of phone back camera and therefore the hoverboard
         let currentTime = frame.timestamp
 
-        if let prevPosition = _prevPosition {
+        if let prevPosition = _prevPosition,
+           let prevForward = _prevForward {
             let dt = Float(currentTime - _prevFrameTime)
             let idx = _totalSampleCount % Self._numSamples
             _velocitySamples[idx] = (currentPosition - prevPosition) / dt
+            _angularVelocitySamples[idx] = degreesRotated(prevForward: prevForward, currentForward: currentForward) / dt
             _dtSamples[idx] = dt
             _totalSampleCount += 1
         }
 
         _prevPosition = currentPosition
+        _prevForward = currentForward
         _prevFrameTime = currentTime
 
         updateVelocityEstimate()
         updateAccelerationEstimate()
+        updateAngularVelocityEstimate()
 
         //log("Velocity: \(speed), Acceleration: \(acceleration.magnitude)")
     }
@@ -81,5 +93,21 @@ class MotionEstimator {
         }
         acceleration *= (1.0 / Float(n))
         _accelerationEstimate = acceleration
+    }
+
+    private func updateAngularVelocityEstimate() {
+        var velocity: Float = 0
+        if _totalSampleCount > 0 {
+            let populatedSamples = min(Self._numSamples, _totalSampleCount)
+            for i in 0..<populatedSamples {
+                velocity += _angularVelocitySamples[i]
+            }
+            velocity *= (1.0 / Float(populatedSamples))
+        }
+        _angularVelocityEstimate = velocity
+    }
+
+    private func degreesRotated(prevForward: Vector3, currentForward: Vector3) -> Float {
+        return Vector3.signedAngle(from: prevForward.xzProjected, to: currentForward.xzProjected, axis: .up)
     }
 }

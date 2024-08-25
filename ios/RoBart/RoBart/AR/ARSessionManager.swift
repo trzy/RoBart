@@ -49,6 +49,10 @@ class ARSessionManager {
         return _motionEstimator.acceleration
     }
 
+    var angularVelocity: Float {
+        return _motionEstimator.angularVelocity
+    }
+
     fileprivate init() {
     }
 

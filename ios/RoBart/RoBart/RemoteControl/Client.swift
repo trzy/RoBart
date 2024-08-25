@@ -86,14 +86,48 @@ class Client {
             let distanceTraveled = "Distance traveled: \((ARSessionManager.shared.transform.position - initialPos).xzProjected.distance) m"
             connection.send(LogMessage(text: distanceTraveled))
 
+        case RotateMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: RotateMessage.self) else { break }
+            guard HoverboardController.isConnected else {
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
+                break
+            }
+            HoverboardController.send(.rotate(degrees: msg.degrees))
+
         case WatchdogSettingsMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: WatchdogSettingsMessage.self) else { break }
             guard HoverboardController.isConnected else {
                 connection.send(LogMessage(text: "Hoverboard not connected!"))
                 break
             }
-            let configMsg = HoverboardConfigMessage(watchdogEnabled: msg.enabled, watchdogSeconds: msg.timeoutSeconds)
+            let configMsg = HoverboardWatchdogMessage(watchdogEnabled: msg.enabled, watchdogSeconds: msg.timeoutSeconds)
             HoverboardController.send(.message(configMsg))
+
+        case PWMSettingsMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PWMSettingsMessage.self) else { break }
+            guard HoverboardController.isConnected else {
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
+                break
+            }
+            let configMsg = HoverboardPWMMessage(pwmFrequency: UInt16(msg.pwmFrequency))
+            HoverboardController.send(.message(configMsg))
+
+        case ThrottleMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: ThrottleMessage.self) else { break }
+            HoverboardController.shared.minThrottle = msg.minThrottle
+            HoverboardController.shared.maxThrottle = msg.maxThrottle
+
+        case PIDGainsMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PIDGainsMessage.self) else { break }
+            if msg.whichPID == "orientation" {
+                HoverboardController.shared.orientationKp = msg.Kp
+                HoverboardController.shared.orientationKi = msg.Ki
+                HoverboardController.shared.orientationKd = msg.Kd
+            } else if msg.whichPID == "angularVelocity" {
+                HoverboardController.shared.angularVelocityKp = msg.Kp
+                HoverboardController.shared.angularVelocityKi = msg.Ki
+                HoverboardController.shared.angularVelocityKd = msg.Kd
+            }
 
         case HoverboardRTTMeasurementMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: HoverboardRTTMeasurementMessage.self) else { break }

@@ -27,7 +27,8 @@ extension simd_float3 {
     }
 
     static func angle(_ u: simd_float3, _ v: simd_float3) -> Float {
-        return acos(Vector3.dot(u, v) / (u.magnitude * v.magnitude)) * .rad2Deg
+        let cosine = Vector3.dot(u, v) / (u.magnitude * v.magnitude)
+        return acos(RoBart.clamp(cosine, min: -1.0, max: 1.0)) * .rad2Deg
     }
 
     static func signedAngle(from u: simd_float3, to v: simd_float3, axis: simd_float3) -> Float {

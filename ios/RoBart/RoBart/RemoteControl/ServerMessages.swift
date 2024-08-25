@@ -29,9 +29,29 @@ struct DriveForDistanceMessage: JSONMessage {
     let speed: Float
 }
 
+struct RotateMessage: JSONMessage {
+    let degrees: Float
+}
+
 struct WatchdogSettingsMessage: JSONMessage {
     let enabled: Bool
     let timeoutSeconds: Double
+}
+
+struct PWMSettingsMessage: JSONMessage {
+    let pwmFrequency: Int
+}
+
+struct ThrottleMessage: JSONMessage {
+    let minThrottle: Float
+    let maxThrottle: Float
+}
+
+struct PIDGainsMessage: JSONMessage {
+    let whichPID: String
+    let Kp: Float
+    let Ki: Float
+    let Kd: Float
 }
 
 struct HoverboardRTTMeasurementMessage: JSONMessage {
