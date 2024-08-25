@@ -47,8 +47,12 @@ class WatchdogSettingsMessage(BaseModel):
     enabled: bool
     timeoutSeconds: float
 
+class PWMSettingsMessage(BaseModel):
+    pwmFrequency: int
+
 class ThrottleMessage(BaseModel):
-    throttle: float
+    minThrottle: float
+    maxThrottle: float
 
 class PIDGainsMessage(BaseModel):
     whichPID: str
@@ -149,8 +153,12 @@ class CommandConsole:
         "watchdog": [
             Param(name="timeout_sec", type=float)
         ],
+        "pwm": [
+            Param(name="hz", type=int, range=(50,20000))
+        ],
         "throttle": [
-            Param(name="throttle", type=float, range=(0,0.25))
+            Param(name="min", type=float, range=(0,0.25)),
+            Param(name="max", type=float, range=(0,0.25))
         ],
         "pid": [
             Param(name="which_pid", type=str, values=[ "o", "orientation", "a", "angularVelocity" ]),
@@ -222,8 +230,11 @@ class CommandConsole:
                     print("Sent request to disable watchdog")
                 else:
                     print(f"Sent request to update watchdog timeout to {timeout} sec")
+            elif command == "pwm":
+                await self.send(PWMSettingsMessage(pwmFrequency=args["hz"]))
+                print("Sent request to change PWM frequency")
             elif command == "throttle":
-                await self.send(ThrottleMessage(throttle=args["throttle"]))
+                await self.send(ThrottleMessage(minThrottle=args["min"], maxThrottle=args["max"]))
                 print("Sent throttle value update")
             elif command == "pid":
                 pid_names = { "o": "orientation", "orientation": "orientation", "a": "angularVelocity", "angularVelocity": "angularVelocity" }
