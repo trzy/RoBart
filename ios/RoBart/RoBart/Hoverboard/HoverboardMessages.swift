@@ -8,7 +8,8 @@
 enum HoverboardMessageID: UInt8 {
     case pingMessage = 0x01
     case pongMessage = 0x02
-    case configMessage = 0x03
+    case watchdogMessage = 0x03
+    case pwmMessage = 0x04
     case motorMessage = 0x10
 }
 
@@ -22,10 +23,15 @@ struct HoverboardPongMessage: SimpleBinaryMessage {
     let timestamp: Double   // timestamp from ping message (useful for measuring RTT)
 }
 
-struct HoverboardConfigMessage: SimpleBinaryMessage {
-    static let id = HoverboardMessageID.configMessage.rawValue
+struct HoverboardWatchdogMessage: SimpleBinaryMessage {
+    static let id = HoverboardMessageID.watchdogMessage.rawValue
     let watchdogEnabled: Bool
     let watchdogSeconds: Double
+}
+
+struct HoverboardPWMMessage: SimpleBinaryMessage {
+    static let id = HoverboardMessageID.pwmMessage.rawValue
+    let pwmFrequency: UInt16
 }
 
 struct HoverboardMotorMessage: SimpleBinaryMessage {
