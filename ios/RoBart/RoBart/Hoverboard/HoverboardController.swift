@@ -20,6 +20,7 @@ import CoreBluetooth
 enum HoverboardCommand {
     case message(_ message: SimpleBinaryMessage)
     case drive(leftThrottle: Float, rightThrottle: Float)
+    case rotateInPlace(steering: Float)
     case rotate(degrees: Float)
 }
 
@@ -191,6 +192,11 @@ class HoverboardController {
             _rightMotorThrottle = rightThrottle
             log("Left=\(_leftMotorThrottle), Right=\(_rightMotorThrottle)")
             sendUpdateToBoard()
+
+        case .rotateInPlace(let steering):
+            // Turn left (steering > 0): left=-steering, right=steering
+            // Turn right (steering < 0): left=-steering, right=steering
+            send(.drive(leftThrottle: -steering, rightThrottle: steering))
 
         case .rotate(let degrees):
             // New orientation set point
