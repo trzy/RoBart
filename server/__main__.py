@@ -154,7 +154,7 @@ class CommandConsole:
             Param(name="timeout_sec", type=float)
         ],
         "pwm": [
-            Param(name="hz", type=int, range=(50,20000))
+            Param(name="hz", type=int, range=(50,50000))
         ],
         "throttle": [
             Param(name="min", type=float, range=(0,0.25)),
