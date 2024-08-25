@@ -50,14 +50,18 @@ enum MotorSide
  */
 static void speed(MotorSide motor, float magnitude)
 {
-  magnitude = max(0.0f, min(100.0f, magnitude * 100.0f));
+  // Compute duty cycle ticks: [0%,100%] -> [0,65535] (cannot use setPWM() because it erroneously
+  // casts to an integer before remapping, making it impossible to specify < 1%)
+  magnitude = max(0.0f, min(1.0f, magnitude));
+  const uint16_t duty_cycle = uint16_t(round(magnitude * 65535.0f));
+
   if (motor == Left)
   {
-    s_pwm_left->setPWM(PIN_LEFT_PWM, s_pwm_frequency, magnitude);
+    s_pwm_left->setPWM_Int(PIN_LEFT_PWM, s_pwm_frequency, duty_cycle);
   }
   else
   {
-    s_pwm_right->setPWM(PIN_RIGHT_PWM, s_pwm_frequency, magnitude);
+    s_pwm_right->setPWM_Int(PIN_RIGHT_PWM, s_pwm_frequency, duty_cycle);
   }
 }
 
