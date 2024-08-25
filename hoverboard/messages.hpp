@@ -19,20 +19,21 @@
 #define VALIDATE_MESSAGE_SIZE(message) static_assert(sizeof(message) <= 256)
 
 // Add new messages to end. Do not reorder. Leave deprecated messages in place but rename them.
-enum MotorMessageID: uint8_t
+enum HoverboardMessageID: uint8_t
 {
-  PingMessage = 0x01,   // ping with sender timestamp
-  PongMessage = 0x02,   // pong message with timestamp from ping
-  ConfigMessage = 0x03, // configuration
-  MotorMessage = 0x10   // direct motor control
+  PingMessage = 0x01,     // ping with sender timestamp
+  PongMessage = 0x02,     // pong message with timestamp from ping
+  WatchdogMessage = 0x03, // watchdog settings
+  PWMMessage = 0x04,      // PWM settings
+  MotorMessage = 0x10     // direct motor control
 };
 
 struct message_header
 {
   const uint8_t num_bytes;
-  const MotorMessageID id;
+  const HoverboardMessageID id;
   
-  message_header(MotorMessageID id, uint8_t num_bytes)
+  message_header(HoverboardMessageID id, uint8_t num_bytes)
     : num_bytes(num_bytes),
       id(id)
   {
@@ -44,7 +45,7 @@ struct ping_message: public message_header
   const double timestamp;
 
   ping_message(double timestamp)
-    : message_header(MotorMessageID::PingMessage, uint8_t(sizeof(*this))),
+    : message_header(HoverboardMessageID::PingMessage, uint8_t(sizeof(*this))),
       timestamp(timestamp)
   {
   }
@@ -57,7 +58,7 @@ struct pong_message: public message_header
   const double timestamp;
 
   pong_message(double timestamp)
-    : message_header(MotorMessageID::PongMessage, uint8_t(sizeof(*this))),
+    : message_header(HoverboardMessageID::PongMessage, uint8_t(sizeof(*this))),
       timestamp(timestamp)
   {
   }
@@ -65,20 +66,33 @@ struct pong_message: public message_header
 
 VALIDATE_MESSAGE_SIZE(pong_message);
 
-struct config_message: public message_header
+struct watchdog_message: public message_header
 {
   const uint8_t watchdog_enabled;
   const double watchdog_seconds;
 
-  config_message(uint8_t watchdog_enabled, double watchdog_seconds)
-    : message_header(MotorMessageID::ConfigMessage, uint8_t(sizeof(*this))),
+  watchdog_message(uint8_t watchdog_enabled, double watchdog_seconds)
+    : message_header(HoverboardMessageID::WatchdogMessage, uint8_t(sizeof(*this))),
       watchdog_enabled(watchdog_enabled),
       watchdog_seconds(watchdog_seconds)
   {
   }
 };
 
-VALIDATE_MESSAGE_SIZE(config_message);
+VALIDATE_MESSAGE_SIZE(watchdog_message);
+
+struct pwm_message: public message_header
+{
+  const uint16_t pwm_frequency;
+
+  pwm_message(uint16_t pwm_frequency)
+    : message_header(HoverboardMessageID::PWMMessage, uint8_t(sizeof(*this))),
+      pwm_frequency(pwm_frequency)
+  {
+  }
+};
+
+VALIDATE_MESSAGE_SIZE(pwm_message);
 
 struct motor_message: public message_header
 {
@@ -86,7 +100,7 @@ struct motor_message: public message_header
   const float right_motor_throttle; // [-1,1]
 
   motor_message(float left, float right)
-    : message_header(MotorMessageID::MotorMessage, uint8_t(sizeof(*this))),
+    : message_header(HoverboardMessageID::MotorMessage, uint8_t(sizeof(*this))),
       left_motor_throttle(left),
       right_motor_throttle(right)
   {
