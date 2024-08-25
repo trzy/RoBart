@@ -30,9 +30,10 @@ constexpr uint32_t PIN_RIGHT_BRAKE = 7; // pin 7
 constexpr uint32_t PIN_RIGHT_STOP = 15; // pin 15
 constexpr uint32_t PIN_RIGHT_PWM = 16;  // pin 16
 
-constexpr float PWM_FREQUENCY = 20000.0f;
+static float s_pwm_frequency = 20000.0f;
 static nRF52_PWM *s_pwm_left = nullptr;
 static nRF52_PWM *s_pwm_right = nullptr;
+
 
 enum MotorSide
 {
@@ -52,11 +53,11 @@ static void speed(MotorSide motor, float magnitude)
   magnitude = max(0.0f, min(100.0f, magnitude * 100.0f));
   if (motor == Left)
   {
-    s_pwm_left->setPWM(PIN_LEFT_PWM, PWM_FREQUENCY, magnitude);
+    s_pwm_left->setPWM(PIN_LEFT_PWM, s_pwm_frequency, magnitude);
   }
   else
   {
-    s_pwm_right->setPWM(PIN_RIGHT_PWM, PWM_FREQUENCY, magnitude);
+    s_pwm_right->setPWM(PIN_RIGHT_PWM, s_pwm_frequency, magnitude);
   }
 }
 
@@ -149,8 +150,8 @@ static void init_motors()
 {
   pinMode(PIN_LEFT_PWM, OUTPUT);
   pinMode(PIN_RIGHT_PWM, OUTPUT);
-  s_pwm_left = new nRF52_PWM(PIN_LEFT_PWM, PWM_FREQUENCY, 0.0f);    // 0 duty cycle: off
-  s_pwm_right = new nRF52_PWM(PIN_RIGHT_PWM, PWM_FREQUENCY, 0.0f);  // 0 duty cycle: off
+  s_pwm_left = new nRF52_PWM(PIN_LEFT_PWM, s_pwm_frequency, 0.0f);    // 0 duty cycle: off
+  s_pwm_right = new nRF52_PWM(PIN_RIGHT_PWM, s_pwm_frequency, 0.0f);  // 0 duty cycle: off
   speed(Left, 0.0f);
   speed(Right, 0.0f);
 
@@ -190,7 +191,7 @@ static void reset_watchdog_timeout()
   s_watchdog_last_message_received_at = millis();
 }
 
-static void update_watchdog_settings(const config_message *msg)
+static void update_watchdog_settings(const watchdog_message *msg)
 {
   s_watchdog_enabled = msg->watchdog_enabled != 0;
   double max_millis = double(std::numeric_limits<unsigned long>::max());
@@ -261,7 +262,7 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
       return;
     }
 
-    MotorMessageID id = MotorMessageID(data[1]);
+    HoverboardMessageID id = HoverboardMessageID(data[1]);
     switch (id)
     {
     case PingMessage:
@@ -277,15 +278,28 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
       }
       break;
 
-    case ConfigMessage:
-      if (length == sizeof(config_message))
+    case WatchdogMessage:
+      if (length == sizeof(watchdog_message))
       {
-        const config_message *msg = reinterpret_cast<const config_message *>(data);
+        const watchdog_message *msg = reinterpret_cast<const watchdog_message *>(data);
         update_watchdog_settings(msg);
       }
       else
       {
-        Serial.printf("Error: config_message has incorrect length (%d)\n", length);
+        Serial.printf("Error: watchdog_message has incorrect length (%d)\n", length);
+      }
+      break;
+    
+    case PWMMessage:
+      if (length == sizeof(pwm_message))
+      {
+        const pwm_message *msg = reinterpret_cast<const pwm_message *>(data);
+        s_pwm_frequency = float(msg->pwm_frequency);
+        Serial.printf("PWM frequency: %d Hz\n", msg->pwm_frequency);
+      }
+      else
+      {
+        Serial.printf("Error: pwm_message has incorrect length (%d)\n", length);
       }
       break;
 
