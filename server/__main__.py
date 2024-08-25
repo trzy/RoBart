@@ -65,6 +65,11 @@ class HoverboardRTTMeasurementMessage(BaseModel):
     delay: float
     rttSeconds: List[float]
 
+class AngularVelocityMeasurementMessage(BaseModel):
+    steering: float
+    numSeconds: float
+    angularVelocityResult: float
+
 
 ####################################################################################################
 # Server
@@ -116,6 +121,10 @@ class RoBartDebugServer(MessageHandler):
         print(f"99%  = {p99:.1f} ms")
         print(f"Max  = {max:.1f} ms")
         print("")
+    
+    @handler(AngularVelocityMeasurementMessage)
+    async def handle_AngularVelocityMeasurementMessage(self, session: Session, msg: AngularVelocityMeasurementMessage, timestamp: float):
+        print(f"Measured angular velocity = {msg.angularVelocityResult} deg/sec")
 
 
 ####################################################################################################
@@ -169,6 +178,10 @@ class CommandConsole:
         "rtt_test": [
             Param(name="samples", type=int, default=1000),
             Param(name="delay_ms", type=float, default=16.67)
+        ],
+        "measure_angvel": [
+            Param(name="steering", type=float, range=(-0.1,0.1)),
+            Param(name="seconds", type=float, range=(1,10))
         ]
     }
 
@@ -246,6 +259,9 @@ class CommandConsole:
                 delay = args["delay_ms"] * 1e-3
                 await self.send(HoverboardRTTMeasurementMessage(numSamples=num_samples, delay=delay, rttSeconds=[]))
                 print("Sent hoverboard RTT test request")
+            elif command == "measure_angvel":
+                await self.send(AngularVelocityMeasurementMessage(steering=args["steering"], numSeconds=args["seconds"], angularVelocityResult=0))
+                print("Sent angular velocity measurement request")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
