@@ -59,3 +59,9 @@ struct HoverboardRTTMeasurementMessage: JSONMessage {
     let delay: Double           // seconds to sleep between consecutive samples
     let rttSeconds: [Double]    // resulting times (sent back as response)
 }
+
+struct AngularVelocityMeasurementMessage: JSONMessage {
+    let steering: Float
+    let numSeconds: Double
+    let angularVelocityResult: Float
+}
