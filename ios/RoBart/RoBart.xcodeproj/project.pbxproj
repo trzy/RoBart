@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
+		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
 		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
@@ -46,6 +48,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
+		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
 		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
@@ -99,6 +103,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CC2AA5DE2C7BF3B000A8DE67 /* Calibration */ = {
+			isa = PBXGroup;
+			children = (
+				CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */,
+			);
+			path = Calibration;
+			sourceTree = "<group>";
+		};
 		CC7C1CAE2C76F2D6003BFA0B /* Binary */ = {
 			isa = PBXGroup;
 			children = (
@@ -148,6 +160,7 @@
 		CCA9A0FA2C62D35E00B0401C /* RoBart */ = {
 			isa = PBXGroup;
 			children = (
+				CC2AA5DE2C7BF3B000A8DE67 /* Calibration */,
 				CC7C1CB92C76F7B1003BFA0B /* Info.plist */,
 				CCA9A10E2C62D7D700B0401C /* Util */,
 				CCA9A1092C62D71B00B0401C /* AR */,
@@ -192,6 +205,7 @@
 				CCA9A1192C62D90500B0401C /* simd_float4x4+Extensions.swift */,
 				CCA9A1452C62FD1300B0401C /* Clamp.swift */,
 				CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */,
+				CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -323,6 +337,7 @@
 			files = (
 				CCA9A1032C62D35F00B0401C /* Preview Assets.xcassets in Resources */,
 				CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */,
+				CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,6 +365,7 @@
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
 				CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */,
 				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,
+				CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */,
 				CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */,
 				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
