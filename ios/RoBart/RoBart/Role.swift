@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Role: String, CaseIterable, Identifiable {
+enum Role: String, Codable, SimpleBinaryCodable, CaseIterable, Identifiable {
     case robot
     case phone
 

@@ -22,7 +22,7 @@ struct ARViewContainer: UIViewRepresentable {
         arView.session.delegate = context.coordinator
 
         // Configure and run an AR session
-        ARSessionManager.shared.configureSession(for: Settings.shared.role)
+        ARSessionManager.shared.startSession()
 
         return arView
     }

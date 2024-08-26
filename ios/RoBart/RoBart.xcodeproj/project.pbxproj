@@ -12,6 +12,9 @@
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
 		CC38DE352C7CEB4D003EEBDE /* Role.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE342C7CEB4D003EEBDE /* Role.swift */; };
 		CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE362C7CECC4003EEBDE /* Settings.swift */; };
+		CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE382C7CFBB9003EEBDE /* PeerManager.swift */; };
+		CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3A2C7D0744003EEBDE /* PeerMessages.swift */; };
+		CC38DE3D2C7D23B5003EEBDE /* AvatarRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3C2C7D23B5003EEBDE /* AvatarRenderer.swift */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
 		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
@@ -56,6 +59,9 @@
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CC38DE342C7CEB4D003EEBDE /* Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Role.swift; sourceTree = "<group>"; };
 		CC38DE362C7CECC4003EEBDE /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		CC38DE382C7CFBB9003EEBDE /* PeerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerManager.swift; sourceTree = "<group>"; };
+		CC38DE3A2C7D0744003EEBDE /* PeerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMessages.swift; sourceTree = "<group>"; };
+		CC38DE3C2C7D23B5003EEBDE /* AvatarRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarRenderer.swift; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
 		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
@@ -142,6 +148,7 @@
 			children = (
 				CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */,
 				CC7C1CB72C76F577003BFA0B /* Client.swift */,
+				CC38DE3A2C7D0744003EEBDE /* PeerMessages.swift */,
 			);
 			path = RemoteControl;
 			sourceTree = "<group>";
@@ -197,6 +204,7 @@
 				CCA9A10A2C62D73500B0401C /* ARSessionManager.swift */,
 				CCA9A10C2C62D77A00B0401C /* MotionEstimator.swift */,
 				CCA9A11B2C62D95900B0401C /* SceneMeshRenderer.swift */,
+				CC38DE3C2C7D23B5003EEBDE /* AvatarRenderer.swift */,
 			);
 			path = AR;
 			sourceTree = "<group>";
@@ -264,6 +272,7 @@
 				CCA9A12C2C62E08E00B0401C /* Serialization */,
 				CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */,
 				CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */,
+				CC38DE382C7CFBB9003EEBDE /* PeerManager.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -358,6 +367,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */,
+				CC38DE3D2C7D23B5003EEBDE /* AvatarRenderer.swift in Sources */,
 				CC7C1CBF2C7A66BC003BFA0B /* PID.swift in Sources */,
 				CCA9A13B2C62E36800B0401C /* HoverboardMessages.swift in Sources */,
 				CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */,
@@ -384,7 +394,9 @@
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
+				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
+				CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */,
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
 				CC38DE352C7CEB4D003EEBDE /* Role.swift in Sources */,
@@ -532,6 +544,7 @@
 				INFOPLIST_FILE = RoBart/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -564,6 +577,7 @@
 				INFOPLIST_FILE = RoBart/Info.plist;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
