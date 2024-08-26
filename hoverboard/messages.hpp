@@ -16,10 +16,11 @@
 
 #pragma pack(push, 1)
 
+// We limit messages to 256 bytes over Bluetooth
 #define VALIDATE_MESSAGE_SIZE(message) static_assert(sizeof(message) <= 256)
 
 // Add new messages to end. Do not reorder. Leave deprecated messages in place but rename them.
-enum HoverboardMessageID: uint8_t
+enum HoverboardMessageID: uint32_t
 {
   PingMessage = 0x01,     // ping with sender timestamp
   PongMessage = 0x02,     // pong message with timestamp from ping
@@ -30,7 +31,7 @@ enum HoverboardMessageID: uint8_t
 
 struct message_header
 {
-  const uint8_t num_bytes;
+  const uint32_t num_bytes;
   const HoverboardMessageID id;
   
   message_header(HoverboardMessageID id, uint8_t num_bytes)
