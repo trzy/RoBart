@@ -13,12 +13,49 @@ import SwiftUI
 class ARSessionManager {
     static let shared = ARSessionManager()
 
+    fileprivate weak var arView: ARView?
+
     fileprivate let frameSubject = PassthroughSubject<ARFrame, Never>()
     var frames: AnyPublisher<ARFrame, Never> {
         return frameSubject.eraseToAnyPublisher()
     }
 
     fileprivate let _motionEstimator = MotionEstimator()
+
+    private(set) var transform: Matrix4x4 = .identity
+
+    var velocity: Vector3 {
+        return _motionEstimator.velocity
+    }
+
+    var acceleration: Vector3 {
+        return _motionEstimator.acceleration
+    }
+
+    var angularVelocity: Float {
+        return _motionEstimator.angularVelocity
+    }
+
+    private var _subscriptions = Set<AnyCancellable>()
+
+    fileprivate init() {
+        Settings.shared.$role.sink { [weak self] (role: Role) in
+            // AR session configuration depends on our role
+            self?.configureSession(for: role)
+        }.store(in: &_subscriptions)
+    }
+
+    func configureSession(for role: Role) {
+        guard let arView = arView else { return }
+
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [ .horizontal, .vertical ]
+        config.environmentTexturing = .none
+//        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+//            config.sceneReconstruction = .mesh
+//        }
+        arView.session.run(config, options: .removeExistingAnchors)
+    }
 
     func nextFrame() async throws -> ARFrame {
         // https://medium.com/geekculture/from-combine-to-async-await-c08bf1d15b77
@@ -39,29 +76,18 @@ class ARSessionManager {
         }
     }
 
-    private(set) var transform: Matrix4x4 = .identity
-
-    var velocity: Vector3 {
-        return _motionEstimator.velocity
-    }
-
-    var acceleration: Vector3 {
-        return _motionEstimator.acceleration
-    }
-
-    var angularVelocity: Float {
-        return _motionEstimator.angularVelocity
-    }
-
-    fileprivate init() {
-    }
-
     /// SwiftUI coordinator instantiated in the SwiftUI `ARViewContainer` to run the ARKit session.
     class Coordinator: NSObject, ARSessionDelegate {
         private let _parentView: ARViewContainer
         private let _sceneMeshRenderer = SceneMeshRenderer()
 
-        weak var arView: ARView?
+        weak var arView: ARView? {
+            didSet {
+                // Pass view to the session manager so it can modify the session. This is so gross,
+                // is there a better way to structure all of this?
+                ARSessionManager.shared.arView = arView
+            }
+        }
 
         init(_ arViewContainer: ARViewContainer) {
             _parentView = arViewContainer
@@ -88,4 +114,3 @@ class ARSessionManager {
         }
     }
 }
-

@@ -16,18 +16,13 @@ struct ARViewContainer: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> ARView {
+        // Create an ARView and pass it to the coordinator (which hands it to ARSessionManager)
         let arView = ARView(frame: .zero)
-
-        let config = ARWorldTrackingConfiguration()
-        config.planeDetection = [ .horizontal, .vertical ]
-        config.environmentTexturing = .none
-//        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-//            config.sceneReconstruction = .mesh
-//        }
-        arView.session.delegate = context.coordinator
-        arView.session.run(config)
-
         context.coordinator.arView = arView
+        arView.session.delegate = context.coordinator
+
+        // Configure and run an AR session
+        ARSessionManager.shared.configureSession(for: Settings.shared.role)
 
         return arView
     }
