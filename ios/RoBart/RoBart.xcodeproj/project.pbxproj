@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
+		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
+		CC38DE352C7CEB4D003EEBDE /* Role.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE342C7CEB4D003EEBDE /* Role.swift */; };
+		CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE362C7CECC4003EEBDE /* Settings.swift */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
 		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
@@ -50,6 +53,9 @@
 /* Begin PBXFileReference section */
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
+		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CC38DE342C7CEB4D003EEBDE /* Role.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Role.swift; sourceTree = "<group>"; };
+		CC38DE362C7CECC4003EEBDE /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
 		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
@@ -169,7 +175,8 @@
 				CC7C1CB42C76F493003BFA0B /* RemoteControl */,
 				CCA9A11D2C62D98A00B0401C /* Views */,
 				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
-				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
+				CC38DE342C7CEB4D003EEBDE /* Role.swift */,
+				CC38DE362C7CECC4003EEBDE /* Settings.swift */,
 				CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */,
 				CCA9A1012C62D35F00B0401C /* Preview Content */,
 			);
@@ -215,6 +222,8 @@
 			children = (
 				CCA9A1202C62DA1600B0401C /* AR */,
 				CCA9A1212C62DADF00B0401C /* Hoverboard */,
+				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
+				CC38DE322C7CE714003EEBDE /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -353,6 +362,8 @@
 				CCA9A13B2C62E36800B0401C /* HoverboardMessages.swift in Sources */,
 				CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */,
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
+				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
+				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
 				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
 				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,
 				CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */,
@@ -376,6 +387,7 @@
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
+				CC38DE352C7CEB4D003EEBDE /* Role.swift in Sources */,
 				CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */,
 				CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */,
 				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,

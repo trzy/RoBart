@@ -15,6 +15,7 @@
 //
 
 import ARKit
+import Combine
 import CoreBluetooth
 
 enum HoverboardCommand {
@@ -101,6 +102,8 @@ class HoverboardController {
     private let _angularVelocityFromSteering = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt")
     private let _steeringFromAngularVelocity = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt", columns: 2, columnX: 1, columnY: 0)
 
+    private var _subscriptions = Set<AnyCancellable>()
+
     static func send(_ command: HoverboardCommand) {
         shared.send(command)
     }
@@ -112,12 +115,23 @@ class HoverboardController {
 
     func runTask() async {
         // Subscribe to frame updates from ARKit
-        let subscription = ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
+        ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
             self?.onFrame(frame)
-        }
+        }.store(in: &_subscriptions)
+
+        // Bluetooth connection to hoverboard only if we are the robot
+        Settings.shared.$role.sink { [weak self] (role: Role) in
+            if role != .robot {
+                log("Disconnecting Bluetooth because we are no longer the robot")
+                self?._ble.disconnect()
+            }
+        }.store(in: &_subscriptions)
 
         // Bluetooth loop
         while true {
+            while Settings.shared.role != .robot {
+                try? await Task.sleep(for: .seconds(5))
+            }
             let peripheral = await findDevice()
             if let connection = await _ble.connect(to: peripheral) {
                 log("Connection succeeded!")
@@ -139,11 +153,11 @@ class HoverboardController {
             _connection = nil
             try? await Task.sleep(for: .seconds(1))
         }
-
-        _ = subscription    // shut up compiler
     }
 
     func send(_ command: HoverboardCommand) {
+        guard Settings.shared.role == .robot else { return }
+
         switch command {
         case .message(let message):
             // Send message immediately
@@ -206,6 +220,8 @@ class HoverboardController {
     }
 
     private func onFrame(_ frame: ARFrame) {
+        guard Settings.shared.role == .robot else { return }
+
         guard let lastTimestamp = _lastLoopTime else {
             // Need to wait two consecutive frames to start measuring time
             _lastLoopTime = frame.timestamp
