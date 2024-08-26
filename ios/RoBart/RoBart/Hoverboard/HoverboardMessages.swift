@@ -5,7 +5,7 @@
 //  Created by Bart Trzynadlowski on 8/6/24.
 //
 
-enum HoverboardMessageID: UInt8 {
+enum HoverboardMessageID: UInt32 {
     case pingMessage = 0x01
     case pongMessage = 0x02
     case watchdogMessage = 0x03

@@ -4,6 +4,8 @@
 //
 //  Created by Bart Trzynadlowski on 8/21/24.
 //
+//  Messages sent between debug server and iPhone.
+//
 
 import Foundation
 

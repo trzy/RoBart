@@ -7,6 +7,7 @@
 
 import ARKit
 import Combine
+import MultipeerConnectivity
 import RealityKit
 import SwiftUI
 
@@ -39,22 +40,46 @@ class ARSessionManager {
     private var _subscriptions = Set<AnyCancellable>()
 
     fileprivate init() {
-        Settings.shared.$role.sink { [weak self] (role: Role) in
-            // AR session configuration depends on our role
-            self?.configureSession(for: role)
+        PeerManager.shared.$peers.sink { [weak self] (peers: [MCPeerID]) in
+            // Update session based on whether there are peers or not.
+            // Note: PeerManager.shared.peers is not updated until after this call, so must use
+            // passed peers!
+            self?.startSession(collaborative: peers.count > 0)
+        }.store(in: &_subscriptions)
+
+        PeerManager.shared.$receivedMessage.sink { [weak self] (received: (peerID: MCPeerID, data: Data)?) in
+            guard let received = received else { return }
+            self?.handlePeerMessage(received.data, from: received.peerID)
         }.store(in: &_subscriptions)
     }
 
-    func configureSession(for role: Role) {
+    func startSession() {
+        startSession(collaborative: PeerManager.shared.peers.count > 0)
+    }
+
+    private func startSession(collaborative: Bool) {
         guard let arView = arView else { return }
 
+        // Session needs to be collaborative if peers are connected. Only start/restart the session
+        // if this has changed or no session exists in the first place.
+        if let existingConfig = arView.session.configuration as? ARWorldTrackingConfiguration {
+            if existingConfig.isCollaborationEnabled == collaborative {
+                // Session already running in proper configuration
+                return
+            }
+        }
+
+        // New session configuration
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [ .horizontal, .vertical ]
         config.environmentTexturing = .none
+        config.isCollaborationEnabled = collaborative
 //        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
 //            config.sceneReconstruction = .mesh
 //        }
         arView.session.run(config, options: .removeExistingAnchors)
+
+        log("Started session with collaboration \(collaborative ? "enabled" : "disabled")")
     }
 
     func nextFrame() async throws -> ARFrame {
@@ -76,10 +101,18 @@ class ARSessionManager {
         }
     }
 
+    private func handlePeerMessage(_ data: Data, from peerID: MCPeerID) {
+        if let msg = PeerCollaborationMessage.deserialize(from: data),
+           let collaborationData = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARSession.CollaborationData.self, from: msg.data) {
+            arView?.session.update(with: collaborationData)
+        }
+    }
+
     /// SwiftUI coordinator instantiated in the SwiftUI `ARViewContainer` to run the ARKit session.
     class Coordinator: NSObject, ARSessionDelegate {
         private let _parentView: ARViewContainer
         private let _sceneMeshRenderer = SceneMeshRenderer()
+        private let _avatarRenderer = AvatarRenderer()
 
         weak var arView: ARView? {
             didSet {
@@ -103,6 +136,7 @@ class ARSessionManager {
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             guard let arView = arView else { return }
             _sceneMeshRenderer.addMeshes(from: anchors, to: arView)
+            _avatarRenderer.addAvatars(from: anchors, to: arView)
         }
 
         func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
@@ -111,6 +145,19 @@ class ARSessionManager {
 
         func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
             _sceneMeshRenderer.removeMeshes(for: anchors)
+            _avatarRenderer.removeAvatars(for: anchors)
+        }
+
+        func session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData) {
+            guard let encodedData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: true) else {
+                log("Failed to encode collaboration data. Session may be corrupted.")
+                return
+            }
+            PeerManager.shared.sendToAll(PeerCollaborationMessage(data: encodedData), reliable: data.priority == .critical)
         }
     }
+}
+
+fileprivate func log(_ message: String) {
+    print("[ARSessionManager] \(message)")
 }

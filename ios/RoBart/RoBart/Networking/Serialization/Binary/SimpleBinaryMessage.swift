@@ -47,11 +47,11 @@
 import Foundation
 
 fileprivate struct Header: Codable {
-    let numBytes: UInt8
-    let id: UInt8
+    let numBytes: UInt32
+    let id: UInt32
 
     static var headerSize: UInt32 {
-        return UInt32(MemoryLayout<UInt8>.size * 2)
+        return UInt32(MemoryLayout<UInt8>.size * 8)
     }
 
     var bodySize: UInt32 {
@@ -72,8 +72,8 @@ fileprivate struct Header: Codable {
         }
     }
 
-    init?(bodySize: Int, id: UInt8) {
-        guard let numBytes = UInt8(exactly: bodySize + Int(Header.headerSize)) else {
+    init?(bodySize: UInt32, id: UInt32) {
+        guard let numBytes = UInt32(exactly: bodySize + Header.headerSize) else {
             return nil
         }
         self.numBytes = numBytes
@@ -82,7 +82,7 @@ fileprivate struct Header: Codable {
 }
 
 protocol SimpleBinaryMessage: Codable {
-    static var id: UInt8 {
+    static var id: UInt32 {
         get
     }
 
@@ -93,14 +93,14 @@ extension SimpleBinaryMessage {
     func serialize() -> Data {
         do {
             let encoder = SimpleBinaryEncoder()
-            try UInt8(0).write(to: encoder) // header: size is a placeholder for now, will be patched
-            try Self.id.write(to: encoder)  // header: message ID
-            try encoder.encode(self)        // body
+            try UInt32(0).write(to: encoder)    // header: size is a placeholder for now, will be patched
+            try Self.id.write(to: encoder)      // header: message ID
+            try encoder.encode(self)            // body
             var encodedData = encoder.data
-            guard let numBytes = UInt8(exactly: encodedData.count) else {
+            guard var numBytes = UInt32(exactly: encodedData.count) else {
                 fatalError("Failed to serialize message because its size (\(encodedData.count) bytes) exceeds maximum message size of 255 bytes")
             }
-            encodedData[0] = numBytes       // patch total message size into header
+            encodedData.replaceSubrange(0..<4, with: &numBytes, count: 4)   // patch message size into header
             return encodedData
         } catch {
             fatalError("Failed to serialize message (id=\(String(format: "0x%02x", Self.id))): \(error.localizedDescription)")
