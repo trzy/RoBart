@@ -119,9 +119,7 @@ class Client {
         case PIDGainsMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PIDGainsMessage.self) else { break }
             if msg.whichPID == "orientation" {
-                HoverboardController.shared.orientationKp = msg.Kp
-                HoverboardController.shared.orientationKi = msg.Ki
-                HoverboardController.shared.orientationKd = msg.Kd
+                HoverboardController.shared.orientationPIDGains = PID.Gains(Kp: msg.Kp, Ki: msg.Ki, Kd: msg.Kd)
             }
 
         case HoverboardRTTMeasurementMessage.id:

@@ -43,21 +43,9 @@ class HoverboardController {
         }
     }
 
-    var orientationKp: Float = 2.0 {
+    var orientationPIDGains = PID.Gains(Kp: 2.0, Ki: 1e-6, Kd: 0) {
         didSet {
-            _orientationPID?.Kp = orientationKp
-        }
-    }
-
-    var orientationKi: Float = 1e-6 {
-        didSet {
-            _orientationPID?.Ki = orientationKi
-        }
-    }
-
-    var orientationKd: Float = 0 {
-        didSet {
-            _orientationPID?.Kd = orientationKd
+            _orientationPID?.gains = orientationPIDGains
         }
     }
 
@@ -100,7 +88,7 @@ class HoverboardController {
             if newValue {
                 // Instantiate new PID controllers if they don't exist; reset existing ones
                 if _orientationPID == nil {
-                    _orientationPID = PID(Kp: orientationKp, Ki: orientationKi, Kd: orientationKd)
+                    _orientationPID = PID(gains: orientationPIDGains)
                 }
                 _orientationPID?.reset()
             } else {
