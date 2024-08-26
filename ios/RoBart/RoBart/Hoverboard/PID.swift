@@ -8,9 +8,23 @@
 import Foundation
 
 class PID {
-    var Kp: Float = 0
-    var Ki: Float = 0
-    var Kd: Float = 0
+    var Kp: Float = 0 {
+        didSet {
+            reset()
+        }
+    }
+
+    var Ki: Float = 0 {
+        didSet {
+            reset()
+        }
+    }
+
+    var Kd: Float = 0 {
+        didSet {
+            reset()
+        }
+    }
 
     private(set) var output: Float = 0
 
