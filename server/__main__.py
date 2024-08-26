@@ -43,6 +43,9 @@ class DriveForDistanceMessage(BaseModel):
 class RotateMessage(BaseModel):
     degrees: float
 
+class DriveForwardMessage(BaseModel):
+    deltaMeters: float
+
 class WatchdogSettingsMessage(BaseModel):
     enabled: bool
     timeoutSeconds: float
@@ -158,6 +161,9 @@ class CommandConsole:
         "rot": [
             Param(name="degrees", type=float, range=(-360,360))
         ],
+        "df": [
+            Param(name="delta_meters", type=float)
+        ],
         "watchdog": [
             Param(name="timeout_sec", type=float)
         ],
@@ -168,7 +174,7 @@ class CommandConsole:
             Param(name="max", type=float, range=(0,0.25))
         ],
         "pid": [
-            Param(name="which_pid", type=str, values=[ "o", "orientation" ]),
+            Param(name="which_pid", type=str, values=[ "o", "orientation", "p", "position" ]),
             Param(name="Kp", type=float),
             Param(name="Ki", type=float),
             Param(name="Kd", type=float)
@@ -233,6 +239,9 @@ class CommandConsole:
             elif command == "rot":
                 await self.send(RotateMessage(degrees=args["degrees"]))
                 print("Sent rotate command")
+            elif command == "df":
+                await self.send(DriveForwardMessage(deltaMeters=args["delta_meters"]))
+                print("Sent drive forward command")
             elif command == "watchdog":
                 timeout = max(0, args["timeout_sec"])
                 enabled = timeout > 0
@@ -248,7 +257,7 @@ class CommandConsole:
                 await self.send(ThrottleMessage(minThrottle=args["min"], maxThrottle=args["max"]))
                 print("Sent throttle value update")
             elif command == "pid":
-                pid_names = { "o": "orientation", "orientation": "orientation" }
+                pid_names = { "o": "orientation", "orientation": "orientation", "p": "position", "position": "position" }
                 which_pid = pid_names[args["which_pid"]]
                 await self.send(PIDGainsMessage(whichPID=which_pid, Kp=args["Kp"], Ki=args["Ki"], Kd=args["Kd"]))
                 print(f"Sent PID gain parametrs for \"{which_pid}\" controller")
