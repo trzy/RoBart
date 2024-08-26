@@ -114,7 +114,6 @@ class Client {
 
         case ThrottleMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: ThrottleMessage.self) else { break }
-            HoverboardController.shared.minThrottle = msg.minThrottle
             HoverboardController.shared.maxThrottle = msg.maxThrottle
 
         case PIDGainsMessage.id:
@@ -123,10 +122,6 @@ class Client {
                 HoverboardController.shared.orientationKp = msg.Kp
                 HoverboardController.shared.orientationKi = msg.Ki
                 HoverboardController.shared.orientationKd = msg.Kd
-            } else if msg.whichPID == "angularVelocity" {
-                HoverboardController.shared.angularVelocityKp = msg.Kp
-                HoverboardController.shared.angularVelocityKi = msg.Ki
-                HoverboardController.shared.angularVelocityKd = msg.Kd
             }
 
         case HoverboardRTTMeasurementMessage.id:

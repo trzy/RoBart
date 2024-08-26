@@ -61,26 +61,7 @@ class HoverboardController {
         }
     }
 
-    var angularVelocityKp: Float = 2.5 {
-        didSet {
-            _angularVelocityPID?.Kp = angularVelocityKp
-        }
-    }
-
-    var angularVelocityKi: Float = 0 {
-        didSet {
-            _angularVelocityPID?.Ki = angularVelocityKi
-        }
-    }
-
-    var angularVelocityKd: Float = 1.0 {
-        didSet {
-            _angularVelocityPID?.Kd = angularVelocityKd
-        }
-    }
-
     var maxThrottle: Float = 0.01
-    var minThrottle: Float = 0
 
     private let _ble = AsyncBluetoothManager(
         service: CBUUID(string: "df72a6f9-a217-11ee-a726-a4b1c10ba08a"),
@@ -112,7 +93,7 @@ class HoverboardController {
 
     private var _pidControlEnabled: Bool {
         get {
-            return _orientationPID != nil && _angularVelocityPID != nil
+            return _orientationPID != nil
         }
 
         set {
@@ -121,26 +102,18 @@ class HoverboardController {
                 if _orientationPID == nil {
                     _orientationPID = PID(Kp: orientationKp, Ki: orientationKi, Kd: orientationKd)
                 }
-                if _angularVelocityPID == nil {
-                    _angularVelocityPID = PID(Kp: angularVelocityKp, Ki: angularVelocityKi, Kd: angularVelocityKd)
-                }
                 _orientationPID?.reset()
-                _angularVelocityPID?.reset()
             } else {
                 // Disable PID control by destroying the controller objects
                 _orientationPID = nil
-                _angularVelocityPID = nil
             }
         }
     }
 
     private var _lastLoopTime: TimeInterval?
     private var _orientationPID: PID?       // target and current forward angle in -> target angular velocity out
-    private var _angularVelocityPID: PID?   // target and current angular velocity in -> throttle out
-
     private var _lastFrameTimestamp: TimeInterval?
     private var _lastForward: Vector3?
-
     private let _angularVelocityFromSteering = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt")
     private let _steeringFromAngularVelocity = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt", columns: 2, columnX: 1, columnY: 0)
 
@@ -249,10 +222,8 @@ class HoverboardController {
 
         guard _pidControlEnabled,
               let orientationPID = _orientationPID,
-              let angularVelocityPID = _angularVelocityPID,
               let targetForward = _targetForward else {
             _orientationPID?.reset()
-            _angularVelocityPID?.reset()
             return
         }
 
@@ -270,51 +241,12 @@ class HoverboardController {
         sendUpdateToBoard()
 
         log("error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
-
-//        // Cascaded PID for orientation. Steering sign corresponds to rotation angle required to
-//        // align toward target forward. That is, positive -> counter-clockwise (turn left) and
-//        // negative -> clockwise (turn right).
-//        let deltaTime = Float(frame.timestamp - lastTimestamp)
-//        let currentForward = -frame.camera.transform.forward
-//        let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
-//        let currentAngularVelocity = estimateAngularVelocity(deltaTime: deltaTime, lastForward: lastForward, currentForward: currentForward)
-//        let targetAngularVelocity = orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
-//        let steering = angularVelocityPID.update(deltaTime: deltaTime, error: targetAngularVelocity - currentAngularVelocity)
-//
-//
-//        log("CurrentForward=\(currentForward) TargetForward=\(targetForward)")
-//
-//        let (leftSteering, rightSteering) = steeringAmountToThrottle(steering)
-//        _leftMotorThrottle = leftSteering
-//        _rightMotorThrottle = rightSteering
-//
-//        log("OrientError=\(orientationErrorDegrees) AngVel=\(currentAngularVelocity) TargetAngVel=\(targetAngularVelocity)")
-//        log("Steering=\(steering), L,R=(\(leftSteering),\(rightSteering)) Throttle=(\(_leftMotorThrottle),\(_rightMotorThrottle))")
-//
-//        sendUpdateToBoard()
     }
 
     private func estimateAngularVelocity(deltaTime: Float, lastForward: Vector3, currentForward: Vector3) -> Float {
         let degreesMoved = Vector3.signedAngle(from: lastForward.xzProjected, to: currentForward.xzProjected, axis: .up)
         let degreesPerSecond = degreesMoved / deltaTime
         return degreesPerSecond
-    }
-
-    private func steeringAmountToThrottle(_ steeringValue: Float) -> (Float, Float) {
-        let sign = steeringValue >= 0 ? Float(1.0) : Float(-1.0)
-        let steering = sign * abs(steeringValue).mapClamped(oldMin: 0, oldMax: 180.0, newMin: minThrottle, newMax: maxThrottle)
-
-        /*
-         * Steering Value -> Turn Direction -> Left, Right
-         * -----------------------------------------------
-         *      -1              Right           +1, -1
-         *      0               Idle            0, 0
-         *      +1              Left            -1, +1
-         */
-
-        let leftSteering = -steering
-        let rightSteering = steering
-        return (leftSteering, rightSteering)
     }
 }
 
