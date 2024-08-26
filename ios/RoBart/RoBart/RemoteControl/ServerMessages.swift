@@ -43,7 +43,6 @@ struct PWMSettingsMessage: JSONMessage {
 }
 
 struct ThrottleMessage: JSONMessage {
-    let minThrottle: Float
     let maxThrottle: Float
 }
 
