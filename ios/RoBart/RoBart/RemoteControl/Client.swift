@@ -92,7 +92,15 @@ class Client {
                 connection.send(LogMessage(text: "Hoverboard not connected!"))
                 break
             }
-            HoverboardController.send(.rotate(degrees: msg.degrees))
+            HoverboardController.send(.rotateInPlaceBy(degrees: msg.degrees))
+
+        case DriveForwardMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: DriveForwardMessage.self) else { break }
+            guard HoverboardController.isConnected else {
+                connection.send(LogMessage(text: "Hoverboard not connected!"))
+                break
+            }
+            HoverboardController.send(.driveForward(distance: msg.deltaMeters))
 
         case WatchdogSettingsMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: WatchdogSettingsMessage.self) else { break }
@@ -118,8 +126,11 @@ class Client {
 
         case PIDGainsMessage.id:
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PIDGainsMessage.self) else { break }
+            let gains = PID.Gains(Kp: msg.Kp, Ki: msg.Ki, Kd: msg.Kd)
             if msg.whichPID == "orientation" {
-                HoverboardController.shared.orientationPIDGains = PID.Gains(Kp: msg.Kp, Ki: msg.Ki, Kd: msg.Kd)
+                HoverboardController.shared.orientationPIDGains = gains
+            } else if msg.whichPID == "position" {
+                HoverboardController.shared.positionPIDGains = gains
             }
 
         case HoverboardRTTMeasurementMessage.id:

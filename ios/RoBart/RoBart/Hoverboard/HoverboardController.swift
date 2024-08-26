@@ -21,7 +21,8 @@ enum HoverboardCommand {
     case message(_ message: SimpleBinaryMessage)
     case drive(leftThrottle: Float, rightThrottle: Float)
     case rotateInPlace(steering: Float)
-    case rotate(degrees: Float)
+    case rotateInPlaceBy(degrees: Float)
+    case driveForward(distance: Float)
 }
 
 class HoverboardController {
@@ -45,7 +46,13 @@ class HoverboardController {
 
     var orientationPIDGains = PID.Gains(Kp: 2.0, Ki: 1e-6, Kd: 0) {
         didSet {
-            _orientationPID?.gains = orientationPIDGains
+            _orientationPID.gains = orientationPIDGains
+        }
+    }
+
+    var positionPIDGains = PID.Gains(Kp: 1.0, Ki: 0, Kd: 0) {
+        didSet {
+            _positionPID.gains = positionPIDGains
         }
     }
 
@@ -74,34 +81,23 @@ class HoverboardController {
     private var _targetForward: Vector3? {
         didSet {
             if let forward = _targetForward {
-                _targetForward = forward.normalized
+                _targetForward = forward.xzProjected.normalized
             }
         }
     }
 
-    private var _pidControlEnabled: Bool {
-        get {
-            return _orientationPID != nil
-        }
-
-        set {
-            if newValue {
-                // Instantiate new PID controllers if they don't exist; reset existing ones
-                if _orientationPID == nil {
-                    _orientationPID = PID(gains: orientationPIDGains)
-                }
-                _orientationPID?.reset()
-            } else {
-                // Disable PID control by destroying the controller objects
-                _orientationPID = nil
+    private var _targetPosition: Vector3? {
+        didSet {
+            if let position = _targetPosition {
+                _targetPosition = position.xzProjected
             }
         }
     }
 
     private var _lastLoopTime: TimeInterval?
-    private var _orientationPID: PID?       // target and current forward angle in -> target angular velocity out
+    private let _orientationPID: PID    // target and current forward angle in -> target angular velocity out
+    private let _positionPID: PID       // target and current position in -> target forward velocity out
     private var _lastFrameTimestamp: TimeInterval?
-    private var _lastForward: Vector3?
     private let _angularVelocityFromSteering = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt")
     private let _steeringFromAngularVelocity = Util.Interpolator(filename: "angular_velocity_kitchen_floor.txt", columns: 2, columnX: 1, columnY: 0)
 
@@ -110,6 +106,8 @@ class HoverboardController {
     }
 
     private init() {
+        _orientationPID = PID(gains: orientationPIDGains)
+        _positionPID = PID(gains: positionPIDGains)
     }
 
     func runTask() async {
@@ -141,6 +139,8 @@ class HoverboardController {
             _connection = nil
             try? await Task.sleep(for: .seconds(1))
         }
+
+        _ = subscription    // shut up compiler
     }
 
     func send(_ command: HoverboardCommand) {
@@ -151,22 +151,35 @@ class HoverboardController {
 
         case .drive(let leftThrottle, let rightThrottle):
             // Set new motor throttle values and send immediately
-            _pidControlEnabled = false
             _leftMotorThrottle = leftThrottle
             _rightMotorThrottle = rightThrottle
             log("Left=\(_leftMotorThrottle), Right=\(_rightMotorThrottle)")
             sendUpdateToBoard()
+
+            // Disable PID control
+            _targetForward = nil
+            _targetPosition = nil
 
         case .rotateInPlace(let steering):
             // Turn left (steering > 0): left=-steering, right=steering
             // Turn right (steering < 0): left=-steering, right=steering
             send(.drive(leftThrottle: -steering, rightThrottle: steering))
 
-        case .rotate(let degrees):
+            // Disable PID control
+            _targetForward = nil
+            _targetPosition = nil
+
+        case .rotateInPlaceBy(let degrees):
             // New orientation set point
             let currentForward = -ARSessionManager.shared.transform.forward.xzProjected
             _targetForward = currentForward.rotated(by: degrees, about: .up)
-            _pidControlEnabled = true
+            _targetPosition = nil   // no position target
+
+        case .driveForward(let distance):
+            // New position set point along current forward direction
+            let currentForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
+            _targetForward = currentForward
+            _targetPosition = ARSessionManager.shared.transform.position.xzProjected + currentForward * distance
         }
     }
 
@@ -193,11 +206,9 @@ class HoverboardController {
     }
 
     private func onFrame(_ frame: ARFrame) {
-        guard let lastTimestamp = _lastLoopTime,
-              let lastForward = _lastForward else {
+        guard let lastTimestamp = _lastLoopTime else {
             // Need to wait two consecutive frames to start measuring time
             _lastLoopTime = frame.timestamp
-            _lastForward = -frame.camera.transform.forward  // -forward is out of back camera (hoverboard forward)
             return
         }
 
@@ -207,34 +218,70 @@ class HoverboardController {
         guard frame.timestamp > (lastTimestamp + loopPeriod - timeEpsilon) else {
             return
         }
+        _lastLoopTime = frame.timestamp
 
-        guard _pidControlEnabled,
-              let orientationPID = _orientationPID,
-              let targetForward = _targetForward else {
-            _orientationPID?.reset()
-            return
+        let deltaTime = Float(frame.timestamp - lastTimestamp)
+        let currentForward = -frame.camera.transform.forward.xzProjected.normalized
+
+        var leftMotorThrottle: Float = 0
+        var rightMotorThrottle: Float = 0
+        var pidEnabled = false
+
+        // Orientation target
+        if let targetForward = _targetForward {
+            // Orientation PID -> desired velocity
+            let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
+            let targetAngularVelocity = _orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
+
+            // Compute motor steering value based on desired velocity
+            var steering = _steeringFromAngularVelocity.interpolate(x: targetAngularVelocity)
+            steering = clamp(steering, min: -maxThrottle, max: maxThrottle)
+            leftMotorThrottle += -steering
+            rightMotorThrottle += steering
+
+            log("Orientation: error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
+
+            pidEnabled = true
         }
 
-        // Orientation PID -> desired velocity
-        let deltaTime = Float(frame.timestamp - lastTimestamp)
-        let currentForward = -frame.camera.transform.forward
-        let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
-        let targetAngularVelocity = orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
+        // Forward position target
+        if let targetPosition = _targetPosition {
+            // Position PID -> desired forward velocity
+            let positionError = positionErrorAlongForwardAxis(currentPosition: frame.camera.transform.position, targetPosition: targetPosition, currentForward: currentForward)
+            let targetLinearVelocity = _positionPID.update(deltaTime: deltaTime, error: positionError)
 
-        // Compute motor steering value based on desired velocity
-        var steering = _steeringFromAngularVelocity.interpolate(x: targetAngularVelocity)
-        steering = clamp(steering, min: -maxThrottle, max: maxThrottle)
-        _leftMotorThrottle = -steering
-        _rightMotorThrottle = steering
-        sendUpdateToBoard()
+            // Velocity -> throttle. If PID P gain is 1.0, this is simply a matter of rescaling to
+            // allowed throttle range.
+            let direction = sign(targetLinearVelocity)
+            let throttle = abs(targetLinearVelocity).mapClamped(oldMin: 0, oldMax: 1, newMin: 0, newMax: maxThrottle)
+            leftMotorThrottle += direction * throttle
+            rightMotorThrottle += direction * throttle
 
-        log("error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
+            log("Position: error=\(positionError) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
+
+            pidEnabled = true
+        }
+
+        // Send to board
+        if pidEnabled {
+            _leftMotorThrottle = leftMotorThrottle
+            _rightMotorThrottle = rightMotorThrottle
+            sendUpdateToBoard()
+        }
     }
 
     private func estimateAngularVelocity(deltaTime: Float, lastForward: Vector3, currentForward: Vector3) -> Float {
         let degreesMoved = Vector3.signedAngle(from: lastForward.xzProjected, to: currentForward.xzProjected, axis: .up)
         let degreesPerSecond = degreesMoved / deltaTime
         return degreesPerSecond
+    }
+
+    private func positionErrorAlongForwardAxis(currentPosition: Vector3, targetPosition: Vector3, currentForward: Vector3) -> Float {
+        let position = Vector3.dot(targetPosition - currentPosition, currentForward) * currentForward + currentPosition
+        let delta = position - currentPosition
+        let distance = delta.xzProjected.magnitude;
+        let sign = sign(Vector3.dot(delta, currentForward))
+        return sign * distance;
     }
 }
 
