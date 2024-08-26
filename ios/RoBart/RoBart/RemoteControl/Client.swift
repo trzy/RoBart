@@ -35,6 +35,8 @@ class Client {
     }
 
     private func handleMessage(_ receivedMessage: ReceivedJSONMessage, connection: AsyncTCPConnection) async {
+        guard Settings.shared.role == .robot else { return }
+
         switch receivedMessage.id {
         case HelloMessage.id:
             if let msg = JSONMessageDeserializer.decode(receivedMessage, as: HelloMessage.self) {
