@@ -17,8 +17,13 @@ class SceneMeshRenderer {
 
         switch anchor {
         case let planeAnchor as ARPlaneAnchor:
+#if !targetEnvironment(simulator)
+            // Render when acting as phone (would be wasteful on robot)
+            guard Settings.shared.role == .phone else { return }
             guard let mesh = tryCreatePlaneMesh(from: planeAnchor) else { return }
-            //entity = createEntity(anchoredTo: anchor, with: mesh)
+            entity = createEntity(anchoredTo: anchor, with: mesh)
+#endif
+            break
         default:
             break
         }
@@ -73,11 +78,13 @@ class SceneMeshRenderer {
         return try? MeshResource.generate(from: [ descriptor ])
     }
 
-//    private func createEntity(anchoredTo anchor: ARAnchor, with mesh: MeshResource) -> AnchorEntity {
-//        let color = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 1, alpha: 0.8))
-//        let entity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: color, roughness: 1.0, isMetallic: false) ])
-//        let anchorEntity = AnchorEntity(anchor: anchor)
-//        anchorEntity.addChild(entity)
-//        return anchorEntity
-//    }
+#if !targetEnvironment(simulator)   // fails on simulator because one of the classes used here is apparently not present in simulator builds
+    private func createEntity(anchoredTo anchor: ARAnchor, with mesh: MeshResource) -> AnchorEntity {
+        let color = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 1, alpha: 0.8))
+        let entity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: color, roughness: 1.0, isMetallic: false) ])
+        let anchorEntity = AnchorEntity(anchor: anchor)
+        anchorEntity.addChild(entity)
+        return anchorEntity
+    }
+#endif
 }
