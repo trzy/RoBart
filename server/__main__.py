@@ -51,7 +51,6 @@ class PWMSettingsMessage(BaseModel):
     pwmFrequency: int
 
 class ThrottleMessage(BaseModel):
-    minThrottle: float
     maxThrottle: float
 
 class PIDGainsMessage(BaseModel):
@@ -166,11 +165,10 @@ class CommandConsole:
             Param(name="hz", type=int, range=(50,50000))
         ],
         "throttle": [
-            Param(name="min", type=float, range=(0,0.25)),
             Param(name="max", type=float, range=(0,0.25))
         ],
         "pid": [
-            Param(name="which_pid", type=str, values=[ "o", "orientation", "a", "angularVelocity" ]),
+            Param(name="which_pid", type=str, values=[ "o", "orientation" ]),
             Param(name="Kp", type=float),
             Param(name="Ki", type=float),
             Param(name="Kd", type=float)
@@ -250,7 +248,7 @@ class CommandConsole:
                 await self.send(ThrottleMessage(minThrottle=args["min"], maxThrottle=args["max"]))
                 print("Sent throttle value update")
             elif command == "pid":
-                pid_names = { "o": "orientation", "orientation": "orientation", "a": "angularVelocity", "angularVelocity": "angularVelocity" }
+                pid_names = { "o": "orientation", "orientation": "orientation" }
                 which_pid = pid_names[args["which_pid"]]
                 await self.send(PIDGainsMessage(whichPID=which_pid, Kp=args["Kp"], Ki=args["Ki"], Kd=args["Kd"]))
                 print(f"Sent PID gain parametrs for \"{which_pid}\" controller")
