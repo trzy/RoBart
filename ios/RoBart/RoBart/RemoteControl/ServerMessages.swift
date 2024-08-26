@@ -17,20 +17,28 @@ struct LogMessage: JSONMessage {
     let text: String
 }
 
+// Open loop
 struct DriveForDurationMessage: JSONMessage {
     let reverse: Bool
     let seconds: Float
     let speed: Float
 }
 
+// Open loop
 struct DriveForDistanceMessage: JSONMessage {
     let reverse: Bool
-    let meters: Float
+    let meters: Float   // unsigned
     let speed: Float
 }
 
+// PID control
 struct RotateMessage: JSONMessage {
     let degrees: Float
+}
+
+// PID control
+struct DriveForwardMessage: JSONMessage {
+    let deltaMeters: Float  // signed
 }
 
 struct WatchdogSettingsMessage: JSONMessage {
