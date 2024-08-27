@@ -258,15 +258,18 @@ static void on_peripheral_disconnect(uint16_t connection_handle, uint8_t reason)
 
 static void on_received(uint16_t connection_handle, BLECharacteristic *characteristic, uint8_t *data, uint16_t length)
 {
-  if (length >= 2)
+  if (length >= 8)
   {
-    if (data[0] != length)
+    uint32_t message_length = *reinterpret_cast<uint32_t *>(&data[0]);
+    uint32_t message_id = *reinterpret_cast<uint32_t *>(&data[4]);
+  
+    if (message_length != length)
     {
-      Serial.printf("Error: Received %d bytes but message header says %d bytes\n", length, data[0]);
+      Serial.printf("Error: Received %d bytes but message header says %d bytes\n", length, message_length);
       return;
     }
 
-    HoverboardMessageID id = HoverboardMessageID(data[1]);
+    HoverboardMessageID id = HoverboardMessageID(message_id);
     switch (id)
     {
     case PingMessage:
