@@ -1,5 +1,5 @@
 //
-//  AvatarRenderer.swift
+//  ParticipantRenderer.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 8/26/24.
@@ -9,10 +9,15 @@ import ARKit
 import RealityKit
 
 /// Renders participant anchors.
-class AvatarRenderer {
+class ParticipantRenderer {
     private var _entityByAnchorID: [UUID: AnchorEntity] = [:]
 
-    func addAvatars(from anchors: [ARAnchor], to arView: ARView) {
+    var participantCount: Int {
+        return _entityByAnchorID.count
+    }
+
+    func addParticipants(from anchors: [ARAnchor], to arView: ARView) {
+#if !targetEnvironment(simulator)
         for anchor in anchors {
             if let participantAnchor = anchor as? ARParticipantAnchor {
                 let entity = AnchorEntity(anchor: participantAnchor)
@@ -21,9 +26,10 @@ class AvatarRenderer {
                 arView.scene.addAnchor(entity)
             }
         }
+#endif
     }
 
-    func removeAvatars(for anchors: [ARAnchor]) {
+    func removeParticipants(for anchors: [ARAnchor]) {
         for anchor in anchors {
             if let entity = _entityByAnchorID.removeValue(forKey: anchor.identifier) {
                 entity.removeFromParent()
@@ -31,6 +37,7 @@ class AvatarRenderer {
         }
     }
 
+#if !targetEnvironment(simulator)
     private func createLine(length: Float, color: UIColor) -> ModelEntity {
         let mesh = MeshResource.generateBox(size: [0.01, 0.01, length])
         let material = SimpleMaterial(color: color, isMetallic: false)
@@ -61,4 +68,5 @@ class AvatarRenderer {
         gizmo.addChild(zAxis)
         return gizmo
     }
+#endif
 }
