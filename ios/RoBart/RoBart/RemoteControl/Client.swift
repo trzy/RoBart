@@ -4,16 +4,25 @@
 //
 //  Created by Bart Trzynadlowski on 8/21/24.
 //
+//  Handles communication with debug server and some communication with peers.
+//
 
 import ARKit
 import Combine
 import Foundation
+import MultipeerConnectivity
 
 class Client {
     private var _task: Task<Void, Never>!
     private let _decoder = JSONDecoder()
+    private var _subscription: Cancellable?
 
     init() {
+        _subscription = PeerManager.shared.$receivedMessage.sink { [weak self] (received: (peerID: MCPeerID, data: Data)?) in
+            guard let received = received else { return }
+            self?.handlePeerMessage(received.data, from: received.peerID)
+        }
+
         _task = Task {
             await runTask()
         }
@@ -25,7 +34,7 @@ class Client {
                 let connection = try await AsyncTCPConnection(host: "192.168.0.123", port: 8000)
                 connection.send(HelloMessage(message: "Hello from iOS!"))
                 for try await receivedMessage in connection {
-                    await handleMessage(receivedMessage, connection: connection)
+                    await handleDebugServerMessage(receivedMessage, connection: connection)
                 }
             } catch {
                 log("Error: \(error.localizedDescription)")
@@ -34,7 +43,14 @@ class Client {
         }
     }
 
-    private func handleMessage(_ receivedMessage: ReceivedJSONMessage, connection: AsyncTCPConnection) async {
+    private func handlePeerMessage(_ data: Data, from peerID: MCPeerID) {
+        if let msg = PeerMotorMessage.deserialize(from: data) {
+            log("Received motor message from peer")
+            HoverboardController.send(.drive(leftThrottle: msg.leftMotorThrottle, rightThrottle: msg.rightMotorThrottle))
+        }
+    }
+
+    private func handleDebugServerMessage(_ receivedMessage: ReceivedJSONMessage, connection: AsyncTCPConnection) async {
         guard Settings.shared.role == .robot else { return }
 
         switch receivedMessage.id {

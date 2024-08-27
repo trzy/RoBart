@@ -16,6 +16,7 @@
 		CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3A2C7D0744003EEBDE /* PeerMessages.swift */; };
 		CC38DE3D2C7D23B5003EEBDE /* ParticipantRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */; };
 		CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */; };
+		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
 		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
@@ -64,6 +65,7 @@
 		CC38DE3A2C7D0744003EEBDE /* PeerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMessages.swift; sourceTree = "<group>"; };
 		CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantRenderer.swift; sourceTree = "<group>"; };
 		CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollaborativeMappingStateView.swift; sourceTree = "<group>"; };
+		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
 		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 				CCA9A1452C62FD1300B0401C /* Clamp.swift */,
 				CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */,
 				CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */,
+				CC38DE402C7D9E05003EEBDE /* WeakRef.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -395,6 +398,7 @@
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
 				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
+				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
 				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,

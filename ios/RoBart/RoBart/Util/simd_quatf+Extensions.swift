@@ -10,6 +10,10 @@ import simd
 typealias Quaternion = simd_quatf
 
 extension simd_quatf {
+    static var identity: simd_quatf {
+        return simd_quatf(real: 1, imag: .zero)
+    }
+
     static func lookRotation(forward: simd_float3, up: simd_float3 = .up) -> simd_quatf {
         let forward = forward.normalized
 

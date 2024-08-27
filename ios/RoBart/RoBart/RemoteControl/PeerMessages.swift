@@ -12,6 +12,7 @@ import Foundation
 enum PeerMessageID: UInt32 {
     case roleMessage = 0x80
     case collaborationMessage = 0x81
+    case motorMessage = 0x82
 }
 
 struct PeerRoleMessage: SimpleBinaryMessage {
@@ -22,4 +23,10 @@ struct PeerRoleMessage: SimpleBinaryMessage {
 struct PeerCollaborationMessage: SimpleBinaryMessage {
     static let id = PeerMessageID.collaborationMessage.rawValue
     let data: Data
+}
+
+struct PeerMotorMessage: SimpleBinaryMessage {
+    static let id = PeerMessageID.motorMessage.rawValue
+    let leftMotorThrottle: Float
+    let rightMotorThrottle: Float
 }

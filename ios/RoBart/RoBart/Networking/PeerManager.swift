@@ -49,7 +49,7 @@ class PeerManager: NSObject, ObservableObject {
         }
     }
 
-    func send(_ message: SimpleBinaryMessage, withRole role: Role, reliable: Bool) {
+    func send(_ message: SimpleBinaryMessage, toPeersWithRole role: Role, reliable: Bool) {
         let peerIDs = peers.filter { (peerID: MCPeerID) in
             if let peerRole = _roleByPeerID[peerID],
                role == peerRole {
