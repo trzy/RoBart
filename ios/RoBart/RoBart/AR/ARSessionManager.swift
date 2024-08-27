@@ -11,10 +11,16 @@ import MultipeerConnectivity
 import RealityKit
 import SwiftUI
 
-class ARSessionManager {
+class ARSessionManager: ObservableObject {
     static let shared = ARSessionManager()
 
+    @Published var participantCount = 0
+
     fileprivate weak var arView: ARView?
+
+    var scene: RealityKit.Scene? {
+        return arView?.scene
+    }
 
     fileprivate let frameSubject = PassthroughSubject<ARFrame, Never>()
     var frames: AnyPublisher<ARFrame, Never> {
@@ -112,7 +118,7 @@ class ARSessionManager {
     class Coordinator: NSObject, ARSessionDelegate {
         private let _parentView: ARViewContainer
         private let _sceneMeshRenderer = SceneMeshRenderer()
-        private let _avatarRenderer = AvatarRenderer()
+        private let _participantRenderer = ParticipantRenderer()
 
         weak var arView: ARView? {
             didSet {
@@ -136,7 +142,8 @@ class ARSessionManager {
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             guard let arView = arView else { return }
             _sceneMeshRenderer.addMeshes(from: anchors, to: arView)
-            _avatarRenderer.addAvatars(from: anchors, to: arView)
+            _participantRenderer.addParticipants(from: anchors, to: arView)
+            ARSessionManager.shared.participantCount = _participantRenderer.participantCount
         }
 
         func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
@@ -145,7 +152,8 @@ class ARSessionManager {
 
         func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
             _sceneMeshRenderer.removeMeshes(for: anchors)
-            _avatarRenderer.removeAvatars(for: anchors)
+            _participantRenderer.removeParticipants(for: anchors)
+            ARSessionManager.shared.participantCount = _participantRenderer.participantCount
         }
 
         func session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData) {

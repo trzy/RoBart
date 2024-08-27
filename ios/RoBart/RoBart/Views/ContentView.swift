@@ -8,12 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var _settings = Settings.shared
+    @ObservedObject private var _settings = Settings.shared
 
     var body: some View {
         NavigationView {
-            VStack {
+            ZStack {
                 ARViewContainer().edgesIgnoringSafeArea(.all)
+                VStack {
+                    Spacer()
+                    HStack() {
+                        CollaborativeMappingStateView()
+                    }
+                }
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -35,6 +41,8 @@ struct ContentView: View {
             }
         }
         .navigationViewStyle(.stack)    // prevent landscape mode column behavior
+        .onAppear {
+        }
     }
 }
 

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var _settings = Settings.shared
+    @ObservedObject private var _settings = Settings.shared
 
     var body: some View {
         NavigationView {
