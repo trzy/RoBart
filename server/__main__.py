@@ -123,7 +123,7 @@ class RoBartDebugServer(MessageHandler):
         print(f"99%  = {p99:.1f} ms")
         print(f"Max  = {max:.1f} ms")
         print("")
-    
+
     @handler(AngularVelocityMeasurementMessage)
     async def handle_AngularVelocityMeasurementMessage(self, session: Session, msg: AngularVelocityMeasurementMessage, timestamp: float):
         print(f"Measured angular velocity = {msg.angularVelocityResult} deg/sec")
@@ -132,7 +132,7 @@ class RoBartDebugServer(MessageHandler):
 ####################################################################################################
 # Command Console
 #
-# Interactive console that excepts keyboard input from the user and sends commands to iPhone.
+# Interactive console that accepts keyboard input from the user and sends commands to iPhone.
 ####################################################################################################
 
 class CommandConsole:
