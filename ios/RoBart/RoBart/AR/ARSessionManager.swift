@@ -14,9 +14,14 @@ import SwiftUI
 class ARSessionManager: ObservableObject {
     static let shared = ARSessionManager()
 
-    @Published var participantCount = 0
+    @Published fileprivate(set) var participantCount = 0
+    @Published fileprivate(set) var remoteAnchor = WeakRef<ARAnchor>()
 
     fileprivate weak var arView: ARView?
+
+    var session: ARSession? {
+        return arView?.session
+    }
 
     var scene: RealityKit.Scene? {
         return arView?.scene
@@ -141,17 +146,25 @@ class ARSessionManager: ObservableObject {
 
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             guard let arView = arView else { return }
-            _sceneMeshRenderer.addMeshes(from: anchors, to: arView)
+            //_sceneMeshRenderer.addMeshes(from: anchors, to: arView)
             _participantRenderer.addParticipants(from: anchors, to: arView)
             ARSessionManager.shared.participantCount = _participantRenderer.participantCount
+
+            // Publish remote anchors (excluding participant anchors)
+            for anchor in anchors {
+                if anchor.sessionIdentifier != session.identifier,
+                   (anchor as? ARParticipantAnchor) == nil {
+                    ARSessionManager.shared.remoteAnchor = WeakRef(object: anchor)
+                }
+            }
         }
 
         func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-            _sceneMeshRenderer.updateMeshes(from: anchors)
+            //_sceneMeshRenderer.updateMeshes(from: anchors)
         }
 
         func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
-            _sceneMeshRenderer.removeMeshes(for: anchors)
+            //_sceneMeshRenderer.removeMeshes(for: anchors)
             _participantRenderer.removeParticipants(for: anchors)
             ARSessionManager.shared.participantCount = _participantRenderer.participantCount
         }

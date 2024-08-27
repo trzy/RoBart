@@ -24,6 +24,7 @@ enum HoverboardCommand {
     case rotateInPlace(steering: Float)
     case rotateInPlaceBy(degrees: Float)
     case driveForward(distance: Float)
+    case driveTo(position: Vector3)
 }
 
 class HoverboardController {
@@ -194,6 +195,10 @@ class HoverboardController {
             let currentForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
             _targetForward = currentForward
             _targetPosition = ARSessionManager.shared.transform.position.xzProjected + currentForward * distance
+
+        case .driveTo(let position):
+            _targetForward = nil
+            _targetPosition = position.xzProjected
         }
     }
 
@@ -238,13 +243,15 @@ class HoverboardController {
 
         let deltaTime = Float(frame.timestamp - lastTimestamp)
         let currentForward = -frame.camera.transform.forward.xzProjected.normalized
+        let currentPosition = frame.camera.transform.position
 
         var leftMotorThrottle: Float = 0
         var rightMotorThrottle: Float = 0
         var pidEnabled = false
 
-        // Orientation target
-        if let targetForward = _targetForward {
+        // Orientation target: use target if one set, otherwise use vector toward target position if position set, otherwise none
+        let targetForward = _targetForward != nil ? _targetForward! : (_targetPosition != nil ? (_targetPosition! - currentPosition).xzProjected.normalized : nil)
+        if let targetForward = targetForward {
             // Orientation PID -> desired velocity
             let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
             let targetAngularVelocity = _orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)

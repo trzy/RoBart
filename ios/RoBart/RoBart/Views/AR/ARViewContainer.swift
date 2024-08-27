@@ -10,7 +10,16 @@ import Combine
 import RealityKit
 import SwiftUI
 
+fileprivate var _subscription: Cancellable?
+
 struct ARViewContainer: UIViewRepresentable {
+    @State private var _onUpdate: ((SceneEvents.Update, ARView) -> Void)
+
+
+    init(_ onUpdate: @escaping (SceneEvents.Update, ARView) -> Void) {
+        self._onUpdate = onUpdate
+    }
+
     func makeCoordinator() -> ARSessionManager.Coordinator {
         ARSessionManager.Coordinator(self)
     }
@@ -23,6 +32,11 @@ struct ARViewContainer: UIViewRepresentable {
 
         // Configure and run an AR session
         ARSessionManager.shared.startSession()
+
+        // Subscribe to update events
+        _subscription = arView.scene.subscribe(to: SceneEvents.Update.self) { (event: SceneEvents.Update) in
+            _onUpdate(event, arView)
+        }
 
         return arView
     }
