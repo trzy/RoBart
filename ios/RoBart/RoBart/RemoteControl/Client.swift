@@ -169,6 +169,10 @@ class Client {
             let responseMsg = await performAngularVelocityMeasurement(steering: msg.steering, for: msg.numSeconds)
             connection.send(responseMsg)
 
+        case PositionGoalToleranceMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PositionGoalToleranceMessage.self) else { break }
+            HoverboardController.shared.positionGoalTolerance = msg.positionGoalTolerance
+
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")
             break
