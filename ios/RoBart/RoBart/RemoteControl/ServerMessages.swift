@@ -74,3 +74,7 @@ struct AngularVelocityMeasurementMessage: JSONMessage {
     let numSeconds: Double
     let angularVelocityResult: Float
 }
+
+struct PositionGoalToleranceMessage: JSONMessage {
+    let positionGoalTolerance: Float
+}

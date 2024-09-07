@@ -58,6 +58,8 @@ class HoverboardController {
         }
     }
 
+    var positionGoalTolerance: Float = 0.025
+
     var maxThrottle: Float = 0.01
 
     private let _ble = AsyncBluetoothManager(
@@ -243,7 +245,7 @@ class HoverboardController {
 
         let deltaTime = Float(frame.timestamp - lastTimestamp)
         let currentForward = -frame.camera.transform.forward.xzProjected.normalized
-        let currentPosition = frame.camera.transform.position
+        let currentPosition = frame.camera.transform.position.xzProjected
 
         var leftMotorThrottle: Float = 0
         var rightMotorThrottle: Float = 0
@@ -269,20 +271,28 @@ class HoverboardController {
 
         // Forward position target
         if let targetPosition = _targetPosition {
-            // Position PID -> desired forward velocity
-            let positionError = positionErrorAlongForwardAxis(currentPosition: frame.camera.transform.position, targetPosition: targetPosition, currentForward: currentForward)
-            let targetLinearVelocity = _positionPID.update(deltaTime: deltaTime, error: positionError)
+            // PID measures linear distance along direction of travel (while orientation PID
+            // continuously orients toward goal). We stop when the actual position is close enough.
+            if (targetPosition - currentPosition).magnitude <= positionGoalTolerance {
+                _targetPosition = nil
+            }
 
-            // Velocity -> throttle. If PID P gain is 1.0, this is simply a matter of rescaling to
-            // allowed throttle range.
-            let direction = sign(targetLinearVelocity)
-            let throttle = abs(targetLinearVelocity).mapClamped(oldMin: 0, oldMax: 1, newMin: 0, newMax: maxThrottle)
-            leftMotorThrottle += direction * throttle
-            rightMotorThrottle += direction * throttle
-
-            log("Position: error=\(positionError) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
-
-            pidEnabled = true
+            if let targetPosition = _targetPosition {
+                // Position PID -> desired forward velocity
+                let positionError = positionErrorAlongForwardAxis(currentPosition: currentPosition, targetPosition: targetPosition, currentForward: currentForward)
+                let targetLinearVelocity = _positionPID.update(deltaTime: deltaTime, error: positionError)
+                
+                // Velocity -> throttle. If PID P gain is 1.0, this is simply a matter of rescaling to
+                // allowed throttle range.
+                let direction = sign(targetLinearVelocity)
+                let throttle = abs(targetLinearVelocity).mapClamped(oldMin: 0, oldMax: 1, newMin: 0, newMax: maxThrottle)
+                leftMotorThrottle += direction * throttle
+                rightMotorThrottle += direction * throttle
+                
+                log("Position: error=\(positionError) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
+                
+                pidEnabled = true
+            }
         }
 
         // Send to board
