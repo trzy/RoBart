@@ -58,7 +58,7 @@ class HoverboardController {
         }
     }
 
-    var positionGoalTolerance: Float = 0.025
+    var positionGoalTolerance: Float = 0.1
 
     var maxThrottle: Float = 0.01
 
