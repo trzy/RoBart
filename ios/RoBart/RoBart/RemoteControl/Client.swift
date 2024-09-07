@@ -173,6 +173,11 @@ class Client {
             guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: PositionGoalToleranceMessage.self) else { break }
             HoverboardController.shared.positionGoalTolerance = msg.positionGoalTolerance
 
+        case RenderSceneGeometryMessage.id:
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: RenderSceneGeometryMessage.self) else { break }
+            ARSessionManager.shared.renderPlanes = msg.planes
+            ARSessionManager.shared.renderWorldMeshes = msg.meshes
+
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")
             break
