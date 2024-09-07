@@ -75,6 +75,10 @@ class AngularVelocityMeasurementMessage(BaseModel):
 class PositionGoalToleranceMessage(BaseModel):
     positionGoalTolerance: float
 
+class RenderSceneGeometryMessage(BaseModel):
+    planes: bool
+    meshes: bool
+
 
 ####################################################################################################
 # Server
@@ -192,6 +196,10 @@ class CommandConsole:
         ],
         "pos_goal_tolerance": [
             Param(name="distance", type=float, range=(0,1))
+        ],
+        "render": [
+            Param(name="planes", type=bool),
+            Param(name="meshes", type=bool)
         ]
     }
 
@@ -211,8 +219,8 @@ class CommandConsole:
                 if param.name in names:
                     raise ValueError(f"Command \"{command}\" has multiple parameters named \"{param.name}\"")
                 names.add(param.name)
-                if param.type not in [ str, int, float ]:
-                    raise ValueError(f"Command \"{command}\" has invalid type for parameter \"{param.name}\". Must be one of: str, int, float")
+                if param.type not in [ str, int, float, bool ]:
+                    raise ValueError(f"Command \"{command}\" has invalid type for parameter \"{param.name}\". Must be one of: str, int, float, or bool")
 
     async def run(self):
         await asyncio.sleep(1)
@@ -278,6 +286,9 @@ class CommandConsole:
             elif command == "pos_goal_tolerance":
                 await self.send(PositionGoalToleranceMessage(positionGoalTolerance=args["distance"]))
                 print("Sent position goal tolerance update")
+            elif command == "render":
+                await self.send(RenderSceneGeometryMessage(planes=args["planes"], meshes=args["meshes"]))
+                print("Sent scene mesh render selection update")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
@@ -351,6 +362,19 @@ class CommandConsole:
                 if value < min(param.range) or value > max(param.range):
                     print(f"Error: Parameter \"{param.name}\" must be in range: [{min(param.range)},{max(param.range)}]")
                     return None
+            return value
+        elif param.type == bool:
+            value = False
+            try:
+                if arg.lower() in [ "on", "enable", "enabled", "true", "t" ]:
+                    value = True
+                elif arg.lower() in [ "off", "disable", "disabled", "false", "f" ]:
+                    value = False
+                else:
+                    value = int(arg) != 0
+            except ValueError:
+                print(f"Error: Parameter \"{param.name}\" must be boolean value")
+                return None
             return value
         else:
             # Assume str
