@@ -78,3 +78,8 @@ struct AngularVelocityMeasurementMessage: JSONMessage {
 struct PositionGoalToleranceMessage: JSONMessage {
     let positionGoalTolerance: Float
 }
+
+struct RenderSceneGeometryMessage: JSONMessage {
+    let planes: Bool
+    let meshes: Bool
+}

@@ -17,8 +17,6 @@ class ARSessionManager: ObservableObject {
     @Published fileprivate(set) var participantCount = 0
     @Published fileprivate(set) var remoteAnchor = WeakRef<ARAnchor>()
 
-    fileprivate weak var arView: ARView?
-
     var session: ARSession? {
         return arView?.session
     }
@@ -32,7 +30,17 @@ class ARSessionManager: ObservableObject {
         return frameSubject.eraseToAnyPublisher()
     }
 
-    fileprivate let _motionEstimator = MotionEstimator()
+    var renderPlanes: Bool = false {
+        didSet {
+            _sceneMeshRenderer.renderPlanes = renderPlanes
+        }
+    }
+
+    var renderWorldMeshes: Bool = false {
+        didSet {
+            _sceneMeshRenderer.renderWorldMeshes = renderWorldMeshes
+        }
+    }
 
     private(set) var transform: Matrix4x4 = .identity
 
@@ -48,7 +56,11 @@ class ARSessionManager: ObservableObject {
         return _motionEstimator.angularVelocity
     }
 
+    fileprivate weak var arView: ARView?
+    fileprivate let _motionEstimator = MotionEstimator()
     private var _subscriptions = Set<AnyCancellable>()
+    fileprivate let _sceneMeshRenderer = SceneMeshRenderer()
+    fileprivate let _participantRenderer = ParticipantRenderer()
 
     fileprivate init() {
         PeerManager.shared.$peers.sink { [weak self] (peers: [MCPeerID]) in
@@ -122,8 +134,6 @@ class ARSessionManager: ObservableObject {
     /// SwiftUI coordinator instantiated in the SwiftUI `ARViewContainer` to run the ARKit session.
     class Coordinator: NSObject, ARSessionDelegate {
         private let _parentView: ARViewContainer
-        private let _sceneMeshRenderer = SceneMeshRenderer()
-        private let _participantRenderer = ParticipantRenderer()
 
         weak var arView: ARView? {
             didSet {
@@ -146,9 +156,9 @@ class ARSessionManager: ObservableObject {
 
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             guard let arView = arView else { return }
-            //_sceneMeshRenderer.addMeshes(from: anchors, to: arView)
-            _participantRenderer.addParticipants(from: anchors, to: arView)
-            ARSessionManager.shared.participantCount = _participantRenderer.participantCount
+            ARSessionManager.shared._sceneMeshRenderer.addMeshes(from: anchors, to: arView)
+            ARSessionManager.shared._participantRenderer.addParticipants(from: anchors, to: arView)
+            ARSessionManager.shared.participantCount = ARSessionManager.shared._participantRenderer.participantCount
 
             // Publish remote anchors (excluding participant anchors)
             for anchor in anchors {
@@ -160,13 +170,13 @@ class ARSessionManager: ObservableObject {
         }
 
         func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-            //_sceneMeshRenderer.updateMeshes(from: anchors)
+            ARSessionManager.shared._sceneMeshRenderer.updateMeshes(from: anchors)
         }
 
         func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
-            //_sceneMeshRenderer.removeMeshes(for: anchors)
-            _participantRenderer.removeParticipants(for: anchors)
-            ARSessionManager.shared.participantCount = _participantRenderer.participantCount
+            ARSessionManager.shared._sceneMeshRenderer.removeMeshes(for: anchors)
+            ARSessionManager.shared._participantRenderer.removeParticipants(for: anchors)
+            ARSessionManager.shared.participantCount = ARSessionManager.shared._participantRenderer.participantCount
         }
 
         func session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData) {
