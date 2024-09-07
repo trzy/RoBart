@@ -23,6 +23,8 @@
 		CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB72C76F577003BFA0B /* Client.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
 		CC7C1CBF2C7A66BC003BFA0B /* PID.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBE2C7A66BC003BFA0B /* PID.swift */; };
+		CCA3B9262C8C1C1300F15F9F /* OrthoDepthRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9252C8C1C1300F15F9F /* OrthoDepthRenderer.swift */; };
+		CCA3B9282C8C1DD400F15F9F /* OrthoDepthRenderer.metal in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9272C8C1DD400F15F9F /* OrthoDepthRenderer.metal */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -73,6 +75,8 @@
 		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamMulticaster.swift; sourceTree = "<group>"; };
 		CC7C1CBE2C7A66BC003BFA0B /* PID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PID.swift; sourceTree = "<group>"; };
+		CCA3B9252C8C1C1300F15F9F /* OrthoDepthRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrthoDepthRenderer.swift; sourceTree = "<group>"; };
+		CCA3B9272C8C1DD400F15F9F /* OrthoDepthRenderer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = OrthoDepthRenderer.metal; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -209,6 +213,8 @@
 				CCA9A10C2C62D77A00B0401C /* MotionEstimator.swift */,
 				CCA9A11B2C62D95900B0401C /* SceneMeshRenderer.swift */,
 				CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */,
+				CCA3B9252C8C1C1300F15F9F /* OrthoDepthRenderer.swift */,
+				CCA3B9272C8C1DD400F15F9F /* OrthoDepthRenderer.metal */,
 			);
 			path = AR;
 			sourceTree = "<group>";
@@ -399,10 +405,12 @@
 				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
+				CCA3B9262C8C1C1300F15F9F /* OrthoDepthRenderer.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
 				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
+				CCA3B9282C8C1DD400F15F9F /* OrthoDepthRenderer.metal in Sources */,
 				CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */,
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,

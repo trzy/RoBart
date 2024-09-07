@@ -97,9 +97,9 @@ class ARSessionManager: ObservableObject {
         config.planeDetection = [ .horizontal, .vertical ]
         config.environmentTexturing = .none
         config.isCollaborationEnabled = collaborative
-//        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-//            config.sceneReconstruction = .mesh
-//        }
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            config.sceneReconstruction = .mesh
+        }
         arView.session.run(config, options: .removeExistingAnchors)
 
         log("Started session with collaboration \(collaborative ? "enabled" : "disabled")")
@@ -122,6 +122,10 @@ class ARSessionManager: ObservableObject {
                     continuation.resume(with: .success(value))
                 }
         }
+    }
+
+    func renderOrthoDepth() -> [Float]? {
+        return _sceneMeshRenderer.renderOrthoDepth()
     }
 
     private func handlePeerMessage(_ data: Data, from peerID: MCPeerID) {

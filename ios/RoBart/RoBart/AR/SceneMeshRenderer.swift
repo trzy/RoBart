@@ -11,6 +11,7 @@ import RealityKit
 /// Renders anchor geometry.
 class SceneMeshRenderer {
     private var _entityByAnchorID: [UUID: Entity] = [:]
+    private var _meshObjectByAnchorID: [UUID: OrthoDepthRenderer.Mesh] = [:]
     private var _planeRootEntity: Entity?
     private var _worldMeshRootEntity: Entity?
     private let _planeColor = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 1, alpha: 0.6))
@@ -91,12 +92,21 @@ class SceneMeshRenderer {
         if let entity = _entityByAnchorID.removeValue(forKey: anchor.identifier) {
             entity.removeFromParent()
         }
+        _meshObjectByAnchorID.removeValue(forKey: anchor.identifier)
     }
 
     func removeMeshes(for anchors: [ARAnchor]) {
         for anchor in anchors {
             removeMesh(for: anchor)
         }
+    }
+
+    func renderOrthoDepth() -> [Float]? {
+        let meshes = Array(_meshObjectByAnchorID.values)
+        guard let renderer = OrthoDepthRenderer() else {
+            return nil
+        }
+        return renderer.render(meshes: meshes, cameraPosition: .zero, orthographicScale: 10)
     }
 
     private func tryCreatePlaneMesh(from anchor: ARPlaneAnchor) -> MeshResource? {
@@ -139,6 +149,10 @@ class SceneMeshRenderer {
         var descriptor = MeshDescriptor(name: "WorldMesh")
         descriptor.positions = MeshBuffer(vertices)
         descriptor.primitives = .triangles(triangles)
+
+        // Save mesh object for ortho rendering
+        _meshObjectByAnchorID.removeValue(forKey: anchor.identifier)
+        _meshObjectByAnchorID[anchor.identifier] = OrthoDepthRenderer.Mesh(vertices: anchor.geometry.vertices.buffer, triangles: anchor.geometry.faces.buffer, transform: anchor.transform)
 
         return try? MeshResource.generate(from: [descriptor])
     }
