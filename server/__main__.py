@@ -72,6 +72,9 @@ class AngularVelocityMeasurementMessage(BaseModel):
     numSeconds: float
     angularVelocityResult: float
 
+class PositionGoalToleranceMessage(BaseModel):
+    positionGoalTolerance: float
+
 
 ####################################################################################################
 # Server
@@ -186,6 +189,9 @@ class CommandConsole:
         "measure_angvel": [
             Param(name="steering", type=float, range=(-0.1,0.1)),
             Param(name="seconds", type=float, range=(1,10))
+        ],
+        "pos_goal_tolerance": [
+            Param(name="distance", type=float, range=(0,1))
         ]
     }
 
@@ -269,6 +275,9 @@ class CommandConsole:
             elif command == "measure_angvel":
                 await self.send(AngularVelocityMeasurementMessage(steering=args["steering"], numSeconds=args["seconds"], angularVelocityResult=0))
                 print("Sent angular velocity measurement request")
+            elif command == "pos_goal_tolerance":
+                await self.send(PositionGoalToleranceMessage(positionGoalTolerance=args["distance"]))
+                print("Sent position goal tolerance update")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
