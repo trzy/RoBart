@@ -23,6 +23,10 @@
 		CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB72C76F577003BFA0B /* Client.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
 		CC7C1CBF2C7A66BC003BFA0B /* PID.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBE2C7A66BC003BFA0B /* PID.swift */; };
+		CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */; };
+		CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */; };
+		CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */; };
+		CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -73,6 +77,10 @@
 		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamMulticaster.swift; sourceTree = "<group>"; };
 		CC7C1CBE2C7A66BC003BFA0B /* PID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PID.swift; sourceTree = "<group>"; };
+		CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthTest.swift; sourceTree = "<group>"; };
+		CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+Extensions.swift"; sourceTree = "<group>"; };
+		CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float3x3+Extensions.swift"; sourceTree = "<group>"; };
+		CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float4+Extensions.swift"; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -157,6 +165,14 @@
 			path = RemoteControl;
 			sourceTree = "<group>";
 		};
+		CCA3B9292C8CE02100F15F9F /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
 		CCA9A0EF2C62D35E00B0401C = {
 			isa = PBXGroup;
 			children = (
@@ -183,6 +199,7 @@
 				CCA9A1092C62D71B00B0401C /* AR */,
 				CCA9A12B2C62E07F00B0401C /* Networking */,
 				CCA9A1282C62E02A00B0401C /* Hoverboard */,
+				CCA3B9292C8CE02100F15F9F /* Navigation */,
 				CC7C1CB42C76F493003BFA0B /* RemoteControl */,
 				CCA9A11D2C62D98A00B0401C /* Views */,
 				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
@@ -220,12 +237,15 @@
 				CCA9A1112C62D81900B0401C /* HexDump.swift */,
 				CCA9A1132C62D8A200B0401C /* float+Extensions.swift */,
 				CCA9A1152C62D8BA00B0401C /* simd_float3+Extensions.swift */,
+				CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */,
 				CCA9A1172C62D8D700B0401C /* simd_quatf+Extensions.swift */,
+				CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */,
 				CCA9A1192C62D90500B0401C /* simd_float4x4+Extensions.swift */,
 				CCA9A1452C62FD1300B0401C /* Clamp.swift */,
 				CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */,
 				CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */,
 				CC38DE402C7D9E05003EEBDE /* WeakRef.swift */,
+				CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -383,10 +403,12 @@
 				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
 				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,
 				CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */,
+				CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */,
 				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
 				CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */,
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
+				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
@@ -405,6 +427,7 @@
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
 				CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */,
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
+				CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
 				CC38DE352C7CEB4D003EEBDE /* Role.swift in Sources */,
 				CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */,
@@ -412,6 +435,7 @@
 				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,
 				CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */,
 				CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */,
+				CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */,
 				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -43,4 +43,9 @@ extension simd_float4x4 {
         let trs = translationMatrix * rotationMatrix * scaleMatrix
         self.init(columns: trs.columns)
     }
+
+    func transformPoint(_ point: Vector3) -> Vector3 {
+        let transformed = self * Vector4(point, 1)
+        return Vector3(x: transformed.x, y: transformed.y, z: transformed.z)
+    }
 }

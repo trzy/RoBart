@@ -14,6 +14,7 @@ struct ContentView: View {
     @ObservedObject private var _settings = Settings.shared
     @State private var _cursor: Entity?
     @State private var _subscription: Cancellable?
+    @StateObject private var _depthTest = DepthTest()
 
     var body: some View {
         NavigationView {
@@ -31,10 +32,19 @@ struct ContentView: View {
                                 .padding()
                             Button("STOP", action: stopHoverboard)
                                 .padding()
+                            Button("Draw", action: { _depthTest.drawPoints() })
+                                .padding()
                             Spacer()
                         }
                         .buttonStyle(.bordered)
                         CollaborativeMappingStateView()
+                    }
+                }
+                if let image = _depthTest.image {
+                    VStack {
+                        Spacer()
+                        Image(uiImage: image)
+                        Spacer()
                     }
                 }
             }
