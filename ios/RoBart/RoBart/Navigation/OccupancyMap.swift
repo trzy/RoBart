@@ -54,7 +54,7 @@ class OccupancyMap {
     }
 
     private func gridIndex(cellX: Int, cellZ: Int) -> Int {
-        return cellZ * cellsWide + cellX
+        return cellZ * cellsDeep + cellX
     }
 
     private func centerCell() -> (cellX: Int, cellZ: Int) {
@@ -94,8 +94,8 @@ class OccupancyMap {
 
         // Clamp to edges. Note that the only difference between this function and positionToIndices()
         // is that the latter adds 0.5 and then floors. Therefore, we know the limits are: [-0.5, s_numCells - 1 + 0.5).
-        xf = min(max(-0.5, xf), cellWidth - 1.0 + 0.5)
-        zf = min(max(-0.5, zf), cellDepth - 1.0 + 0.5)
+        xf = min(max(-0.5, xf), Float(cellsWide - 1) + 0.5)
+        zf = min(max(-0.5, zf), Float(cellsDeep - 1) + 0.5)
         return (cellX: xf, cellZ: zf)
     }
 
@@ -121,6 +121,7 @@ class OccupancyMap {
         // degrees about the x axis, which points down in portrait orientation).
         let rotateDepthToARKit = Quaternion(angle: .pi, axis: .right)
         let cameraToWorld = viewMatrix * Matrix4x4(translation: .zero, rotation: rotateDepthToARKit, scale: .one)
+        //print(cameraToWorld)
 
         // Check each point and update observations
         var idx = 0
@@ -138,8 +139,9 @@ class OccupancyMap {
                 // Compute its world position
                 let cameraSpacePos = Vector3(x: depth * (Float(xi) - cx) / fx , y: depth * (Float(yi) - cy) / fy, z: depth)
                 let worldPos = cameraToWorld.transformPoint(cameraSpacePos)
+                //print(worldPos)
 
-                // Ignore floor and ceiling -- TODO: need to find floor as minimum ground plane!
+                // Ignore floor and ceiling
                 if (worldPos.y < (floorY + 0.25)) || (worldPos.y > Calibration.phoneHeight) {
                     continue
                 }
@@ -149,9 +151,14 @@ class OccupancyMap {
 
                 // Count LiDAR points found
                 let cell = positionToIndices(position: worldPos)
+                //print(cell)
                 _occupancy[gridIndex(cellX: cell.cellX, cellZ: cell.cellZ)] += 1.0
             }
         }
+
+//        for i in 0..<_occupancy.count {
+//            print("S - \(i) = \(_occupancy[i])")
+//        }
     }
 
     func updateOccupancyFromObservations(from countMap: OccupancyMap, observationThreshold: Float) {
@@ -189,6 +196,35 @@ class OccupancyMap {
                 context.fill(rect)
             }
         }
+
+        // Draw circle at our current position
+        let ourCell = positionToIndices(position: ARSessionManager.shared.transform.position)
+        let ourCellX = CGFloat(ourCell.cellX)
+        let ourCellY = CGFloat(ourCell.cellZ)
+        let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
+        let ourPosY = (ourCellY + 0.5) * CGFloat(pixLength)
+        context.setFillColor(UIColor.red.cgColor)
+        let center = CGPoint(x: ourPosX, y: ourPosY)
+        let path = UIBezierPath(
+            arcCenter: center,
+            radius: 0.5 * CGFloat(pixLength),
+            startAngle: 0,
+            endAngle: 2 * .pi,
+            clockwise: true
+        )
+        path.fill()
+
+        // Draw a little arc in front of our current heading
+        let inFront = ARSessionManager.shared.transform.position - 1.0 * ARSessionManager.shared.transform.forward.xzProjected
+        let cellInFront = positionToFractionalIndices(position: inFront)
+        let posFarInFront = simd_float2((Float(cellInFront.cellX) + 0.5 ) * Float(pixLength), (Float(cellInFront.cellZ) + 0.5 ) * Float(pixLength))
+        let posCenter = simd_float2(Float(ourPosX), Float(ourPosY))
+        let forwardDir = simd_normalize(posFarInFront - posCenter)
+        let linePath = UIBezierPath()
+        linePath.move(to: center)
+        linePath.addLine(to: CGPoint(x: center.x + CGFloat(forwardDir.x) * CGFloat(2 * pixLength), y: center.y + CGFloat(forwardDir.y) * CGFloat(2 * pixLength)))
+        context.setStrokeColor(UIColor.red.cgColor)
+        linePath.stroke()
 
         // Retrieve the generated image
         let image = UIGraphicsGetImageFromCurrentImageContext()

@@ -3,3 +3,4 @@
 //
 
 #include "FilterDepthMap.hpp"
+#include "COccupancyMap.hpp"
