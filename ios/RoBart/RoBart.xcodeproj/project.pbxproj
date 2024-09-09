@@ -27,6 +27,8 @@
 		CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */; };
 		CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */; };
 		CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */; };
+		CCA3B9332C8D26ED00F15F9F /* OccupancyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */; };
+		CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9342C8EA2D300F15F9F /* Calibration.swift */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -81,6 +83,8 @@
 		CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+Extensions.swift"; sourceTree = "<group>"; };
 		CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float3x3+Extensions.swift"; sourceTree = "<group>"; };
 		CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float4+Extensions.swift"; sourceTree = "<group>"; };
+		CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccupancyMap.swift; sourceTree = "<group>"; };
+		CCA3B9342C8EA2D300F15F9F /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -131,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */,
+				CCA3B9342C8EA2D300F15F9F /* Calibration.swift */,
 			);
 			path = Calibration;
 			sourceTree = "<group>";
@@ -169,6 +174,7 @@
 			isa = PBXGroup;
 			children = (
 				CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */,
+				CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -407,10 +413,12 @@
 				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
 				CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */,
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
+				CCA3B9332C8D26ED00F15F9F /* OccupancyMap.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
+				CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
 				CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */,
 				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,

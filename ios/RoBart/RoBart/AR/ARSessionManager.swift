@@ -44,6 +44,21 @@ class ARSessionManager: ObservableObject {
 
     private(set) var transform: Matrix4x4 = .identity
 
+    var floorY: Float {
+        // Use actual value if we have it
+        if let floorY = _floorY {
+            return floorY
+        }
+
+        // Otherwise need to estimate
+        if Settings.shared.role == .robot {
+            return -Calibration.phoneHeight
+        } else {
+            // Use a sensible default for someone standing and holding a phone
+            return -1.5
+        }
+    }
+
     var velocity: Vector3 {
         return _motionEstimator.velocity
     }
@@ -61,6 +76,7 @@ class ARSessionManager: ObservableObject {
     private var _subscriptions = Set<AnyCancellable>()
     fileprivate let _sceneMeshRenderer = SceneMeshRenderer()
     fileprivate let _participantRenderer = ParticipantRenderer()
+    private var _floorY: Float? = nil
 
     fileprivate init() {
         PeerManager.shared.$peers.sink { [weak self] (peers: [MCPeerID]) in
@@ -134,6 +150,33 @@ class ARSessionManager: ObservableObject {
         }
     }
 
+    private func updateFloorPlane(from anchors: [ARAnchor]) {
+        for anchor in anchors {
+            if let plane = anchor as? ARPlaneAnchor,
+               plane.alignment == .horizontal {
+                // Record the minimum y of horizontal planes. If device supports plane
+                // classification, then only use planes detected to be floor planes.
+                var y = plane.transform.position.y
+                var sample = true
+                if ARPlaneAnchor.isClassificationSupported && plane.classification != .floor {
+                    sample = false
+                }
+                if sample {
+                    if _floorY == nil {
+                        _floorY = y
+                        log("Floor Y estimate updated: \(_floorY!)")
+                    } else {
+                        let delta = abs(_floorY! - y)
+                        if delta >= 0.1 {
+                            _floorY = min(_floorY!, y)
+                            log("Floor Y estimate updated: \(_floorY!)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// SwiftUI coordinator instantiated in the SwiftUI `ARViewContainer` to run the ARKit session.
     class Coordinator: NSObject, ARSessionDelegate {
         private let _parentView: ARViewContainer
@@ -159,6 +202,7 @@ class ARSessionManager: ObservableObject {
 
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             guard let arView = arView else { return }
+            ARSessionManager.shared.updateFloorPlane(from: anchors)
             ARSessionManager.shared._sceneMeshRenderer.addMeshes(from: anchors, to: arView)
             ARSessionManager.shared._participantRenderer.addParticipants(from: anchors, to: arView)
             ARSessionManager.shared.participantCount = ARSessionManager.shared._participantRenderer.participantCount
@@ -173,6 +217,7 @@ class ARSessionManager: ObservableObject {
         }
 
         func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+            ARSessionManager.shared.updateFloorPlane(from: anchors)
             ARSessionManager.shared._sceneMeshRenderer.updateMeshes(from: anchors)
         }
 
