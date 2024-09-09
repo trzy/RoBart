@@ -74,6 +74,8 @@ class DepthTest: ObservableObject {
     private let _depthHeight = 24
     private var _entities: [Entity] = []
 
+    private var _occupancy: OccupancyMap?
+
     init() {
         _subscription = ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
             self?.onFrame(frame)
@@ -136,7 +138,7 @@ class DepthTest: ObservableObject {
            let scene = ARSessionManager.shared.scene {
             // Create entities
             let materials = [ SimpleMaterial(color: UIColor.purple, roughness: 1.0, isMetallic: false) ]
-            for i in 0..<(_depthHeight*_depthWidth) {
+            for _ in 0..<(_depthHeight*_depthWidth) {
                 let anchor = AnchorEntity(world: .zero)
                 anchor.isEnabled = false
                 let sphere = MeshResource.generateSphere(radius: 0.01)
@@ -149,7 +151,35 @@ class DepthTest: ObservableObject {
             }
         }
 
-        image = sceneDepth.depthMap.uiImageFromDepth()
+        //image = sceneDepth.depthMap.uiImageFromDepth()
+        //image = sceneDepth.confidenceMap?.uiImageFromDepth()
+
+        if _occupancy == nil {
+            _occupancy = OccupancyMap(width: 20, depth: 20, cellWidth: 0.5, cellDepth: 0.5, centerPoint: frame.camera.transform.position.xzProjected)
+        }
+
+        // First, count the number of observed LiDAR points found in each cell
+        let occupancy = _occupancy!
+        guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
+        let observations = OccupancyMap(
+            width: occupancy.width,
+            depth: occupancy.depth,
+            cellWidth: occupancy.cellWidth,
+            cellDepth: occupancy.cellDepth,
+            centerPoint: occupancy.centerPoint
+        )
+        observations.updateObservations(
+            depthMap: depthMap,
+            intrinsics: _intrinsics!,
+            rgbResolution: _rgbResolution!,
+            viewMatrix: _viewMatrix!,
+            floorY: ARSessionManager.shared.floorY
+        )
+
+        // Then, update the occupancy map only if the count exceeds a threshold
+        occupancy.updateOccupancyFromObservations(from: observations, observationThreshold: 10)
+
+        image = occupancy.render()
     }
 }
 
