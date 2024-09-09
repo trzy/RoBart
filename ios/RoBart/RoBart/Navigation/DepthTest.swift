@@ -74,6 +74,7 @@ class DepthTest: ObservableObject {
     private let _depthHeight = 24
     private var _entities: [Entity] = []
 
+    private var _cOccupancy: COccupancyMap?
     private var _occupancy: OccupancyMap?
 
     init() {
@@ -154,7 +155,15 @@ class DepthTest: ObservableObject {
         //image = sceneDepth.depthMap.uiImageFromDepth()
         //image = sceneDepth.confidenceMap?.uiImageFromDepth()
 
-        if _occupancy == nil {
+        if _cOccupancy == nil {
+            _cOccupancy = COccupancyMap(
+                20,     // width
+                20,     // depth
+                0.5,    // cellWidth
+                0.5,    // cellDepth
+                frame.camera.transform.position.xzProjected // centerPoint
+            )
+
             _occupancy = OccupancyMap(width: 20, depth: 20, cellWidth: 0.5, cellDepth: 0.5, centerPoint: frame.camera.transform.position.xzProjected)
         }
 
@@ -170,28 +179,40 @@ class DepthTest: ObservableObject {
         // Filter out low confidence depth values
         filterDepthMap(sceneDepth.depthMap, confidenceMap, UInt8(ARConfidenceLevel.medium.rawValue))
 
-        // First, count the number of observed LiDAR points found in each cell
-        let occupancy = _occupancy!
+        // Resize depth map to be smaller
         guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
-        let observations = OccupancyMap(
-            width: occupancy.width,
-            depth: occupancy.depth,
-            cellWidth: occupancy.cellWidth,
-            cellDepth: occupancy.cellDepth,
-            centerPoint: occupancy.centerPoint
+
+        // Swift version
+        var occupancy = _occupancy!
+        guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
+        var observations = OccupancyMap(width: occupancy.width, depth: occupancy.depth, cellWidth: occupancy.cellWidth, cellDepth: occupancy.cellDepth, centerPoint: occupancy.centerPoint)
+        observations.updateObservations(depthMap: depthMap, intrinsics: _intrinsics!, rgbResolution: _rgbResolution!, viewMatrix: _viewMatrix!, floorY: ARSessionManager.shared.floorY)
+        occupancy.updateOccupancyFromObservations(from: observations, observationThreshold: 10)
+        //image = occupancy.render()
+
+
+        // First, count the number of observed LiDAR points found in each cell
+        var cOccupancy = _cOccupancy!
+        var cObservations = COccupancyMap(
+            cOccupancy.width(),
+            cOccupancy.depth(),
+            cOccupancy.cellWidth(),
+            cOccupancy.cellDepth(),
+            cOccupancy.centerPoint()
         )
-        observations.updateObservations(
-            depthMap: depthMap,
-            intrinsics: _intrinsics!,
-            rgbResolution: _rgbResolution!,
-            viewMatrix: _viewMatrix!,
-            floorY: ARSessionManager.shared.floorY
+        cObservations.updateObservationCounts(
+            depthMap,
+            _intrinsics!,
+            simd_float2(Float(_rgbResolution!.width), Float(_rgbResolution!.height)),
+            _viewMatrix!,
+            ARSessionManager.shared.floorY,
+            Calibration.phoneHeight
         )
 
         // Then, update the occupancy map only if the count exceeds a threshold
-        occupancy.updateOccupancyFromObservations(from: observations, observationThreshold: 10)
+        cOccupancy.updateOccupancyFromObservationCounts(cObservations, 10)
 
-        image = occupancy.render()
+        image = renderOccupancy(occupancy: cOccupancy)
     }
 
     private func suppressLowConfidenceDepthValues(depthMap: CVPixelBuffer, confidenceMap: CVPixelBuffer, minimumConfidence: ARConfidenceLevel) {
@@ -231,6 +252,67 @@ class DepthTest: ObservableObject {
 
         CVPixelBufferUnlockBaseAddress(confidenceMap, .readOnly)
         CVPixelBufferUnlockBaseAddress(depthMap, CVPixelBufferLockFlags(rawValue: 0))
+    }
+
+    private func renderOccupancy(occupancy map: COccupancyMap) -> UIImage? {
+        let pixLength = 10
+        let imageSize = CGSize(width: map.cellsWide() * pixLength, height: map.cellsDeep() * pixLength)
+
+        // Create a graphics context to draw the image
+        UIGraphicsBeginImageContext(imageSize)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+
+        // Loop through the occupancy grid and draw squares
+        for zi in 0..<map.cellsDeep() {
+            for xi in 0..<map.cellsWide() {
+                let isOccupied = map.at(xi, zi) > 0
+
+                // Set the color based on occupancy
+                let color: UIColor = isOccupied ? .blue : .white
+                context.setFillColor(color.cgColor)
+
+                // Define the square's rectangle
+                let rect = CGRect(x: xi * pixLength, y: zi * pixLength, width: pixLength, height: pixLength)
+
+                // Draw the rectangle
+                context.fill(rect)
+            }
+        }
+
+        // Draw circle at our current position
+        let ourCell = map.positionToIndices(ARSessionManager.shared.transform.position)
+        let ourCellX = CGFloat(ourCell.first)
+        let ourCellY = CGFloat(ourCell.second)
+        let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
+        let ourPosY = (ourCellY + 0.5) * CGFloat(pixLength)
+        context.setFillColor(UIColor.red.cgColor)
+        let center = CGPoint(x: ourPosX, y: ourPosY)
+        let path = UIBezierPath(
+            arcCenter: center,
+            radius: 0.5 * CGFloat(pixLength),
+            startAngle: 0,
+            endAngle: 2 * .pi,
+            clockwise: true
+        )
+        path.fill()
+
+        // Draw a little arc in front of our current heading
+        let inFront = ARSessionManager.shared.transform.position - 1.0 * ARSessionManager.shared.transform.forward.xzProjected
+        let cellInFront = map.positionToFractionalIndices(inFront)
+        let posFarInFront = simd_float2((Float(cellInFront.first) + 0.5 ) * Float(pixLength), (Float(cellInFront.second) + 0.5 ) * Float(pixLength))
+        let posCenter = simd_float2(Float(ourPosX), Float(ourPosY))
+        let forwardDir = simd_normalize(posFarInFront - posCenter)
+        let linePath = UIBezierPath()
+        linePath.move(to: center)
+        linePath.addLine(to: CGPoint(x: center.x + CGFloat(forwardDir.x) * CGFloat(2 * pixLength), y: center.y + CGFloat(forwardDir.y) * CGFloat(2 * pixLength)))
+        context.setStrokeColor(UIColor.red.cgColor)
+        linePath.stroke()
+        
+        // Retrieve the generated image
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return image
     }
 }
 
