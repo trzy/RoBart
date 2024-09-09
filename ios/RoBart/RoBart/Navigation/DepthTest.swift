@@ -158,6 +158,18 @@ class DepthTest: ObservableObject {
             _occupancy = OccupancyMap(width: 20, depth: 20, cellWidth: 0.5, cellDepth: 0.5, centerPoint: frame.camera.transform.position.xzProjected)
         }
 
+//        if let f = sceneDepth.confidenceMap?.toUInt8Array() {
+//            for i in 0..<f.count {
+//                print("\(i)=\(f[i])")
+//            }
+//            fatalError("foo")
+//        }
+
+        guard let confidenceMap = sceneDepth.confidenceMap else { return }
+
+        // Filter out low confidence depth values
+        suppressLowConfidenceDepthValues(depthMap: sceneDepth.depthMap, confidenceMap: confidenceMap, minimumConfidence: .medium)
+
         // First, count the number of observed LiDAR points found in each cell
         let occupancy = _occupancy!
         guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
@@ -180,6 +192,45 @@ class DepthTest: ObservableObject {
         occupancy.updateOccupancyFromObservations(from: observations, observationThreshold: 10)
 
         image = occupancy.render()
+    }
+
+    private func suppressLowConfidenceDepthValues(depthMap: CVPixelBuffer, confidenceMap: CVPixelBuffer, minimumConfidence: ARConfidenceLevel) {
+        assert(depthMap.format == kCVPixelFormatType_DepthFloat32)
+        assert(confidenceMap.format == kCVPixelFormatType_OneComponent8)
+        assert(depthMap.width == confidenceMap.width)
+        assert(depthMap.height == confidenceMap.height)
+
+        let width = depthMap.width
+        let height = depthMap.height
+
+        CVPixelBufferLockBaseAddress(depthMap, CVPixelBufferLockFlags(rawValue: 0))
+        CVPixelBufferLockBaseAddress(confidenceMap, .readOnly)
+        let offsetToNextLineDepthMap = (depthMap.bytesPerRow / MemoryLayout<Float>.stride) - depthMap.width
+        let offsetToNextLineConfidenceMap = confidenceMap.bytesPerRow - confidenceMap.width
+
+        if let depthMapAddress = CVPixelBufferGetBaseAddress(depthMap),
+           let confidenceMapAddress = CVPixelBufferGetBaseAddress(confidenceMap) {
+            let depthFloats = depthMapAddress.assumingMemoryBound(to: Float.self)
+            let confidenceBytes = confidenceMapAddress.assumingMemoryBound(to: UInt8.self)
+
+            // Preserve only high confidence depth values. Low confidence values set to infinity.
+            var depthIdx = 0
+            var confidenceIdx = 0
+            for _ in 0..<height {
+                for _ in 0..<width {
+                    if confidenceBytes[confidenceIdx] <= minimumConfidence.rawValue {
+                        depthFloats[depthIdx] = 1e6
+                    }
+                    depthIdx += 1
+                    confidenceIdx += 1
+                }
+                depthIdx += offsetToNextLineConfidenceMap
+                confidenceIdx += offsetToNextLineConfidenceMap
+            }
+        }
+
+        CVPixelBufferUnlockBaseAddress(confidenceMap, .readOnly)
+        CVPixelBufferUnlockBaseAddress(depthMap, CVPixelBufferLockFlags(rawValue: 0))
     }
 }
 
