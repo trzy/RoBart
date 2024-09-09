@@ -129,6 +129,8 @@ class OccupancyMap {
                 // Get depth point
                 let depth = depthValues[idx]    // use positive depth directly in these calculations
                 idx += 1
+
+                // Works best with mid-range depth points
                 if depth < 1  || depth > 3 {
                     continue
                 }
@@ -141,6 +143,9 @@ class OccupancyMap {
                 if (worldPos.y < (floorY + 0.25)) || (worldPos.y > Calibration.phoneHeight) {
                     continue
                 }
+//                if (worldPos.y < -0.1) || (worldPos.y > 0.1) {
+//                    continue
+//                }
 
                 // Count LiDAR points found
                 let cell = positionToIndices(position: worldPos)

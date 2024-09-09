@@ -23,8 +23,28 @@ extension CVPixelBuffer {
         return CVPixelBufferGetHeight(self)
     }
 
+    var bytesPerRow: Int {
+        return CVPixelBufferGetBytesPerRow(self)
+    }
+
     var format: OSType {
         return CVPixelBufferGetPixelFormatType(self)
+    }
+
+    func toUInt8Array() -> [UInt8]? {
+        guard CVPixelBufferGetPixelFormatType(self) == kCVPixelFormatType_OneComponent8 else {
+            log("Error: toUInt8Array() currently only supports 8-bit single channel images")
+            return nil
+        }
+        CVPixelBufferLockBaseAddress(self, .readOnly)
+        guard let baseAddress = CVPixelBufferGetBaseAddress(self) else {
+            CVPixelBufferUnlockBaseAddress(self, .readOnly)
+            return nil
+        }
+        let byteBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
+        let byteArray = Array(UnsafeBufferPointer(start: byteBuffer, count: width * height))
+        CVPixelBufferUnlockBaseAddress(self, .readOnly)
+        return byteArray
     }
 
     func toFloatArray() -> [Float]? {
