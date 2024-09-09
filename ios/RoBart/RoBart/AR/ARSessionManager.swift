@@ -156,7 +156,7 @@ class ARSessionManager: ObservableObject {
                plane.alignment == .horizontal {
                 // Record the minimum y of horizontal planes. If device supports plane
                 // classification, then only use planes detected to be floor planes.
-                var y = plane.transform.position.y
+                let y = plane.transform.position.y
                 var sample = true
                 if ARPlaneAnchor.isClassificationSupported && plane.classification != .floor {
                     sample = false

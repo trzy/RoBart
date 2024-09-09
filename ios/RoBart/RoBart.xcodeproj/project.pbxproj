@@ -29,6 +29,7 @@
 		CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */; };
 		CCA3B9332C8D26ED00F15F9F /* OccupancyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */; };
 		CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9342C8EA2D300F15F9F /* Calibration.swift */; };
+		CCA3B9392C8EC40E00F15F9F /* FilterDepthMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -85,6 +86,9 @@
 		CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float4+Extensions.swift"; sourceTree = "<group>"; };
 		CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccupancyMap.swift; sourceTree = "<group>"; };
 		CCA3B9342C8EA2D300F15F9F /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
+		CCA3B9362C8EC40E00F15F9F /* RoBart-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RoBart-Bridging-Header.h"; sourceTree = "<group>"; };
+		CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FilterDepthMap.cpp; sourceTree = "<group>"; };
+		CCA3B9382C8EC40E00F15F9F /* FilterDepthMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FilterDepthMap.hpp; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -175,6 +179,8 @@
 			children = (
 				CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */,
 				CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */,
+				CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */,
+				CCA3B9382C8EC40E00F15F9F /* FilterDepthMap.hpp */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -211,6 +217,7 @@
 				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
 				CC38DE342C7CEB4D003EEBDE /* Role.swift */,
 				CC38DE362C7CECC4003EEBDE /* Settings.swift */,
+				CCA3B9362C8EC40E00F15F9F /* RoBart-Bridging-Header.h */,
 				CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */,
 				CCA9A1012C62D35F00B0401C /* Preview Content */,
 			);
@@ -359,6 +366,7 @@
 				TargetAttributes = {
 					CCA9A0F72C62D35E00B0401C = {
 						CreatedOnToolsVersion = 15.4;
+						LastSwiftMigration = 1540;
 					};
 				};
 			};
@@ -442,6 +450,7 @@
 				CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */,
 				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,
 				CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */,
+				CCA3B9392C8EC40E00F15F9F /* FilterDepthMap.cpp in Sources */,
 				CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */,
 				CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */,
 				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
@@ -575,6 +584,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Robart/Preview Content\"";
@@ -598,6 +608,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RoBart/RoBart-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -608,6 +621,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Robart/Preview Content\"";
@@ -631,6 +645,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RoBart/RoBart-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
