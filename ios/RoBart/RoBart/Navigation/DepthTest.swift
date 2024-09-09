@@ -168,7 +168,7 @@ class DepthTest: ObservableObject {
         guard let confidenceMap = sceneDepth.confidenceMap else { return }
 
         // Filter out low confidence depth values
-        suppressLowConfidenceDepthValues(depthMap: sceneDepth.depthMap, confidenceMap: confidenceMap, minimumConfidence: .medium)
+        filterDepthMap(sceneDepth.depthMap, confidenceMap, UInt8(ARConfidenceLevel.medium.rawValue))
 
         // First, count the number of observed LiDAR points found in each cell
         let occupancy = _occupancy!
@@ -218,13 +218,13 @@ class DepthTest: ObservableObject {
             var confidenceIdx = 0
             for _ in 0..<height {
                 for _ in 0..<width {
-                    if confidenceBytes[confidenceIdx] <= minimumConfidence.rawValue {
+                    if confidenceBytes[confidenceIdx] < minimumConfidence.rawValue {
                         depthFloats[depthIdx] = 1e6
                     }
                     depthIdx += 1
                     confidenceIdx += 1
                 }
-                depthIdx += offsetToNextLineConfidenceMap
+                depthIdx += offsetToNextLineDepthMap
                 confidenceIdx += offsetToNextLineConfidenceMap
             }
         }
