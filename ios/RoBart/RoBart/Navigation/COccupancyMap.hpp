@@ -26,16 +26,20 @@ public:
 
     void clear();
 
-    void updateObservationCounts(
-         CVPixelBufferRef depthMap,
-         simd_float3x3 intrinsics,
-         simd_float2 rgbResolution,
-         simd_float4x4 viewMatrix,
-         float floorY,
-         float phoneHeight
+    void updateCellCounts(
+        CVPixelBufferRef depthMap,
+        simd_float3x3 intrinsics,
+        simd_float2 rgbResolution,
+        simd_float4x4 viewMatrix,
+        float minDepth,
+        float maxDepth,
+        float minHeight,
+        float maxHeight,
+        float incomingSampleWeight,
+        float previousWeight
     );
     
-    void updateOccupancyFromObservationCounts(const COccupancyMap &observations, float observationThreshold);
+    void updateOccupancyFromCounts(const COccupancyMap &counts, float thresholdAmount);
 
     inline std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
 

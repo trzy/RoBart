@@ -142,7 +142,7 @@ class OccupancyMap {
                 //print(worldPos)
 
                 // Ignore floor and ceiling
-                if (worldPos.y < (floorY + 0.25)) || (worldPos.y > Calibration.phoneHeight) {
+                if (worldPos.y < (floorY + 0.25)) || (worldPos.y > (floorY + Calibration.phoneHeightAboveFloor)) {
                     continue
                 }
 //                if (worldPos.y < -0.1) || (worldPos.y > 0.1) {

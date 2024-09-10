@@ -7,5 +7,5 @@
 
 class Calibration {
     /// Height of phone above ground when mounted on robot
-    static let phoneHeight: Float = 1.0
+    static let phoneHeightAboveFloor: Float = 1.0
 }
