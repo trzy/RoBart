@@ -11,8 +11,6 @@
 #include <cstdlib>
 #include <memory>
 
-#include <iostream>
-
 COccupancyMap::COccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint)
 {
     assert(cellWidth <= width);
