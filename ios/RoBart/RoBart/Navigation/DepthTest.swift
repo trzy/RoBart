@@ -74,7 +74,17 @@ class DepthTest: ObservableObject {
     private let _depthHeight = 24
     private var _entities: [Entity] = []
 
-    private var _lastFrameTimestamp: TimeInterval?
+    /// How often we sample the depth map and accumulate cell hit counts.
+    private let _targetDepthSampleRateHz: Double = 10
+
+    /// How often we commit updates to the occupancy map itself.
+    private let _targetOccupancyUpdateRateHz: Double = 1
+
+    /// The last frame timestamp at which we sampled depth.
+    private var _lastDepthSampleTimestamp: TimeInterval?
+
+    /// THe last frame timestamp at which we updated the occupancy map.
+    private var _lastOccupancyUpdateTimestamp: TimeInterval?
 
     /// Moving average of LiDAR samples found in each cell
     private var _hitCounts: COccupancyMap?
@@ -83,6 +93,7 @@ class DepthTest: ObservableObject {
     private var _occupancy: COccupancyMap?
 
     init() {
+        assert(_targetDepthSampleRateHz >= _targetOccupancyUpdateRateHz)
         _subscription = ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
             self?.onFrame(frame)
         }
@@ -160,15 +171,17 @@ class DepthTest: ObservableObject {
         //image = sceneDepth.depthMap.uiImageFromDepth()
         //image = sceneDepth.confidenceMap?.uiImageFromDepth()
 
-        // Compute delta time from last depth frame
-        guard let lastFrameTimestamp = _lastFrameTimestamp else {
-            _lastFrameTimestamp = frame.timestamp
+        // Is it time to sample depth and update cell hit counts?
+        guard let lastDepthSampleTimestamp = _lastDepthSampleTimestamp else {
+            _lastDepthSampleTimestamp = frame.timestamp
             return
         }
-        let deltaTime = Float(frame.timestamp - lastFrameTimestamp)
-        _lastFrameTimestamp = frame.timestamp
+        let nextDepthSampleTime = lastDepthSampleTimestamp + (1.0 / _targetDepthSampleRateHz)
+        guard frame.timestamp >= nextDepthSampleTime else { return }
+        let sampleDeltaTime = frame.timestamp - lastDepthSampleTimestamp
+        _lastDepthSampleTimestamp = frame.timestamp
 
-        // Instantiate occupancy map on first frame
+        // Lazy instantiate occupancy map on first frame
         var timer = Util.Stopwatch()
         timer.start()
         if _occupancy == nil {
@@ -202,7 +215,7 @@ class DepthTest: ObservableObject {
         let minHeight = ARSessionManager.shared.floorY + 0.25
         let maxHeight = ARSessionManager.shared.floorY + Calibration.phoneHeightAboveFloor
         let tau: Float = 1.0
-        let newSampleWeight: Float = 1.0 - exp(-deltaTime / tau)    // EWMA: https://en.wikipedia.org/wiki/Exponential_smoothing
+        let newSampleWeight: Float = 1.0 - exp(-Float(sampleDeltaTime) / tau)   // EWMA: https://en.wikipedia.org/wiki/Exponential_smoothing
         let previousWeight: Float = 1.0 - newSampleWeight
         hitCounts.updateCellCounts(
             depthMap,
@@ -217,13 +230,26 @@ class DepthTest: ObservableObject {
             previousWeight
         )
 
+        log ("Depth sample update: \(timer.elapsedMilliseconds()) ms")
+        log("Sample rate: \(1.0/sampleDeltaTime) Hz")
+
+        // Is it time to update the actual occupancy map?
+        guard let lastOccupancyUpdateTimestamp = _lastOccupancyUpdateTimestamp else {
+            _lastOccupancyUpdateTimestamp = frame.timestamp
+            return
+        }
+        let nextOccupancyUpdateTime = lastOccupancyUpdateTimestamp + (1.0 / _targetOccupancyUpdateRateHz)
+        guard frame.timestamp >= nextOccupancyUpdateTime else { return }
+        _lastOccupancyUpdateTimestamp = frame.timestamp
+
         // Then, update the occupancy map only if the count exceeds a threshold
         occupancy.updateOccupancyFromCounts(
             hitCounts,
             10  // count threshold
         )
 
-        print("Occupancy update: \(timer.elapsedMilliseconds()) ms")
+        log("Occupancy update: \(timer.elapsedMilliseconds()) ms")
+        log("Update rate: \(1.0/(frame.timestamp - lastOccupancyUpdateTimestamp)) Hz")
 
         image = renderOccupancy(occupancy: occupancy)
     }
