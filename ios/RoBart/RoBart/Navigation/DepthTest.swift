@@ -74,8 +74,13 @@ class DepthTest: ObservableObject {
     private let _depthHeight = 24
     private var _entities: [Entity] = []
 
-    private var _cOccupancy: COccupancyMap?
-    private var _occupancy: OccupancyMap?
+    private var _lastFrameTimestamp: TimeInterval?
+
+    /// Moving average of LiDAR samples found in each cell
+    private var _hitCounts: COccupancyMap?
+
+    /// Occupancy map (binary occupied/not occupied), integrated from hit count map
+    private var _occupancy: COccupancyMap?
 
     init() {
         _subscription = ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
@@ -155,103 +160,72 @@ class DepthTest: ObservableObject {
         //image = sceneDepth.depthMap.uiImageFromDepth()
         //image = sceneDepth.confidenceMap?.uiImageFromDepth()
 
-        if _cOccupancy == nil {
-            _cOccupancy = COccupancyMap(
-                20,     // width
-                20,     // depth
-                0.5,    // cellWidth
-                0.5,    // cellDepth
-                frame.camera.transform.position.xzProjected // centerPoint
-            )
+        // Compute delta time from last depth frame
+        guard let lastFrameTimestamp = _lastFrameTimestamp else {
+            _lastFrameTimestamp = frame.timestamp
+            return
+        }
+        let deltaTime = Float(frame.timestamp - lastFrameTimestamp)
+        _lastFrameTimestamp = frame.timestamp
 
-            _occupancy = OccupancyMap(width: 20, depth: 20, cellWidth: 0.5, cellDepth: 0.5, centerPoint: frame.camera.transform.position.xzProjected)
+        // Instantiate occupancy map on first frame
+        var timer = Util.Stopwatch()
+        timer.start()
+        if _occupancy == nil {
+            _hitCounts = COccupancyMap(
+                20,     // width (meters)
+                20,     // depth (meters)
+                0.5,    // cell width (meters)
+                0.5,    // cell depth (meters)
+                frame.camera.transform.position.xzProjected // world center point
+            )
+            _occupancy = COccupancyMap(
+                _hitCounts!.width(),
+                _hitCounts!.depth(),
+                _hitCounts!.cellWidth(),
+                _hitCounts!.cellDepth(),
+                _hitCounts!.centerPoint()
+            )
         }
 
-//        if let f = sceneDepth.confidenceMap?.toUInt8Array() {
-//            for i in 0..<f.count {
-//                print("\(i)=\(f[i])")
-//            }
-//            fatalError("foo")
-//        }
-
-        guard let confidenceMap = sceneDepth.confidenceMap else { return }
+        var hitCounts = _hitCounts!
+        var occupancy = _occupancy!
 
         // Filter out low confidence depth values
-        filterDepthMap(sceneDepth.depthMap, confidenceMap, UInt8(ARConfidenceLevel.medium.rawValue))
+        guard let confidenceMap = sceneDepth.confidenceMap else { return }
+        let depthMap = sceneDepth.depthMap
+        filterDepthMap(depthMap, confidenceMap, UInt8(ARConfidenceLevel.high.rawValue))
 
-        // Resize depth map to be smaller
-        guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
-
-        // Swift version
-        var occupancy = _occupancy!
-        guard let depthMap = sceneDepth.depthMap.resize(newWidth: 32, newHeight: 24) else { return }
-        var observations = OccupancyMap(width: occupancy.width, depth: occupancy.depth, cellWidth: occupancy.cellWidth, cellDepth: occupancy.cellDepth, centerPoint: occupancy.centerPoint)
-        observations.updateObservations(depthMap: depthMap, intrinsics: _intrinsics!, rgbResolution: _rgbResolution!, viewMatrix: _viewMatrix!, floorY: ARSessionManager.shared.floorY)
-        occupancy.updateOccupancyFromObservations(from: observations, observationThreshold: 10)
-        //image = occupancy.render()
-
-
-        // First, count the number of observed LiDAR points found in each cell
-        var cOccupancy = _cOccupancy!
-        var cObservations = COccupancyMap(
-            cOccupancy.width(),
-            cOccupancy.depth(),
-            cOccupancy.cellWidth(),
-            cOccupancy.cellDepth(),
-            cOccupancy.centerPoint()
-        )
-        cObservations.updateObservationCounts(
+        // Update expontential moving average of the number of LiDAR points in each cell
+        let minDepth: Float = 1.0
+        let maxDepth: Float = 3.0
+        let minHeight = ARSessionManager.shared.floorY + 0.25
+        let maxHeight = ARSessionManager.shared.floorY + Calibration.phoneHeightAboveFloor
+        let tau: Float = 1.0
+        let newSampleWeight: Float = 1.0 - exp(-deltaTime / tau)    // EWMA: https://en.wikipedia.org/wiki/Exponential_smoothing
+        let previousWeight: Float = 1.0 - newSampleWeight
+        hitCounts.updateCellCounts(
             depthMap,
             _intrinsics!,
             simd_float2(Float(_rgbResolution!.width), Float(_rgbResolution!.height)),
             _viewMatrix!,
-            ARSessionManager.shared.floorY,
-            Calibration.phoneHeight
+            minDepth,
+            maxDepth,
+            minHeight,
+            maxHeight,
+            newSampleWeight,
+            previousWeight
         )
 
         // Then, update the occupancy map only if the count exceeds a threshold
-        cOccupancy.updateOccupancyFromObservationCounts(cObservations, 10)
+        occupancy.updateOccupancyFromCounts(
+            hitCounts,
+            10  // count threshold
+        )
 
-        image = renderOccupancy(occupancy: cOccupancy)
-    }
+        print("Occupancy update: \(timer.elapsedMilliseconds()) ms")
 
-    private func suppressLowConfidenceDepthValues(depthMap: CVPixelBuffer, confidenceMap: CVPixelBuffer, minimumConfidence: ARConfidenceLevel) {
-        assert(depthMap.format == kCVPixelFormatType_DepthFloat32)
-        assert(confidenceMap.format == kCVPixelFormatType_OneComponent8)
-        assert(depthMap.width == confidenceMap.width)
-        assert(depthMap.height == confidenceMap.height)
-
-        let width = depthMap.width
-        let height = depthMap.height
-
-        CVPixelBufferLockBaseAddress(depthMap, CVPixelBufferLockFlags(rawValue: 0))
-        CVPixelBufferLockBaseAddress(confidenceMap, .readOnly)
-        let offsetToNextLineDepthMap = (depthMap.bytesPerRow / MemoryLayout<Float>.stride) - depthMap.width
-        let offsetToNextLineConfidenceMap = confidenceMap.bytesPerRow - confidenceMap.width
-
-        if let depthMapAddress = CVPixelBufferGetBaseAddress(depthMap),
-           let confidenceMapAddress = CVPixelBufferGetBaseAddress(confidenceMap) {
-            let depthFloats = depthMapAddress.assumingMemoryBound(to: Float.self)
-            let confidenceBytes = confidenceMapAddress.assumingMemoryBound(to: UInt8.self)
-
-            // Preserve only high confidence depth values. Low confidence values set to infinity.
-            var depthIdx = 0
-            var confidenceIdx = 0
-            for _ in 0..<height {
-                for _ in 0..<width {
-                    if confidenceBytes[confidenceIdx] < minimumConfidence.rawValue {
-                        depthFloats[depthIdx] = 1e6
-                    }
-                    depthIdx += 1
-                    confidenceIdx += 1
-                }
-                depthIdx += offsetToNextLineDepthMap
-                confidenceIdx += offsetToNextLineConfidenceMap
-            }
-        }
-
-        CVPixelBufferUnlockBaseAddress(confidenceMap, .readOnly)
-        CVPixelBufferUnlockBaseAddress(depthMap, CVPixelBufferLockFlags(rawValue: 0))
+        image = renderOccupancy(occupancy: occupancy)
     }
 
     private func renderOccupancy(occupancy map: COccupancyMap) -> UIImage? {
@@ -296,7 +270,7 @@ class DepthTest: ObservableObject {
         )
         path.fill()
 
-        // Draw a little arc in front of our current heading
+        // Draw a little line in front of our current heading
         let inFront = ARSessionManager.shared.transform.position - 1.0 * ARSessionManager.shared.transform.forward.xzProjected
         let cellInFront = map.positionToFractionalIndices(inFront)
         let posFarInFront = simd_float2((Float(cellInFront.first) + 0.5 ) * Float(pixLength), (Float(cellInFront.second) + 0.5 ) * Float(pixLength))

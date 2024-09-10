@@ -31,6 +31,7 @@
 		CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9342C8EA2D300F15F9F /* Calibration.swift */; };
 		CCA3B9392C8EC40E00F15F9F /* FilterDepthMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */; };
 		CCA3B93C2C8ECB2F00F15F9F /* COccupancyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B93A2C8ECB2F00F15F9F /* COccupancyMap.cpp */; };
+		CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
 		CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */; };
@@ -92,6 +93,7 @@
 		CCA3B9382C8EC40E00F15F9F /* FilterDepthMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FilterDepthMap.hpp; sourceTree = "<group>"; };
 		CCA3B93A2C8ECB2F00F15F9F /* COccupancyMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = COccupancyMap.cpp; sourceTree = "<group>"; };
 		CCA3B93B2C8ECB2F00F15F9F /* COccupancyMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = COccupancyMap.hpp; sourceTree = "<group>"; };
+		CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
 		CCA9A0FD2C62D35E00B0401C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -264,6 +266,7 @@
 				CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */,
 				CC38DE402C7D9E05003EEBDE /* WeakRef.swift */,
 				CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */,
+				CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -418,6 +421,7 @@
 				CCA9A1352C62E1AD00B0401C /* SimpleBinaryCodingError.swift in Sources */,
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
 				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
+				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
 				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
 				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,

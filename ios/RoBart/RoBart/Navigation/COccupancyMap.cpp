@@ -105,13 +105,17 @@ std::pair<float, float> COccupancyMap::positionToFractionalIndices(simd_float3 p
     return std::make_pair(xf, zf);
 }
 
-void COccupancyMap::updateObservationCounts(
+void COccupancyMap::updateCellCounts(
     CVPixelBufferRef depthMap,
     simd_float3x3 intrinsics,
     simd_float2 rgbResolution,
     simd_float4x4 viewMatrix,
-    float floorY,
-    float phoneHeight
+    float minDepth,
+    float maxDepth,
+    float minHeight,
+    float maxHeight,
+    float incomingSampleWeight,
+    float previousWeight
 )
 {
     assert(CVPixelBufferGetPixelFormatType(depthMap) == kCVPixelFormatType_DepthFloat32);
@@ -141,10 +145,11 @@ void COccupancyMap::updateObservationCounts(
     rotateDepthToARKit.columns[2].z = -1.0; // cos(180)
     simd_float4x4 cameraToWorld = simd_mul(viewMatrix, rotateDepthToARKit);
 
-//    std::cout << "C [" << cameraToWorld.columns[0].x << " " << cameraToWorld.columns[0].y << " " << cameraToWorld.columns[0].z << " " << cameraToWorld.columns[0].w << " ]" << std::endl;
-//    std::cout << "  [" << cameraToWorld.columns[1].x << " " << cameraToWorld.columns[1].y << " " << cameraToWorld.columns[1].z << " " <<  cameraToWorld.columns[1].w << " ]" << std::endl;
-//    std::cout << "  [" << cameraToWorld.columns[2].x << " " << cameraToWorld.columns[2].y << " " << cameraToWorld.columns[2].z << " " <<  cameraToWorld.columns[2].w << " ]" << std::endl;
-//    std::cout << "  [" << cameraToWorld.columns[3].x << " " << cameraToWorld.columns[3].y << " " << cameraToWorld.columns[3].z << " " <<  cameraToWorld.columns[3].w << " ]" << std::endl;
+    // Decay existing
+    for (size_t i = 0; i < _cellsWide * _cellsDeep; i++)
+    {
+        _occupancy[i] *= previousWeight;
+    }
 
     // Check each depth point and update observation count
     float *depthValues = reinterpret_cast<float *>(CVPixelBufferGetBaseAddress(depthMap));
@@ -158,7 +163,7 @@ void COccupancyMap::updateObservationCounts(
             
             // Works best with values that are not too close or too far (for some reason these
             // tend to be noisy)
-            if (depth < 1.0f || depth > 3.0f)
+            if (depth < minDepth || depth > maxDepth)
             {
                 continue;
             }
@@ -171,18 +176,17 @@ void COccupancyMap::updateObservationCounts(
             simd_float4 cameraSpacePos = simd_make_float4(cameraSpacePosXY.x, cameraSpacePosXY.y, depth, 1.0f);
             simd_float4 worldPos4 = simd_mul(cameraToWorld, cameraSpacePos);
             simd_float3 worldPos = simd_make_float3(worldPos4);
-            //std::cout << "C worldPos " << worldPos.x << " " << worldPos.y << " " << worldPos.z << std::endl;
 
             // Ignore floor and ceiling; constrain to some horizontal slice
-            if ((worldPos.y < (floorY + 0.25f)) || (worldPos.y > phoneHeight))
+            if (worldPos.y < minHeight || worldPos.y > maxHeight)
             {
                 continue;
             }
 
             // Count LiDAR points found
             auto cell = positionToIndices(worldPos);
-            //std::cout << "C cellX=" << cell.first << " cellZ=" << cell.second << std::endl;
-            _occupancy[gridIndex(cell.first, cell.second)] += 1.0f;
+            size_t idx = gridIndex(cell.first, cell.second);
+            _occupancy[idx] += 1.0f * incomingSampleWeight;
         }
 
         depthValues += offsetToNextLine;
@@ -190,18 +194,21 @@ void COccupancyMap::updateObservationCounts(
 
 //    for (size_t i = 0; i < _cellsWide * _cellsDeep; i++)
 //    {
-//        std::cout << "C - " << i << " = " << _occupancy[i] << std::endl;
+//        if (_occupancy[i] > 0)
+//        {
+//            std::cout << i << ": " << _occupancy[i] << std::endl;
+//        }
 //    }
 
     CVPixelBufferUnlockBaseAddress(depthMap, 0);
 }
 
-void COccupancyMap::updateOccupancyFromObservationCounts(const COccupancyMap &observations, float observationThreshold)
+void COccupancyMap::updateOccupancyFromCounts(const COccupancyMap &counts, float thresholdAmount)
 {
-    assert(observations._cellsWide * observations._cellsDeep == _cellsWide * _cellsDeep);
-    for (size_t i = 0; i < observations._cellsWide * observations._cellsDeep; i++)
+    assert(counts._cellsWide * counts._cellsDeep == _cellsWide * _cellsDeep);
+    for (size_t i = 0; i < counts._cellsWide * counts._cellsDeep; i++)
     {
-        if (observations._occupancy[i] >= observationThreshold)
+        if (counts._occupancy[i] >= thresholdAmount)
         {
             _occupancy[i] = 1.0f;
         }

@@ -52,7 +52,7 @@ class ARSessionManager: ObservableObject {
 
         // Otherwise need to estimate
         if Settings.shared.role == .robot {
-            return -Calibration.phoneHeight
+            return -Calibration.phoneHeightAboveFloor
         } else {
             // Use a sensible default for someone standing and holding a phone
             return -1.5
