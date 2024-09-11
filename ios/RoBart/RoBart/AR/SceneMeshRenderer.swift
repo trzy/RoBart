@@ -28,7 +28,7 @@ class SceneMeshRenderer {
         }
     }
 
-    var renderWorldMeshes = true {
+    var renderWorldMeshes = false {
         didSet {
             _worldMeshRootEntity?.isEnabled = renderWorldMeshes
         }

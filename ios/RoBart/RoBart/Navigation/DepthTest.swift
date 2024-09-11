@@ -86,13 +86,15 @@ class DepthTest: ObservableObject {
     /// THe last frame timestamp at which we updated the occupancy map.
     private var _lastOccupancyUpdateTimestamp: TimeInterval?
 
-    /// Moving average of LiDAR samples found in each cell
+    /// Moving average of LiDAR samples found in each cell.
     private var _hitCounts: OccupancyMap?
 
-    /// Occupancy map (binary occupied/not occupied), integrated from hit count map
+    /// Occupancy map (binary occupied/not occupied), integrated from hit count map or computed
+    /// from height map.
     private var _occupancy: OccupancyMap?
 
-    private var _gpuOccupancy: GPUOccupancyMap?
+    /// Heigh map computed from scene mesh vertices on GPU.
+    private var _heightMap: HeightMap?
 
     init() {
         assert(_targetDepthSampleRateHz >= _targetOccupancyUpdateRateHz)
@@ -147,15 +149,80 @@ class DepthTest: ObservableObject {
     }
 
     func testPath() {
-        guard let occupancy = _occupancy else { return }
-        let from = ARSessionManager.shared.transform.position;
-        let to = occupancy.centerPoint()
-        let path = findPath(occupancy, from, to)
-        var pathCells: [(cellX: Int, cellZ: Int)] = []
-        for cell in path {
-            pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
+        var timer = Util.Stopwatch()
+        timer.start()
+
+        // Lazy instantiate occupancy map on first frame, when we have our initial position
+        if _heightMap == nil {
+            _heightMap = HeightMap(
+                width: 20,
+                depth: 20,
+                cellWidth: 0.5,
+                cellDepth: 0.5,
+                centerPoint: ARSessionManager.shared.transform.position
+            )
+
+            _occupancy = OccupancyMap(
+                _heightMap!.width,
+                _heightMap!.depth,
+                _heightMap!.cellWidth,
+                _heightMap!.cellDepth,
+                _heightMap!.centerPoint
+            )
         }
-        image = renderOccupancy(occupancy: occupancy, path: pathCells)
+        let heightMap = _heightMap!
+
+        // Unbundle all meshes into a linear array of vertices and associate a transform with each
+        var vertices: [Vector3] = []
+        var transforms: [Matrix4x4] = []
+        var transformIdxs: [UInt32] = []
+        let meshes = ARSessionManager.shared.sceneMeshes
+        var transformIdx: UInt32 = 0
+        for mesh in meshes {
+            transforms.append(mesh.transform)
+            for vertex in mesh.vertices {
+                vertices.append(vertex)
+                transformIdxs.append(transformIdx)
+            }
+            transformIdx += 1
+        }
+
+        // Update height map
+        heightMap.reset(to: ARSessionManager.shared.floorY)
+        heightMap.update(vertices: vertices, transforms: transforms, transformIndices: transformIdxs) { [weak self] (commandBuffer: MTLCommandBuffer) in
+            guard let self = self else { return }
+
+            // Update occupancy map from height map
+            var occupancy = _occupancy!
+            if let heights = heightMap.getMapArray() {
+                heights.withUnsafeBufferPointer { ptr in
+                    occupancy.updateOccupancyFromHeightMap(ptr.baseAddress, heights.count, ARSessionManager.shared.floorY + 0.25)
+                }
+            }
+
+            log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
+
+            // Path
+            let from = ARSessionManager.shared.transform.position;
+            let to = occupancy.centerPoint()
+            let path = findPath(occupancy, from, to)
+            var pathCells: [(cellX: Int, cellZ: Int)] = []
+            for cell in path {
+                pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
+            }
+            image = renderOccupancy(occupancy: occupancy, path: pathCells)
+        }
+
+
+//        guard let occupancy = _occupancy else { return }
+//        let from = ARSessionManager.shared.transform.position;
+//        let to = occupancy.centerPoint()
+//        let path = findPath(occupancy, from, to)
+//        var pathCells: [(cellX: Int, cellZ: Int)] = []
+//        for cell in path {
+//            pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
+//        }
+//        image = renderOccupancy(occupancy: occupancy, path: pathCells)
     }
 
     private func onFrame(_ frame: ARFrame) {
@@ -186,7 +253,7 @@ class DepthTest: ObservableObject {
         //updateOccupancyUsingSceneDepth(frame: frame)
 
         // Update occupancy using scene meshes
-        updateOccupancyUsingSceneGeometry(frame: frame)
+        //updateOccupancyUsingSceneGeometry(frame: frame)
     }
 
     private func updateOccupancyUsingSceneGeometry(frame: ARFrame) {
@@ -203,16 +270,24 @@ class DepthTest: ObservableObject {
         timer.start()
 
         // Lazy instantiate occupancy map on first frame, when we have our initial position
-        if _gpuOccupancy == nil {
-            _gpuOccupancy = GPUOccupancyMap(
+        if _heightMap == nil {
+            _heightMap = HeightMap(
                 width: 20,
                 depth: 20,
-                cellWidth: 0.25,
-                cellDepth: 0.25,
-                centerPosition: ARSessionManager.shared.transform.position
+                cellWidth: 0.5,
+                cellDepth: 0.5,
+                centerPoint: ARSessionManager.shared.transform.position
+            )
+
+            _occupancy = OccupancyMap(
+                _heightMap!.width,
+                _heightMap!.depth,
+                _heightMap!.cellWidth,
+                _heightMap!.cellDepth,
+                _heightMap!.centerPoint
             )
         }
-        let occupancy = _gpuOccupancy!
+        let heightMap = _heightMap!
 
         // Unbundle all meshes into a linear array of vertices and associate a transform with each
         var vertices: [Vector3] = []
@@ -229,13 +304,21 @@ class DepthTest: ObservableObject {
             transformIdx += 1
         }
 
-        // Update
-        occupancy.reset()
-        occupancy.update(vertices: vertices, transforms: transforms, transformIndices: transformIdxs)
+        // Update height map
+        heightMap.reset(to: ARSessionManager.shared.floorY)
+        heightMap.update(vertices: vertices, transforms: transforms, transformIndices: transformIdxs)
+
+        // Update occupancy map from height map
+        var occupancy = _occupancy!
+        if let heights = heightMap.getMapArray() {
+            heights.withUnsafeBufferPointer { ptr in
+                occupancy.updateOccupancyFromHeightMap(ptr.baseAddress, heights.count, ARSessionManager.shared.floorY + 0.25)
+            }
+        }
 
         log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
 
-        image = renderOccupancy(occupancy: occupancy)
+        //image = renderOccupancy(occupancy: occupancy)
     }
 
     private func updateOccupancyUsingSceneDepth(frame: ARFrame) {
@@ -404,7 +487,7 @@ class DepthTest: ObservableObject {
         return image
     }
 
-    private func renderOccupancy(occupancy map: GPUOccupancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
+    private func renderOccupancy(occupancy map: HeightMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
         // Get data
         guard let data = map.getMapArray() else { return nil }
 
