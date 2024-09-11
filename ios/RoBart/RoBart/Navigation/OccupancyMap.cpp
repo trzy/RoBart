@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 
 OccupancyMap::OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint)
@@ -210,5 +211,19 @@ void OccupancyMap::updateOccupancyFromCounts(const OccupancyMap &counts, float t
         {
             _occupancy[i] = 1.0f;
         }
+    }
+}
+
+void OccupancyMap::updateOccupancyFromHeightMap(const float *heights, size_t size, float occupancyHeightThreshold)
+{
+    if (size != _cellsWide * _cellsDeep)
+    {
+        std::cout << "[OccupancyMap] Error: Height map dimensions do not match occupancy map" << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < size; i++)
+    {
+        _occupancy[i] = (heights[i] >= occupancyHeightThreshold ? 1.0f : 0.0f);
     }
 }
