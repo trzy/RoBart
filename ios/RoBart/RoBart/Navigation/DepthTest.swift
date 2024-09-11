@@ -100,6 +100,27 @@ class DepthTest: ObservableObject {
     }
 
     func drawPoints() {
+        guard let map = GPUOccupancyMap() else {
+            log("Unable to create GPUOccupancyMap")
+            return
+        }
+
+        guard let texture = map.createTexture(width: 32, height: 32, initialData: Array(repeating: Float(0), count: 32 * 32)) else {
+            log("Unable to create texture")
+            return
+        }
+
+        let vertices = [ Vector3.one, Vector3(x: 1, y: 2, z: 3), Vector3(x: 4, y: 5, z: 6) ]
+
+        map.processVertices(vertices: vertices, texture: texture, transformMatrix: .identity)
+        if let values = map.getTextureData(from: texture) {
+            for i in 0..<values.count {
+                log("\(i) = \(values[i])")
+            }
+        }
+    }
+
+    func drawPoints2() {
         guard let sceneDepth = _sceneDepth,
               let intrinsics = _intrinsics,
               let viewMatrix = _viewMatrix,
