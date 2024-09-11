@@ -214,11 +214,24 @@ class DepthTest: ObservableObject {
         }
         let occupancy = _gpuOccupancy!
 
-        // Update from scene geometry
-        occupancy.reset()
-        for mesh in ARSessionManager.shared.sceneMeshes {
-            occupancy.processVertices(vertices: mesh.vertices, transformMatrix: mesh.transform)
+        // Unbundle all meshes into a linear array of vertices and associate a transform with each
+        var vertices: [Vector3] = []
+        var transforms: [Matrix4x4] = []
+        var transformIdxs: [UInt32] = []
+        let meshes = ARSessionManager.shared.sceneMeshes
+        var transformIdx: UInt32 = 0
+        for mesh in meshes {
+            transforms.append(mesh.transform)
+            for vertex in mesh.vertices {
+                vertices.append(vertex)
+                transformIdxs.append(transformIdx)
+            }
+            transformIdx += 1
         }
+
+        // Update
+        occupancy.reset()
+        occupancy.update(vertices: vertices, transforms: transforms, transformIndices: transformIdxs)
 
         log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
 

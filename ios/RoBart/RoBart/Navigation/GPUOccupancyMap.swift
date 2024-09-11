@@ -92,7 +92,16 @@ class GPUOccupancyMap {
         }
     }
 
-    func processVertices(vertices: [Vector3], transformMatrix: simd_float4x4) {
+    func update(vertices: [Vector3], transforms: [Matrix4x4], transformIndices: [UInt32]) {
+        guard vertices.count > 0, transforms.count > 0, transformIndices.count > 0 else {
+            return
+        }
+
+        guard vertices.count == transformIndices.count else {
+            log("Error: Vertex and transform index arrays must be the same length")
+            return
+        }
+
         guard let commandBuffer = _commandQueue.makeCommandBuffer() else {
             log("Error: Failed to create command buffer")
             return
@@ -105,7 +114,8 @@ class GPUOccupancyMap {
 
         // Set up buffers
         let vertexBuffer = _device.makeBuffer(bytes: vertices, length: MemoryLayout<Vector3>.stride * vertices.count, options: [])
-        let matrixBuffer = _device.makeBuffer(bytes: [transformMatrix], length: MemoryLayout<simd_float4x4>.size, options: [])
+        let matricesBuffer = _device.makeBuffer(bytes: transforms, length: MemoryLayout<simd_float4x4>.stride * transforms.count, options: [])
+        let matrixIndicesBuffer = _device.makeBuffer(bytes: transformIndices, length: MemoryLayout<UInt32>.stride * transformIndices.count, options: [])
         let centerPositionBuffer = _device.makeBuffer(bytes: [_centerPosition], length: MemoryLayout<Vector3>.size, options: [])
         let cellsWideBuffer = _device.makeBuffer(bytes: [UInt32(_texture.width)], length: MemoryLayout<UInt32>.size, options: [])
         let cellsDeepBuffer = _device.makeBuffer(bytes: [UInt32(_texture.height)], length: MemoryLayout<UInt32>.size, options: [])
@@ -115,12 +125,13 @@ class GPUOccupancyMap {
         computeEncoder.setComputePipelineState(_pipelineState)
         computeEncoder.setBuffer(vertexBuffer, offset: 0, index: 0)
         computeEncoder.setTexture(_texture, index: 0)
-        computeEncoder.setBuffer(matrixBuffer, offset: 0, index: 1)
-        computeEncoder.setBuffer(centerPositionBuffer, offset: 0, index: 2)
-        computeEncoder.setBuffer(cellsWideBuffer, offset: 0, index: 3)
-        computeEncoder.setBuffer(cellsDeepBuffer, offset: 0, index: 4)
-        computeEncoder.setBuffer(cellWidthBuffer, offset: 0, index: 5)
-        computeEncoder.setBuffer(cellDepthBuffer, offset: 0, index: 6)
+        computeEncoder.setBuffer(matricesBuffer, offset: 0, index: 1)
+        computeEncoder.setBuffer(matrixIndicesBuffer, offset: 0, index: 2)
+        computeEncoder.setBuffer(centerPositionBuffer, offset: 0, index: 3)
+        computeEncoder.setBuffer(cellsWideBuffer, offset: 0, index: 4)
+        computeEncoder.setBuffer(cellsDeepBuffer, offset: 0, index: 5)
+        computeEncoder.setBuffer(cellWidthBuffer, offset: 0, index: 6)
+        computeEncoder.setBuffer(cellDepthBuffer, offset: 0, index: 7)
 
         let gridSize = MTLSize(width: vertices.count, height: 1, depth: 1)
         let threadGroupSize = MTLSize(width: _pipelineState.threadExecutionWidth, height: 1, depth: 1)

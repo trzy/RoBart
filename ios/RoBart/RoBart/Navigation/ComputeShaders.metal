@@ -11,16 +11,19 @@ using namespace metal;
 kernel void processVerticesAndUpdateHeightmap(
     device float3 *vertices [[buffer(0)]],
     texture2d<float, access::read_write> texture [[texture(0)]],
-    constant float4x4 &transformMatrix [[buffer(1)]],
-    constant float3 &centerPosition [[buffer(2)]],
-    constant uint &cellsWide [[buffer(3)]],
-    constant uint &cellsDeep [[buffer(4)]],
-    constant float &cellWidth [[buffer(5)]],
-    constant float &cellDepth [[buffer(6)]],
+    constant float4x4 *transformMatrices [[buffer(1)]],
+    constant uint *transformIndices [[buffer(2)]],
+    constant float3 &centerPosition [[buffer(3)]],
+    constant uint &cellsWide [[buffer(4)]],
+    constant uint &cellsDeep [[buffer(5)]],
+    constant float &cellWidth [[buffer(6)]],
+    constant float &cellDepth [[buffer(7)]],
     uint vid [[thread_position_in_grid]]
 ) 
 {
     float3 vert = vertices[vid];
+    uint idx = transformIndices[vid];
+    float4x4 transformMatrix = transformMatrices[idx];
 
     // Transform vertex to world space
     float4 transformedPosition = transformMatrix * float4(vert, 1.0);
