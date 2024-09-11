@@ -92,6 +92,8 @@ class DepthTest: ObservableObject {
     /// Occupancy map (binary occupied/not occupied), integrated from hit count map
     private var _occupancy: OccupancyMap?
 
+    private var _gpuOccupancy: GPUOccupancyMap?
+
     init() {
         assert(_targetDepthSampleRateHz >= _targetOccupancyUpdateRateHz)
         _subscription = ARSessionManager.shared.frames.sink { [weak self] (frame: ARFrame) in
@@ -100,27 +102,6 @@ class DepthTest: ObservableObject {
     }
 
     func drawPoints() {
-        guard let map = GPUOccupancyMap() else {
-            log("Unable to create GPUOccupancyMap")
-            return
-        }
-
-        guard let texture = map.createTexture(width: 32, height: 32, initialData: Array(repeating: Float(0), count: 32 * 32)) else {
-            log("Unable to create texture")
-            return
-        }
-
-        let vertices = [ Vector3.one, Vector3(x: 1, y: 2, z: 3), Vector3(x: 4, y: 5, z: 6) ]
-
-        map.processVertices(vertices: vertices, texture: texture, transformMatrix: .identity)
-        if let values = map.getTextureData(from: texture) {
-            for i in 0..<values.count {
-                log("\(i) = \(values[i])")
-            }
-        }
-    }
-
-    func drawPoints2() {
         guard let sceneDepth = _sceneDepth,
               let intrinsics = _intrinsics,
               let viewMatrix = _viewMatrix,
@@ -201,8 +182,56 @@ class DepthTest: ObservableObject {
             }
         }
 
-        //image = sceneDepth.depthMap.uiImageFromDepth()
-        //image = sceneDepth.confidenceMap?.uiImageFromDepth()
+        // Update occupancy using scene depth
+        //updateOccupancyUsingSceneDepth(frame: frame)
+
+        // Update occupancy using scene meshes
+        updateOccupancyUsingSceneGeometry(frame: frame)
+    }
+
+    private func updateOccupancyUsingSceneGeometry(frame: ARFrame) {
+        // Is it time to update the actual occupancy map?
+        guard let lastOccupancyUpdateTimestamp = _lastOccupancyUpdateTimestamp else {
+            _lastOccupancyUpdateTimestamp = frame.timestamp
+            return
+        }
+        let nextOccupancyUpdateTime = lastOccupancyUpdateTimestamp + (1.0 / _targetOccupancyUpdateRateHz)
+        guard frame.timestamp >= nextOccupancyUpdateTime else { return }
+        _lastOccupancyUpdateTimestamp = frame.timestamp
+
+        var timer = Util.Stopwatch()
+        timer.start()
+
+        // Lazy instantiate occupancy map on first frame, when we have our initial position
+        if _gpuOccupancy == nil {
+            _gpuOccupancy = GPUOccupancyMap(
+                width: 20,
+                depth: 20,
+                cellWidth: 0.25,
+                cellDepth: 0.25,
+                centerPosition: ARSessionManager.shared.transform.position
+            )
+        }
+        let occupancy = _gpuOccupancy!
+
+        // Update from scene geometry
+        occupancy.reset()
+        for mesh in ARSessionManager.shared.sceneMeshes {
+            occupancy.processVertices(vertices: mesh.vertices, transformMatrix: mesh.transform)
+        }
+
+        log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
+
+        image = renderOccupancy(occupancy: occupancy)
+    }
+
+    private func updateOccupancyUsingSceneDepth(frame: ARFrame) {
+        guard let sceneDepth = _sceneDepth,
+              let intrinsics = _intrinsics,
+              let viewMatrix = _viewMatrix,
+              let rgbResolution = _rgbResolution else {
+            return
+        }
 
         // Is it time to sample depth and update cell hit counts?
         guard let lastDepthSampleTimestamp = _lastDepthSampleTimestamp else {
@@ -252,9 +281,9 @@ class DepthTest: ObservableObject {
         let previousWeight: Float = 1.0 - newSampleWeight
         hitCounts.updateCellCounts(
             depthMap,
-            _intrinsics!,
-            simd_float2(Float(_rgbResolution!.width), Float(_rgbResolution!.height)),
-            _viewMatrix!,
+            intrinsics,
+            simd_float2(Float(rgbResolution.width), Float(rgbResolution.height)),
+            viewMatrix,
             minDepth,
             maxDepth,
             minHeight,
@@ -284,7 +313,7 @@ class DepthTest: ObservableObject {
         //log("Occupancy update: \(timer.elapsedMilliseconds()) ms")
         //log("Update rate: \(1.0/(frame.timestamp - lastOccupancyUpdateTimestamp)) Hz")
 
-        //image = renderOccupancy(occupancy: occupancy)
+        image = renderOccupancy(occupancy: occupancy)
     }
 
     private func renderOccupancy(occupancy map: OccupancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
@@ -355,6 +384,88 @@ class DepthTest: ObservableObject {
         context.setStrokeColor(UIColor.red.cgColor)
         linePath.stroke()
         
+        // Retrieve the generated image
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return image
+    }
+
+    private func renderOccupancy(occupancy map: GPUOccupancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
+        // Get data
+        guard let data = map.getMapArray() else { return nil }
+
+        // Map dimensions
+        let pixLength = 10
+        let imageSize = CGSize(width: map.cellsWide * pixLength, height: map.cellsDeep * pixLength)
+
+        // Create a graphics context to draw the image
+        UIGraphicsBeginImageContext(imageSize)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+
+        // Loop through the occupancy grid and draw squares
+        for zi in 0..<map.cellsDeep {
+            for xi in 0..<map.cellsWide {
+                let idx = map.linearIndex(cellX: xi, cellZ: zi)
+                let isOccupied = data[idx] > 0
+
+                // Set the color based on occupancy
+                let color: UIColor = isOccupied ? .blue : .white
+                context.setFillColor(color.cgColor)
+
+                // Define the square's rectangle
+                let rect = CGRect(x: xi * pixLength, y: zi * pixLength, width: pixLength, height: pixLength)
+
+                // Draw the rectangle
+                context.fill(rect)
+            }
+        }
+
+        // Draw path, if one given
+        context.setFillColor(UIColor.black.cgColor)
+        for cell in path {
+            // A slightly smaller rect
+            let crumbLength = pixLength / 2
+            let rect = CGRect(
+                x: cell.cellX * pixLength + (pixLength - crumbLength) / 2,
+                y: cell.cellZ * pixLength + (pixLength - crumbLength) / 2,
+                width: crumbLength,
+                height: crumbLength
+            )
+            context.fill(rect)
+        }
+
+        // Draw circle at our current position
+        let robotPosition = ARSessionManager.shared.transform.position
+        let robotForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
+        let ourCell = map.positionToIndices(position: robotPosition)
+        let ourCellX = CGFloat(ourCell.cellX)
+        let ourCellZ = CGFloat(ourCell.cellZ)
+        let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
+        let ourPosZ = (ourCellZ + 0.5) * CGFloat(pixLength)
+        context.setFillColor(UIColor.red.cgColor)
+        let center = CGPoint(x: ourPosX, y: ourPosZ)
+        let path = UIBezierPath(
+            arcCenter: center,
+            radius: 0.5 * CGFloat(pixLength),
+            startAngle: 0,
+            endAngle: 2 * .pi,
+            clockwise: true
+        )
+        path.fill()
+
+        // Draw a little line in front of our current heading
+        let inFront = robotPosition + 1.0 * robotForward
+        let cellInFront = map.positionToFractionalIndices(position: inFront)
+        let posFarInFront = simd_float2((Float(cellInFront.cellX) + 0.5) * Float(pixLength), (Float(cellInFront.cellZ) + 0.5 ) * Float(pixLength))
+        let posCenter = simd_float2(Float(ourPosX), Float(ourPosZ))
+        let forwardDir = simd_normalize(posFarInFront - posCenter)
+        let linePath = UIBezierPath()
+        linePath.move(to: center)
+        linePath.addLine(to: CGPoint(x: center.x + CGFloat(forwardDir.x) * CGFloat(2 * pixLength), y: center.y + CGFloat(forwardDir.y) * CGFloat(2 * pixLength)))
+        context.setStrokeColor(UIColor.red.cgColor)
+        linePath.stroke()
+
         // Retrieve the generated image
         let image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()

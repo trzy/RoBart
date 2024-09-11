@@ -8,9 +8,15 @@
 import ARKit
 import RealityKit
 
+struct SceneMesh {
+    let vertices: [Vector3]
+    let transform: Matrix4x4
+}
+
 /// Renders anchor geometry.
 class SceneMeshRenderer {
     private var _entityByAnchorID: [UUID: Entity] = [:]
+    private var _verticesByAnchorID: [UUID: [Vector3]] = [:]
     private var _planeRootEntity: Entity?
     private var _worldMeshRootEntity: Entity?
     private let _planeColor = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 1, alpha: 0.6))
@@ -22,7 +28,7 @@ class SceneMeshRenderer {
         }
     }
 
-    var renderWorldMeshes = false {
+    var renderWorldMeshes = true {
         didSet {
             _worldMeshRootEntity?.isEnabled = renderWorldMeshes
         }
@@ -44,9 +50,10 @@ class SceneMeshRenderer {
             break
         case let meshAnchor as ARMeshAnchor:
 #if !targetEnvironment(simulator)
-            guard let mesh = tryCreateWorldMesh(from: meshAnchor) else { break }
+            guard let (mesh, vertices) = tryCreateWorldMesh(from: meshAnchor) else { break }
             entity = createUnanchoredEntity(anchoredTo: anchor, with: mesh, color: _worldMeshColor)
             worldMeshRootEntity.addChild(entity!)
+            _verticesByAnchorID[anchor.identifier] = vertices
 #endif
             break
         default:
@@ -73,9 +80,10 @@ class SceneMeshRenderer {
             guard let mesh = tryCreatePlaneMesh(from: planeAnchor) else { break }
             modelEntity.model?.mesh = mesh
         case let meshAnchor as ARMeshAnchor:
-            guard let mesh = tryCreateWorldMesh(from: meshAnchor) else { break }
+            guard let (mesh, vertices) = tryCreateWorldMesh(from: meshAnchor) else { break }
             modelEntity.model?.mesh = mesh
             entity.transform.matrix = anchor.transform  // because entity is not a real AnchorEntity
+            _verticesByAnchorID[anchor.identifier] = vertices
         default:
             break
         }
@@ -91,11 +99,18 @@ class SceneMeshRenderer {
         if let entity = _entityByAnchorID.removeValue(forKey: anchor.identifier) {
             entity.removeFromParent()
         }
+        _verticesByAnchorID.removeValue(forKey: anchor.identifier)
     }
 
     func removeMeshes(for anchors: [ARAnchor]) {
         for anchor in anchors {
             removeMesh(for: anchor)
+        }
+    }
+
+    func getMeshes() -> [SceneMesh] {
+        return _verticesByAnchorID.map { (identifier: UUID, vertices: [Vector3]) -> SceneMesh in
+            SceneMesh(vertices: vertices, transform: _entityByAnchorID[identifier]!.transform.matrix)
         }
     }
 
@@ -106,7 +121,7 @@ class SceneMeshRenderer {
         return try? MeshResource.generate(from: [ descriptor ])
     }
 
-    private func tryCreateWorldMesh(from anchor: ARMeshAnchor) -> MeshResource? {
+    private func tryCreateWorldMesh(from anchor: ARMeshAnchor) -> (MeshResource, [Vector3])? {
         // Read out triangles
         assert(anchor.geometry.faces.primitiveType == .triangle)
         let numFaces = anchor.geometry.faces.count
@@ -140,7 +155,10 @@ class SceneMeshRenderer {
         descriptor.positions = MeshBuffer(vertices)
         descriptor.primitives = .triangles(triangles)
 
-        return try? MeshResource.generate(from: [descriptor])
+        if let mesh = try? MeshResource.generate(from: [descriptor]) {
+            return (mesh, vertices)
+        }
+        return nil
     }
 
 #if !targetEnvironment(simulator)   // fails on simulator because one of the classes used here is apparently not present in simulator builds
