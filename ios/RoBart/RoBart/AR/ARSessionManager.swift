@@ -59,6 +59,10 @@ class ARSessionManager: ObservableObject {
         }
     }
 
+    var sceneMeshes: [SceneMesh] {
+        return _sceneMeshRenderer.getMeshes()
+    }
+
     var velocity: Vector3 {
         return _motionEstimator.velocity
     }
@@ -116,9 +120,9 @@ class ARSessionManager: ObservableObject {
         if Settings.shared.role == .robot && ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) {
             config.frameSemantics.insert(.sceneDepth)
         }
-//        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-//            config.sceneReconstruction = .mesh
-//        }
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            config.sceneReconstruction = .mesh
+        }
         arView.session.run(config, options: .removeExistingAnchors)
 
         log("Started session with collaboration \(collaborative ? "enabled" : "disabled") and scene depth \(config.frameSemantics.contains(.sceneDepth) ? "enabled" : "disabled")")
