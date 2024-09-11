@@ -10,6 +10,6 @@
 
 #include <CoreVideo/CoreVideo.h>
 
-extern void filterDepthMap(CVPixelBufferRef depth_map, CVPixelBufferRef confidence_map, uint8_t minimum_confidence);
+extern void filterDepthMap(CVPixelBufferRef depthMap, CVPixelBufferRef confidenceMap, uint8_t minimumConfidence);
 
 #endif /* FilterDepthMap_hpp */

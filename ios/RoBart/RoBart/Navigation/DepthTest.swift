@@ -87,10 +87,10 @@ class DepthTest: ObservableObject {
     private var _lastOccupancyUpdateTimestamp: TimeInterval?
 
     /// Moving average of LiDAR samples found in each cell
-    private var _hitCounts: COccupancyMap?
+    private var _hitCounts: OccupancyMap?
 
     /// Occupancy map (binary occupied/not occupied), integrated from hit count map
-    private var _occupancy: COccupancyMap?
+    private var _occupancy: OccupancyMap?
 
     init() {
         assert(_targetDepthSampleRateHz >= _targetOccupancyUpdateRateHz)
@@ -144,6 +144,18 @@ class DepthTest: ObservableObject {
         }
     }
 
+    func testPath() {
+        guard let occupancy = _occupancy else { return }
+        let from = ARSessionManager.shared.transform.position;
+        let to = occupancy.centerPoint()
+        let path = findPath(occupancy, from, to)
+        var pathCells: [(cellX: Int, cellZ: Int)] = []
+        for cell in path {
+            pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
+        }
+        image = renderOccupancy(occupancy: occupancy, path: pathCells)
+    }
+
     private func onFrame(_ frame: ARFrame) {
         guard let sceneDepth = frame.sceneDepth else { return }
         _sceneDepth = sceneDepth
@@ -185,14 +197,14 @@ class DepthTest: ObservableObject {
         var timer = Util.Stopwatch()
         timer.start()
         if _occupancy == nil {
-            _hitCounts = COccupancyMap(
+            _hitCounts = OccupancyMap(
                 20,     // width (meters)
                 20,     // depth (meters)
                 0.5,    // cell width (meters)
                 0.5,    // cell depth (meters)
                 frame.camera.transform.position.xzProjected // world center point
             )
-            _occupancy = COccupancyMap(
+            _occupancy = OccupancyMap(
                 _hitCounts!.width(),
                 _hitCounts!.depth(),
                 _hitCounts!.cellWidth(),
@@ -230,8 +242,8 @@ class DepthTest: ObservableObject {
             previousWeight
         )
 
-        log ("Depth sample update: \(timer.elapsedMilliseconds()) ms")
-        log("Sample rate: \(1.0/sampleDeltaTime) Hz")
+        //log("Depth sample update: \(timer.elapsedMilliseconds()) ms")
+        //log("Sample rate: \(1.0/sampleDeltaTime) Hz")
 
         // Is it time to update the actual occupancy map?
         guard let lastOccupancyUpdateTimestamp = _lastOccupancyUpdateTimestamp else {
@@ -248,13 +260,13 @@ class DepthTest: ObservableObject {
             10  // count threshold
         )
 
-        log("Occupancy update: \(timer.elapsedMilliseconds()) ms")
-        log("Update rate: \(1.0/(frame.timestamp - lastOccupancyUpdateTimestamp)) Hz")
+        //log("Occupancy update: \(timer.elapsedMilliseconds()) ms")
+        //log("Update rate: \(1.0/(frame.timestamp - lastOccupancyUpdateTimestamp)) Hz")
 
-        image = renderOccupancy(occupancy: occupancy)
+        //image = renderOccupancy(occupancy: occupancy)
     }
 
-    private func renderOccupancy(occupancy map: COccupancyMap) -> UIImage? {
+    private func renderOccupancy(occupancy map: OccupancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
         let pixLength = 10
         let imageSize = CGSize(width: map.cellsWide() * pixLength, height: map.cellsDeep() * pixLength)
 
@@ -277,6 +289,20 @@ class DepthTest: ObservableObject {
                 // Draw the rectangle
                 context.fill(rect)
             }
+        }
+
+        // Draw path, if one given
+        context.setFillColor(UIColor.black.cgColor)
+        for cell in path {
+            // A slightly smaller rect
+            let crumbLength = pixLength / 2
+            let rect = CGRect(
+                x: cell.cellX * pixLength + (pixLength - crumbLength) / 2,
+                y: cell.cellZ * pixLength + (pixLength - crumbLength) / 2,
+                width: crumbLength,
+                height: crumbLength
+            )
+            context.fill(rect)
         }
 
         // Draw circle at our current position

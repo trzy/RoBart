@@ -5,13 +5,13 @@
 //  Created by Bart Trzynadlowski on 9/8/24.
 //
 
-#include "COccupancyMap.hpp"
+#include "OccupancyMap.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <memory>
 
-COccupancyMap::COccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint)
+OccupancyMap::OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint)
 {
     assert(cellWidth <= width);
     assert(cellDepth <= depth);
@@ -35,14 +35,14 @@ COccupancyMap::COccupancyMap(float width, float depth, float cellWidth, float ce
         float x = centerPoint.x - cellWidth * float(center.first);  // centerPoint.x - cellWidth * center.cellX
         for (size_t xi = 0; xi < _cellsWide; xi++)
         {
-            _worldPosition[gridIndex(xi, zi)] = simd_make_float3(x, 0, z);
+            _worldPosition[linearIndex(xi, zi)] = simd_make_float3(x, 0, z);
             x += cellWidth;
         }
         z += cellDepth;
     }
 }
 
-COccupancyMap::COccupancyMap(const COccupancyMap &rhs)
+OccupancyMap::OccupancyMap(const OccupancyMap &rhs)
     : _width(rhs._width),
       _depth(rhs._depth),
       _cellWidth(rhs._cellWidth),
@@ -55,20 +55,20 @@ COccupancyMap::COccupancyMap(const COccupancyMap &rhs)
 {
 }
 
-inline std::pair<size_t, size_t> COccupancyMap::centerCell() const
+std::pair<size_t, size_t> OccupancyMap::centerCell() const
 {
     size_t cellX = size_t(round(float(_cellsWide) * 0.5));
     size_t cellZ = size_t(round(float(_cellsDeep) * 0.5));
     return std::make_pair(cellX, cellZ);
 }
 
-inline size_t COccupancyMap::centerIndex() const
+size_t OccupancyMap::centerIndex() const
 {
     auto center = centerCell();
-    return gridIndex(center.first, center.second);
+    return linearIndex(center.first, center.second);
 }
 
-inline std::pair<size_t, size_t> COccupancyMap::positionToIndices(simd_float3 position) const
+std::pair<size_t, size_t> OccupancyMap::positionToIndices(simd_float3 position) const
 {
     auto center = centerCell();
     size_t centerCellX = center.first;
@@ -84,7 +84,7 @@ inline std::pair<size_t, size_t> COccupancyMap::positionToIndices(simd_float3 po
     return std::make_pair(uxi, uzi);
 }
 
-std::pair<float, float> COccupancyMap::positionToFractionalIndices(simd_float3 position) const
+std::pair<float, float> OccupancyMap::positionToFractionalIndices(simd_float3 position) const
 {
     auto center = centerCell();
     float centerCellX = center.first;
@@ -103,7 +103,7 @@ std::pair<float, float> COccupancyMap::positionToFractionalIndices(simd_float3 p
     return std::make_pair(xf, zf);
 }
 
-void COccupancyMap::updateCellCounts(
+void OccupancyMap::updateCellCounts(
     CVPixelBufferRef depthMap,
     simd_float3x3 intrinsics,
     simd_float2 rgbResolution,
@@ -183,7 +183,7 @@ void COccupancyMap::updateCellCounts(
 
             // Count LiDAR points found
             auto cell = positionToIndices(worldPos);
-            size_t idx = gridIndex(cell.first, cell.second);
+            size_t idx = linearIndex(cell.first, cell.second);
             _occupancy[idx] += 1.0f * incomingSampleWeight;
         }
 
@@ -201,7 +201,7 @@ void COccupancyMap::updateCellCounts(
     CVPixelBufferUnlockBaseAddress(depthMap, 0);
 }
 
-void COccupancyMap::updateOccupancyFromCounts(const COccupancyMap &counts, float thresholdAmount)
+void OccupancyMap::updateOccupancyFromCounts(const OccupancyMap &counts, float thresholdAmount)
 {
     assert(counts._cellsWide * counts._cellsDeep == _cellsWide * _cellsDeep);
     for (size_t i = 0; i < counts._cellsWide * counts._cellsDeep; i++)

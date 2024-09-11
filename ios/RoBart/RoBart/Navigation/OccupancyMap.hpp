@@ -15,14 +15,14 @@
 #include <memory>
 #include <tuple>
 
-class COccupancyMap
+class OccupancyMap
 {
 public:
-    COccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint);
+    OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint);
 
     /// Copies the object and uses the same underlying memory as the right-hand side. That is,
     /// modifications to the new occupancy map will also affect the original object.
-    COccupancyMap(const COccupancyMap &rhs);
+    OccupancyMap(const OccupancyMap &rhs);
 
     void clear();
 
@@ -39,15 +39,20 @@ public:
         float previousWeight
     );
     
-    void updateOccupancyFromCounts(const COccupancyMap &counts, float thresholdAmount);
+    void updateOccupancyFromCounts(const OccupancyMap &counts, float thresholdAmount);
 
-    inline std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
+    std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
 
     std::pair<float, float> positionToFractionalIndices(simd_float3 position) const;
 
     inline float at(size_t cellX, size_t cellZ) const
     {
-        return _occupancy[gridIndex(cellX, cellZ)];
+        return _occupancy[linearIndex(cellX, cellZ)];
+    }
+
+    inline float at(std::pair<size_t, size_t> cell) const
+    {
+        return at(cell.first, cell.second);
     }
 
     inline float width() const
@@ -85,14 +90,33 @@ public:
         return _centerPoint;
     }
 
+    struct CellHash
+    {
+        std::size_t operator()(const std::pair<std::size_t, std::size_t> &key) const
+        {
+            static const std::size_t prime1 = 2654435761ULL;
+            static const std::size_t prime2 = 2246822519ULL;
+
+            // Hash of first element
+            std::size_t hash1 = key.first * prime1;
+
+            // Rotate hash1 and XOR with hash of second element
+            std::size_t hash2 = (hash1 << 31) | (hash1 >> (sizeof(std::size_t) * 8 - 31));
+            hash2 ^= key.second * prime2;
+
+            // Final mix
+            return hash1 ^ hash2;
+        }
+    };
+
 private:
-    inline size_t gridIndex(size_t cellX, size_t cellZ) const
+    inline size_t linearIndex(size_t cellX, size_t cellZ) const
     {
         return cellZ * _cellsDeep + cellX;
     }
 
-    inline std::pair<size_t, size_t> centerCell() const;
-    inline size_t centerIndex() const;
+    std::pair<size_t, size_t> centerCell() const;
+    size_t centerIndex() const;
 
     float _width;
     float _depth;
