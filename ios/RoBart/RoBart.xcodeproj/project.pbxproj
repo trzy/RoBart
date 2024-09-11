@@ -23,14 +23,14 @@
 		CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB72C76F577003BFA0B /* Client.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
 		CC7C1CBF2C7A66BC003BFA0B /* PID.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBE2C7A66BC003BFA0B /* PID.swift */; };
+		CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC8C39592C90F4380040559F /* FindPath.cpp */; };
 		CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */; };
 		CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */; };
 		CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */; };
 		CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */; };
-		CCA3B9332C8D26ED00F15F9F /* OccupancyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */; };
 		CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9342C8EA2D300F15F9F /* Calibration.swift */; };
 		CCA3B9392C8EC40E00F15F9F /* FilterDepthMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */; };
-		CCA3B93C2C8ECB2F00F15F9F /* COccupancyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B93A2C8ECB2F00F15F9F /* COccupancyMap.cpp */; };
+		CCA3B93C2C8ECB2F00F15F9F /* OccupancyMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B93A2C8ECB2F00F15F9F /* OccupancyMap.cpp */; };
 		CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */; };
 		CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */; };
 		CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A0FD2C62D35E00B0401C /* ContentView.swift */; };
@@ -82,17 +82,18 @@
 		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamMulticaster.swift; sourceTree = "<group>"; };
 		CC7C1CBE2C7A66BC003BFA0B /* PID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PID.swift; sourceTree = "<group>"; };
+		CC8C39592C90F4380040559F /* FindPath.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FindPath.cpp; sourceTree = "<group>"; };
+		CC8C395A2C90F4380040559F /* FindPath.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FindPath.hpp; sourceTree = "<group>"; };
 		CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthTest.swift; sourceTree = "<group>"; };
 		CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+Extensions.swift"; sourceTree = "<group>"; };
 		CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float3x3+Extensions.swift"; sourceTree = "<group>"; };
 		CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float4+Extensions.swift"; sourceTree = "<group>"; };
-		CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccupancyMap.swift; sourceTree = "<group>"; };
 		CCA3B9342C8EA2D300F15F9F /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
 		CCA3B9362C8EC40E00F15F9F /* RoBart-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RoBart-Bridging-Header.h"; sourceTree = "<group>"; };
 		CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FilterDepthMap.cpp; sourceTree = "<group>"; };
 		CCA3B9382C8EC40E00F15F9F /* FilterDepthMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = FilterDepthMap.hpp; sourceTree = "<group>"; };
-		CCA3B93A2C8ECB2F00F15F9F /* COccupancyMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = COccupancyMap.cpp; sourceTree = "<group>"; };
-		CCA3B93B2C8ECB2F00F15F9F /* COccupancyMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = COccupancyMap.hpp; sourceTree = "<group>"; };
+		CCA3B93A2C8ECB2F00F15F9F /* OccupancyMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OccupancyMap.cpp; sourceTree = "<group>"; };
+		CCA3B93B2C8ECB2F00F15F9F /* OccupancyMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = OccupancyMap.hpp; sourceTree = "<group>"; };
 		CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
 		CCA9A0F82C62D35E00B0401C /* RoBart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoBart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartApp.swift; sourceTree = "<group>"; };
@@ -183,11 +184,12 @@
 			isa = PBXGroup;
 			children = (
 				CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */,
-				CCA3B9322C8D26ED00F15F9F /* OccupancyMap.swift */,
 				CCA3B9372C8EC40E00F15F9F /* FilterDepthMap.cpp */,
 				CCA3B9382C8EC40E00F15F9F /* FilterDepthMap.hpp */,
-				CCA3B93A2C8ECB2F00F15F9F /* COccupancyMap.cpp */,
-				CCA3B93B2C8ECB2F00F15F9F /* COccupancyMap.hpp */,
+				CCA3B93A2C8ECB2F00F15F9F /* OccupancyMap.cpp */,
+				CCA3B93B2C8ECB2F00F15F9F /* OccupancyMap.hpp */,
+				CC8C39592C90F4380040559F /* FindPath.cpp */,
+				CC8C395A2C90F4380040559F /* FindPath.hpp */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -430,7 +432,6 @@
 				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
 				CC7C1CB82C76F577003BFA0B /* Client.swift in Sources */,
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
-				CCA3B9332C8D26ED00F15F9F /* OccupancyMap.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
@@ -443,11 +444,12 @@
 				CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */,
 				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
-				CCA3B93C2C8ECB2F00F15F9F /* COccupancyMap.cpp in Sources */,
+				CCA3B93C2C8ECB2F00F15F9F /* OccupancyMap.cpp in Sources */,
 				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
+				CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
 				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,

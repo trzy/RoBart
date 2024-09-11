@@ -3,4 +3,5 @@
 //
 
 #include "FilterDepthMap.hpp"
-#include "COccupancyMap.hpp"
+#include "OccupancyMap.hpp"
+#include "FindPath.hpp"

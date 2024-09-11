@@ -34,6 +34,8 @@ struct ContentView: View {
                                 .padding()
                             Button("Draw", action: { _depthTest.drawPoints() })
                                 .padding()
+                            Button("Path", action: { _depthTest.testPath() })
+                                .padding()
                             Spacer()
                         }
                         .buttonStyle(.bordered)
