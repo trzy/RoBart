@@ -227,3 +227,13 @@ void OccupancyMap::updateOccupancyFromHeightMap(const float *heights, size_t siz
         _occupancy[i] = (heights[i] >= occupancyHeightThreshold ? 1.0f : 0.0f);
     }
 }
+
+void OccupancyMap::updateOccupancyFromArray(const float *occupied, size_t size)
+{
+    if (size != _cellsWide * _cellsDeep)
+    {
+        std::cout << "[OccupancyMap] Error: Array dimensions do not match occupancy map" << std::endl;
+        return;
+    }
+    memcpy(_occupancy.get(), occupied, size * sizeof(float));
+}

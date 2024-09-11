@@ -43,6 +43,8 @@ public:
 
     void updateOccupancyFromHeightMap(const float *heights, size_t size, float occupancyHeightThreshold);
 
+    void updateOccupancyFromArray(const float *occupied, size_t size);
+
     std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
 
     std::pair<float, float> positionToFractionalIndices(simd_float3 position) const;
