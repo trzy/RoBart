@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-kernel void processVerticesAndUpdateHeightmap(
+kernel void processVerticesAndUpdateOccupancy(
     device float3 *vertices [[buffer(0)]],
     texture2d<float, access::read_write> texture [[texture(0)]],
     constant float4x4 *transformMatrices [[buffer(1)]],
@@ -18,6 +18,8 @@ kernel void processVerticesAndUpdateHeightmap(
     constant uint &cellsDeep [[buffer(5)]],
     constant float &cellWidth [[buffer(6)]],
     constant float &cellDepth [[buffer(7)]],
+    constant float &minOccupiedHeight [[buffer(8)]],
+    constant float &maxOccupiedHeight [[buffer(9)]],
     uint vid [[thread_position_in_grid]]
 ) 
 {
@@ -32,6 +34,12 @@ kernel void processVerticesAndUpdateHeightmap(
     float2 point = float2(transformedPosition.x, transformedPosition.z);
     float height = transformedPosition.y;
 
+    // Update occupancy if Y value is within the correct height range
+    if (height < minOccupiedHeight || height > maxOccupiedHeight)
+    {
+        return;
+    }
+
     // Compute center cell of texture
     uint centerCellX = uint(round(cellsWide * 0.5));
     uint centerCellZ = uint(round(cellsDeep * 0.5));
@@ -44,12 +52,9 @@ kernel void processVerticesAndUpdateHeightmap(
     coord = clamp(coord, int2(0, 0), int2(cellsWide - 1, cellsDeep - 1));
     uint2 texCoord = uint2(coord);
 
-    // Read current height
-    float currentHeight = texture.read(texCoord).r;
-
-    // Update height if new height is greater
-    if (height > currentHeight)
-    {
-        texture.write(float4(height, 0, 0, 0), texCoord);
-    }
+    // Mark cell as occupied. Because of a race condition between the multiple threads accessing
+    // this texture, we can only write the same value. Multiple vertices in different threads may
+    // map to the same texel. Therefore, we cannot read-modify-write (e.g., to construct a height
+    // map).
+    texture.write(float4(1.0, 0, 0, 0), texCoord);
 }
