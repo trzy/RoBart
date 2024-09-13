@@ -115,14 +115,10 @@ fileprivate func updatePath(to goal: Vector3, from startPosition: Vector3, occup
     timer.start()
     let from = ARSessionManager.shared.transform.position;
     let to = goal
-    let path = findPath(occupancy, from, to)
-    var pathCells: [(cellX: Int, cellZ: Int)] = []
-    for cell in path {
-        pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
-    }
+    let pathCells = findPath(occupancy, from, to)
 
     // Convert path to positions
-    let pathPositions = pathCells.map { occupancy.indicesToPosition($0.cellX, $0.cellZ) }
+    let pathPositions = pathCells.map { occupancy.cellToPosition($0) }
     log("Path computed: \(timer.elapsedMilliseconds()) ms")
 
     // Debug: send to handheld phones for visualization

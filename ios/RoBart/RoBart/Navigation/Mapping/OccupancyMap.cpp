@@ -30,10 +30,10 @@ OccupancyMap::OccupancyMap(float width, float depth, float cellWidth, float cell
     // World position at center point of each cell
     _worldPosition = std::make_shared<simd_float3[]>(_cellsWide * _cellsDeep);
     auto center = centerCell();
-    float z = centerPoint.z - cellDepth * float(center.second);     // centerPoint.z - cellDepth * center.cellZ
+    float z = centerPoint.z - cellDepth * float(center.cellZ);
     for (size_t zi = 0; zi < _cellsDeep; zi++)
     {
-        float x = centerPoint.x - cellWidth * float(center.first);  // centerPoint.x - cellWidth * center.cellX
+        float x = centerPoint.x - cellWidth * float(center.cellX);
         for (size_t xi = 0; xi < _cellsWide; xi++)
         {
             _worldPosition[linearIndex(xi, zi)] = simd_make_float3(x, 0, z);
@@ -56,52 +56,45 @@ OccupancyMap::OccupancyMap(const OccupancyMap &rhs)
 {
 }
 
-std::pair<size_t, size_t> OccupancyMap::centerCell() const
+OccupancyMap::CellIndices OccupancyMap::centerCell() const
 {
     size_t cellX = size_t(round(float(_cellsWide) * 0.5));
     size_t cellZ = size_t(round(float(_cellsDeep) * 0.5));
-    return std::make_pair(cellX, cellZ);
+    return CellIndices(cellX, cellZ);
 }
 
 size_t OccupancyMap::centerIndex() const
 {
-    auto center = centerCell();
-    return linearIndex(center.first, center.second);
+    return linearIndex(centerCell());
 }
 
-std::pair<size_t, size_t> OccupancyMap::positionToIndices(simd_float3 position) const
+OccupancyMap::CellIndices OccupancyMap::positionToCell(simd_float3 position) const
 {
     auto center = centerCell();
-    size_t centerCellX = center.first;
-    size_t centerCellZ = center.second;
-
     simd_float3 gridCenterPoint = _worldPosition[centerIndex()];
 
-    long xi = long(floor((position.x - gridCenterPoint.x) / _cellWidth + 0.5)) + centerCellX;
-    long zi = long(floor((position.z - gridCenterPoint.z) / _cellDepth + 0.5)) + centerCellZ;
+    long xi = long(floor((position.x - gridCenterPoint.x) / _cellWidth + 0.5)) + center.cellX;
+    long zi = long(floor((position.z - gridCenterPoint.z) / _cellDepth + 0.5)) + center.cellZ;
     size_t uxi = std::min(size_t(std::max(long(0), xi)), _cellsWide - 1);
     size_t uzi = std::min(size_t(std::max(long(0), zi)), _cellsDeep - 1);
 
-    return std::make_pair(uxi, uzi);
+    return CellIndices(uxi, uzi);
 }
 
-std::pair<float, float> OccupancyMap::positionToFractionalIndices(simd_float3 position) const
+OccupancyMap::FractionalCellIndices OccupancyMap::positionToFractionalIndices(simd_float3 position) const
 {
     auto center = centerCell();
-    float centerCellX = center.first;
-    float centerCellZ = center.second;
-
     simd_float3 gridCenterPoint = _worldPosition[centerIndex()];
 
-    float xf = ((position.x - gridCenterPoint.x) / _cellWidth) + centerCellX;
-    float zf = ((position.z - gridCenterPoint.z) / _cellDepth) + centerCellZ;
+    float xf = ((position.x - gridCenterPoint.x) / _cellWidth) + center.cellX;
+    float zf = ((position.z - gridCenterPoint.z) / _cellDepth) + center.cellZ;
 
     // Clamp to edges. Note that the only difference between this function and positionToIndices()
     // is that the latter adds 0.5 and then floors. Therefore, we know the limits are: [-0.5, s_numCells - 1 + 0.5).
     xf = std::min(std::max(-0.5f, xf), float(_cellsWide - 1) + 0.5f);
     zf = std::min(std::max(-0.5f, zf), float(_cellsDeep - 1) + 0.5f);
 
-    return std::make_pair(xf, zf);
+    return FractionalCellIndices(xf, zf);
 }
 
 void OccupancyMap::updateCellCounts(
@@ -183,8 +176,8 @@ void OccupancyMap::updateCellCounts(
             }
 
             // Count LiDAR points found
-            auto cell = positionToIndices(worldPos);
-            size_t idx = linearIndex(cell.first, cell.second);
+            auto cell = positionToCell(worldPos);
+            size_t idx = linearIndex(cell);
             _occupancy[idx] += 1.0f * incomingSampleWeight;
         }
 

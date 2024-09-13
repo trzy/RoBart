@@ -14,11 +14,52 @@
 #include <simd/simd.h>
 #include <algorithm>
 #include <memory>
-#include <tuple>
 
 class OccupancyMap
 {
 public:
+    /// Integral X and Z indices into the 2D occupancy map. Used for indexing into the map.
+    struct CellIndices
+    {
+        size_t cellX;
+        size_t cellZ;
+
+        CellIndices()
+        {
+            cellX = 0;
+            cellZ = 0;
+        }
+
+        CellIndices(size_t cellX, size_t cellZ)
+        {
+            this->cellX = cellX;
+            this->cellZ = cellZ;
+        }
+
+        bool operator==(const CellIndices &rhs) const
+        {
+            return cellX == rhs.cellX && cellZ == rhs.cellZ;
+        }
+    };
+
+    /// Fractional X and Z indices into the 2D occupancy map (not floored to integral values). Useful for visualization, pathing, etc.
+    struct FractionalCellIndices
+    {
+        float cellX;
+        float cellZ;
+
+        FractionalCellIndices(float cellX, float cellZ)
+        {
+            this->cellX = cellX;
+            this->cellZ = cellZ;
+        }
+
+        bool operator==(const FractionalCellIndices &rhs) const
+        {
+            return cellX == rhs.cellX && cellZ == rhs.cellZ;
+        }
+    };
+
     OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint);
 
     /// Copies the object and uses the same underlying memory as the right-hand side. That is,
@@ -46,23 +87,23 @@ public:
 
     void updateOccupancyFromArray(const float *occupied, size_t size);
 
-    std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
+    CellIndices positionToCell(simd_float3 position) const;
 
-    std::pair<float, float> positionToFractionalIndices(simd_float3 position) const;
+    FractionalCellIndices positionToFractionalIndices(simd_float3 position) const;
 
-    simd_float3 indicesToPosition(size_t cellX, size_t cellZ) const
+    simd_float3 cellToPosition(CellIndices cell) const
     {
-        return _worldPosition[linearIndex(cellX, cellZ)];
+        return _worldPosition[linearIndex(cell)];
+    }
+
+    inline float at(CellIndices cell) const
+    {
+        return _occupancy[linearIndex(cell)];
     }
 
     inline float at(size_t cellX, size_t cellZ) const
     {
         return _occupancy[linearIndex(cellX, cellZ)];
-    }
-
-    inline float at(std::pair<size_t, size_t> cell) const
-    {
-        return at(cell.first, cell.second);
     }
 
     inline float width() const
@@ -102,17 +143,17 @@ public:
 
     struct CellHash
     {
-        std::size_t operator()(const std::pair<std::size_t, std::size_t> &key) const
+        std::size_t operator()(const CellIndices &key) const
         {
             static const std::size_t prime1 = 2654435761ULL;
             static const std::size_t prime2 = 2246822519ULL;
 
             // Hash of first element
-            std::size_t hash1 = key.first * prime1;
+            std::size_t hash1 = key.cellX * prime1;
 
             // Rotate hash1 and XOR with hash of second element
             std::size_t hash2 = (hash1 << 31) | (hash1 >> (sizeof(std::size_t) * 8 - 31));
-            hash2 ^= key.second * prime2;
+            hash2 ^= key.cellZ * prime2;
 
             // Final mix
             return hash1 ^ hash2;
@@ -120,6 +161,11 @@ public:
     };
 
 private:
+    inline size_t linearIndex(CellIndices cell) const
+    {
+        return linearIndex(cell.cellX, cell.cellZ);
+    }
+
     inline size_t linearIndex(size_t cellX, size_t cellZ) const
     {
         cellX = std::min(cellX, _cellsWide - 1);
@@ -127,7 +173,7 @@ private:
         return cellZ * _cellsDeep + cellX;
     }
 
-    std::pair<size_t, size_t> centerCell() const;
+    CellIndices centerCell() const;
     size_t centerIndex() const;
 
     float _width;
