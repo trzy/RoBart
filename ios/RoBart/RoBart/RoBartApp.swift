@@ -14,9 +14,12 @@ struct RoBartApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(client: _client)
                 .task {
                     await HoverboardController.shared.runTask()
+                }
+                .task {
+                    await NavigationController.shared.runTask()
                 }
         }
     }

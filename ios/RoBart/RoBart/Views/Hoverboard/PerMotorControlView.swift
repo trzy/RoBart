@@ -178,7 +178,13 @@ struct PerMotorControlView: View {
     }
 
     private func sendToMotors() {
-        HoverboardController.shared.send(.drive(leftThrottle: _leftThrottle, rightThrottle: _rightThrottle))
+        if Settings.shared.role == .robot {
+            // We are the robot
+            HoverboardController.shared.send(.drive(leftThrottle: _leftThrottle, rightThrottle: _rightThrottle))
+        } else {
+            // Send to the robot
+            PeerManager.shared.send(PeerMotorMessage(leftMotorThrottle: _leftThrottle, rightMotorThrottle: _rightThrottle), toPeersWithRole: .robot, reliable: true)
+        }
     }
 }
 

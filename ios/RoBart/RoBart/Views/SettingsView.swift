@@ -10,6 +10,11 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var _settings = Settings.shared
 
+    private let _isRobot = Binding<Bool>(
+        get: { Settings.shared.role == .robot },
+        set: { (value: Bool) in }
+    )
+
     var body: some View {
         NavigationView {
             VStack {
@@ -22,8 +27,15 @@ struct SettingsView: View {
                     List {
                         Picker("Role", selection: $_settings.role) {
                             Text("Robot").tag(Role.robot)
-                            Text("Phone").tag(Role.phone)
+                            Text("Handheld").tag(Role.handheld)
                         }
+
+                        // How the "drive-to" button functions
+                        Picker("Drive-To Behavior", selection: $_settings.driveToButtonUsesNavigation) {
+                            Text("Uses Navigation").tag(true)
+                            Text("Drive Straight").tag(false)
+                        }
+                        .disabled(_isRobot.wrappedValue)
                     }
                     Spacer()
                 }

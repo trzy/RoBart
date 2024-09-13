@@ -49,3 +49,14 @@ extension simd_float4x4 {
         return Vector3(x: transformed.x, y: transformed.y, z: transformed.z)
     }
 }
+
+extension simd_float4x4: Codable {
+    public func encode(to encoder: any Encoder) throws {
+        fatalError("Encodable method encode(to:) not implemented on simd_float4x4")
+    }
+
+    public init(from decoder: any Decoder) throws {
+        self.init()
+        fatalError("Decodable init(from:) not implemented on simd_float4x4")
+    }
+}

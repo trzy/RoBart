@@ -13,10 +13,13 @@ class Settings: ObservableObject {
 
     @Published var role: Role = .robot {
         didSet {
+            // Role is saved
             UserDefaults.standard.set(role.rawValue, forKey: Self.k_roleKey)
             log("Set: \(Self.k_roleKey) = \(role)")
         }
     }
+
+    @Published var driveToButtonUsesNavigation = true
 
     private static let k_roleKey = "role"
 

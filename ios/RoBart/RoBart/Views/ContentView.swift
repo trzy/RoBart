@@ -14,7 +14,12 @@ struct ContentView: View {
     @ObservedObject private var _settings = Settings.shared
     @State private var _cursor: Entity?
     @State private var _subscription: Cancellable?
+    @ObservedObject private var _client: Client
     @StateObject private var _depthTest = DepthTest()
+
+    init(client: Client) {
+        _client = client
+    }
 
     var body: some View {
         NavigationView {
@@ -27,25 +32,43 @@ struct ContentView: View {
                     Spacer()
                     VStack {
                         HStack {
-                            Button("Drive To", action: placeDriveToAnchor)
-                                .disabled(_cursor == nil || _settings.role != .phone)
+                            // Drive to destination
+                            let driveToLabel = _settings.driveToButtonUsesNavigation ? "Navigate To" : "Drive To"
+                            Button(driveToLabel, action: placeDriveToAnchor)
+                                .disabled(_cursor == nil || _settings.role != .handheld)
                                 .padding()
+
+                            // Emergency stop
                             Button("STOP", action: stopHoverboard)
                                 .padding()
-                            Button("Draw", action: { _depthTest.drawPoints() })
-                                .padding()
-                            Button("Path", action: { _depthTest.testPath() })
-                                .padding()
+
+//                            Button("Draw", action: { _depthTest.drawPoints() })
+//                                .padding()
+//                            Button("Path", action: { _depthTest.testPath() })
+//                                .padding()
                             Spacer()
                         }
                         .buttonStyle(.bordered)
                         CollaborativeMappingStateView()
                     }
                 }
-                if let image = _depthTest.image {
+//                if let image = _depthTest.image {
+//                    VStack {
+//                        Spacer()
+//                        Image(uiImage: image)
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fit)
+//                        Spacer()
+//                    }
+//                }
+                if _settings.role == .handheld,
+                   let image = _client.robotOccupancyMapImage {
+                    let _ = print("Showing image")
                     VStack {
                         Spacer()
                         Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
                         Spacer()
                     }
                 }
@@ -58,7 +81,6 @@ struct ContentView: View {
                         Image(systemName: "car.front.waves.down")
                             .imageScale(.large)
                     }
-                    .disabled(_settings.role != .robot)
 
                     NavigationLink {
                         SettingsView()
@@ -93,15 +115,20 @@ struct ContentView: View {
         // mapping. Robot will destroy the anchor.
         guard let cursor = _cursor else { return }
         let worldTransform = cursor.transformMatrix(relativeTo: nil)
-        let anchor = ARAnchor(name: "Drive Here", transform: worldTransform)
+        let name = Settings.shared.driveToButtonUsesNavigation ? "Navigate Here" : "Drive Here"
+        let anchor = ARAnchor(name: name, transform: worldTransform)
         ARSessionManager.shared.session?.add(anchor: anchor)
     }
 
     private func handleRemoteAnchor(_ anchor: ARAnchor) {
         if anchor.name == "Drive Here" {
-            // Drive to anchor received from remote
+            // Drive to anchor received from remote without using navigation
             log("Driving to remote anchor")
             HoverboardController.send(.driveTo(position: anchor.transform.position))
+            ARSessionManager.shared.session?.remove(anchor: anchor)
+        } else if anchor.name == "Navigate Here" {
+            // Use navigation
+            NavigationController.shared.run(.navigate(to: anchor.transform.position))
             ARSessionManager.shared.session?.remove(anchor: anchor)
         }
     }
@@ -119,8 +146,13 @@ struct ContentView: View {
     }
 
     private func stopHoverboard() {
-        let msg = PeerMotorMessage(leftMotorThrottle: 0, rightMotorThrottle: 0)
-        PeerManager.shared.send(msg, toPeersWithRole: .robot, reliable: true)
+        if Settings.shared.role == .robot {
+            // We are the robot: stop immediately
+            _client.stopRobot()
+        } else {
+            // Send to robot
+            PeerManager.shared.send(PeerStopMessage(), toPeersWithRole: .robot, reliable: true)
+        }
     }
 }
 
@@ -129,5 +161,5 @@ fileprivate func log(_ message: String) {
 }
 
 #Preview {
-    ContentView()
+    ContentView(client: Client())
 }

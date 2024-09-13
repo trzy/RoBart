@@ -12,6 +12,7 @@
 
 #include <CoreVideo/CoreVideo.h>
 #include <simd/simd.h>
+#include <algorithm>
 #include <memory>
 #include <tuple>
 
@@ -48,6 +49,11 @@ public:
     std::pair<size_t, size_t> positionToIndices(simd_float3 position) const;
 
     std::pair<float, float> positionToFractionalIndices(simd_float3 position) const;
+
+    simd_float3 indicesToPosition(size_t cellX, size_t cellZ) const
+    {
+        return _worldPosition[linearIndex(cellX, cellZ)];
+    }
 
     inline float at(size_t cellX, size_t cellZ) const
     {
@@ -116,6 +122,8 @@ public:
 private:
     inline size_t linearIndex(size_t cellX, size_t cellZ) const
     {
+        cellX = std::min(cellX, _cellsWide - 1);
+        cellZ = std::min(cellZ, _cellsDeep - 1);
         return cellZ * _cellsDeep + cellX;
     }
 

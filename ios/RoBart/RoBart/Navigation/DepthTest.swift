@@ -188,10 +188,10 @@ class DepthTest: ObservableObject {
         }
 
         // Update GPU occupancy map
-        let minHeight = ARSessionManager.shared.floorY
+        let minHeight = ARSessionManager.shared.floorY + 0.25
         let maxHeight = ARSessionManager.shared.floorY + Calibration.phoneHeightAboveFloor
         gpuOccupancy.reset(to: 0)
-        gpuOccupancy.update(
+        _ = gpuOccupancy.update(
             vertices: vertices,
             transforms: transforms,
             transformIndices: transformIdxs,
@@ -200,7 +200,7 @@ class DepthTest: ObservableObject {
         ) { [weak self] (commandBuffer: MTLCommandBuffer) in
             guard let self = self else { return }
 
-            // Update occupancy map from height map
+            // Update occupancy map from GPU map
             var occupancy = _occupancy!
             if let occupancyArray = gpuOccupancy.getMapArray() {
                 occupancyArray.withUnsafeBufferPointer { ptr in
@@ -261,7 +261,7 @@ class DepthTest: ObservableObject {
         //updateOccupancyUsingSceneDepth(frame: frame)
 
         // Update occupancy using scene meshes
-        updateOccupancyUsingSceneGeometry(frame: frame)
+        //updateOccupancyUsingSceneGeometry(frame: frame)
     }
 
     private func updateOccupancyUsingSceneGeometry(frame: ARFrame) {
@@ -313,7 +313,7 @@ class DepthTest: ObservableObject {
         }
 
         // Update height map
-        let minHeight = ARSessionManager.shared.floorY
+        let minHeight = ARSessionManager.shared.floorY + 0.25
         let maxHeight = ARSessionManager.shared.floorY + Calibration.phoneHeightAboveFloor
         gpuOccupancy.reset(to: 0)
         gpuOccupancy.update(

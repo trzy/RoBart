@@ -12,7 +12,9 @@ import Combine
 import Foundation
 import MultipeerConnectivity
 
-class Client {
+class Client: ObservableObject {
+    @Published var robotOccupancyMapImage: UIImage?
+
     private var _task: Task<Void, Never>!
     private let _decoder = JSONDecoder()
     private var _subscription: Cancellable?
@@ -26,6 +28,12 @@ class Client {
         _task = Task {
             await runTask()
         }
+    }
+
+    func stopRobot() {
+        log("Stopping robot...")
+        HoverboardController.shared.send(.drive(leftThrottle: 0, rightThrottle: 0))
+        NavigationController.shared.stopNavigation()
     }
 
     private func runTask() async {
@@ -47,6 +55,12 @@ class Client {
         if let msg = PeerMotorMessage.deserialize(from: data) {
             log("Received motor message from peer")
             HoverboardController.send(.drive(leftThrottle: msg.leftMotorThrottle, rightThrottle: msg.rightMotorThrottle))
+        } else if let _ = PeerStopMessage.deserialize(from: data) {
+            log("Received stop message from peer")
+            stopRobot()
+        } else if let msg = PeerOccupancyMessage.deserialize(from: data) {
+            log("Received occupancy map message from peer")
+            renderOccupancyMap(from: msg)
         }
     }
 
@@ -73,7 +87,7 @@ class Client {
             let initialPos = ARSessionManager.shared.transform.position
 
             await sleep(seconds: Double(msg.seconds))
-            stop()
+            stopRobot()
 
             let finalPos = ARSessionManager.shared.transform.position
             let result = "Distance traveled: \((finalPos - initialPos).xzProjected.distance)"
@@ -98,7 +112,7 @@ class Client {
                 _ = try? await ARSessionManager.shared.nextFrame()    // wait one frame
             } while (ARSessionManager.shared.transform.position - initialPos).xzProjected.distance < msg.meters
 
-            stop()
+            stopRobot()
 
             // Measure actual distance traveled
             let distanceTraveled = "Distance traveled: \((ARSessionManager.shared.transform.position - initialPos).xzProjected.distance) m"
@@ -184,10 +198,6 @@ class Client {
         }
     }
 
-    private func stop() {
-        HoverboardController.send(.drive(leftThrottle: 0, rightThrottle: 0))
-    }
-
     private func sleep(seconds: Double) async {
         try? await Task.sleep(for: .seconds(seconds))
     }
@@ -262,7 +272,7 @@ class Client {
 
         guard var frame = try? await ARSessionManager.shared.nextFrame(),
               sign(steering) != 0 else {
-            stop()
+            stopRobot()
             return errorResponse
         }
 
@@ -305,13 +315,13 @@ class Client {
             }
 
             guard let nextFrame = try? await ARSessionManager.shared.nextFrame() else {
-                stop()
+                stopRobot()
                 return errorResponse
             }
             frame = nextFrame
         } while frame.timestamp <= deadline
 
-        stop()
+        stopRobot()
 
         if havePartialResult {
             // Need to add how far we have moved from startVector around the circle
@@ -326,6 +336,15 @@ class Client {
 
         let totalSeconds = frame.timestamp - t0
         return AngularVelocityMeasurementMessage(steering: steering, numSeconds: totalSeconds, angularVelocityResult: degreesTraversed / Float(totalSeconds))
+    }
+
+    private func renderOccupancyMap(from msg: PeerOccupancyMessage) {
+        var occupancy = OccupancyMap(msg.width, msg.depth, msg.cellWidth, msg.cellDepth, msg.centerPoint)
+        msg.occupancy.withUnsafeBufferPointer { ptr in
+            occupancy.updateOccupancyFromArray(ptr.baseAddress, msg.occupancy.count)
+        }
+        robotOccupancyMapImage = RoBart.renderOccupancyMap(occupancy: occupancy, ourTransform: msg.ourTransform, path: msg.path)
+        log("Rendered occupancy map image")
     }
 }
 
