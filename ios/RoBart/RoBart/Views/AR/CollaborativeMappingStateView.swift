@@ -14,11 +14,13 @@ struct CollaborativeMappingStateView: View {
     var body: some View {
         HStack {
             let connected = _peerManager.peers.count > 0
-            let numRemotePeers = max(0, _peerManager.peers.count - 1)
+
             Image(systemName: connected ? "iphone.radiowaves.left.and.right" : "iphone.slash")
                 .imageScale(.large)
                 .foregroundColor(connected ? .primary : .secondary)
-            Text("\(_arSessionManager.participantCount)/\(numRemotePeers)")
+
+            // Print (synchronized peers) / (connected peers)
+            Text("\(_arSessionManager.participantCount)/\(_peerManager.remotePeerCount)")
                 .foregroundColor(_arSessionManager.participantCount > 0 ? .primary : .secondary)
         }
     }
