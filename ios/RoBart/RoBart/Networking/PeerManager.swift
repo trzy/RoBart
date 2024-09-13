@@ -10,7 +10,8 @@ import MultipeerConnectivity
 class PeerManager: NSObject, ObservableObject {
     static let shared = PeerManager()
 
-    @Published var peers: [MCPeerID] = []
+    @Published private(set) var peers: [MCPeerID] = []
+    @Published private(set) var remotePeerCount: Int = 0
     @Published private(set) var receivedMessage: (peerID: MCPeerID, data: Data)?
 
     private let _serviceType = "robart"
@@ -97,6 +98,8 @@ extension PeerManager: MCSessionDelegate {
 
             log("Connected peers: \(session.connectedPeers)")
             peers = session.connectedPeers
+            let ourPeerId = _ourPeerId
+            remotePeerCount = peers.filter({ $0 != ourPeerId }).count
 
             // Remove disconnected peers from role map
             let oldPeerIDs = Set<MCPeerID>(_roleByPeerID.keys)
