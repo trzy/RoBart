@@ -107,6 +107,8 @@ class GPUOccpancyMap {
     /// - Parameter maxOccupiedHeight: The maximum world-space Y value to mark a cell as occupied.
     /// - Parameter completion: An optional completion to run on the main queue when the GPU has finished. If this is `nil`,
     /// the function blocks. When using this, the caller is responsible for ensuring `update` is not called again until after the completion finishes.
+    /// - Returns: `true` if successful and the completion will be called, otherwise `false` if an error occurred and the completion will not be
+    /// invoked.
     func update(
         vertices: [Vector3],
         transforms: [Matrix4x4],
@@ -114,24 +116,24 @@ class GPUOccpancyMap {
         minOccupiedHeight: Float,
         maxOccupiedHeight: Float,
         completion: ((MTLCommandBuffer) -> Void)? = nil
-    ) {
+    ) -> Bool {
         guard vertices.count > 0, transforms.count > 0, transformIndices.count > 0 else {
-            return
+            return false
         }
 
         guard vertices.count == transformIndices.count else {
             log("Error: Vertex and transform index arrays must be the same length")
-            return
+            return false
         }
 
         guard let commandBuffer = _commandQueue.makeCommandBuffer() else {
             log("Error: Failed to create command buffer")
-            return
+            return false
         }
               
         guard let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
             log("Error: Failed to create compute encoder")
-            return
+            return false
         }
 
         // Set up buffers
@@ -175,6 +177,40 @@ class GPUOccpancyMap {
             commandBuffer.commit()
             commandBuffer.waitUntilCompleted()
         }
+
+        return true
+    }
+
+    func update(
+        vertices: [Vector3],
+        transforms: [Matrix4x4],
+        transformIndices: [UInt32],
+        minOccupiedHeight: Float,
+        maxOccupiedHeight: Float
+    ) async -> MTLCommandBuffer? {
+        let stream = AsyncStream<MTLCommandBuffer> { [weak self] continuation in
+            guard let self = self else {
+                continuation.finish()
+                return
+            }
+            let succeeded = update(
+                vertices: vertices,
+                transforms: transforms,
+                transformIndices: transformIndices,
+                minOccupiedHeight: minOccupiedHeight,
+                maxOccupiedHeight: maxOccupiedHeight
+            ) { (commandBuffer: MTLCommandBuffer) in
+                continuation.yield(commandBuffer)
+                continuation.finish()
+            }
+            if !succeeded {
+                continuation.finish()
+            }
+        }
+        
+        // Only care about first event
+        var it = stream.makeAsyncIterator()
+        return await it.next()
     }
 
     /// Obtains the map by copying it from GPU to CPU.

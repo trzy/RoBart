@@ -9,7 +9,7 @@ import Foundation
 
 enum Role: String, Codable, SimpleBinaryCodable, CaseIterable, Identifiable {
     case robot
-    case phone
+    case handheld
 
     var id: Self {
         return self

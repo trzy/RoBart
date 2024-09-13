@@ -23,6 +23,7 @@ enum HoverboardCommand {
     case drive(leftThrottle: Float, rightThrottle: Float)
     case rotateInPlace(steering: Float)
     case rotateInPlaceBy(degrees: Float)
+    case face(forward: Vector3)
     case driveForward(distance: Float)
     case driveTo(position: Vector3)
 }
@@ -60,7 +61,13 @@ class HoverboardController {
 
     var positionGoalTolerance: Float = 0.1
 
+    var orientationGoalTolerance: Float = 2.8
+
     var maxThrottle: Float = 0.01
+
+    var isMoving: Bool {
+        return _targetForward != nil || _targetPosition != nil || _leftMotorThrottle != 0 || _rightMotorThrottle != 0
+    }
 
     private let _ble = AsyncBluetoothManager(
         service: CBUUID(string: "df72a6f9-a217-11ee-a726-a4b1c10ba08a"),
@@ -111,7 +118,7 @@ class HoverboardController {
         shared.send(command)
     }
 
-    private init() {
+    fileprivate init() {
         _orientationPID = PID(gains: orientationPIDGains)
         _positionPID = PID(gains: positionPIDGains)
     }
@@ -192,6 +199,11 @@ class HoverboardController {
             _targetForward = currentForward.rotated(by: degrees, about: .up)
             _targetPosition = nil   // no position target
 
+        case .face(let forward):
+            // New orientation set point
+            _targetForward = forward.xzProjected
+            _targetPosition = nil
+
         case .driveForward(let distance):
             // New position set point along current forward direction
             let currentForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
@@ -254,18 +266,31 @@ class HoverboardController {
         // Orientation target: use target if one set, otherwise use vector toward target position if position set, otherwise none
         let targetForward = _targetForward != nil ? _targetForward! : (_targetPosition != nil ? (_targetPosition! - currentPosition).xzProjected.normalized : nil)
         if let targetForward = targetForward {
-            // Orientation PID -> desired velocity
+            // Orientation error: if heading to a position, we must keep the orientation PID active
+            // but if only rotating, we stop when we hit our goal.
             let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
-            let targetAngularVelocity = _orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
+            if _targetPosition == nil && orientationErrorDegrees <= orientationGoalTolerance {
+                _targetForward = nil
+                leftMotorThrottle = 0
+                rightMotorThrottle = 0
+            }
 
-            // Compute motor steering value based on desired velocity
-            var steering = _steeringFromAngularVelocity.interpolate(x: targetAngularVelocity)
-            steering = clamp(steering, min: -maxThrottle, max: maxThrottle)
-            leftMotorThrottle += -steering
-            rightMotorThrottle += steering
+            if let _ = _targetForward {
 
-            log("Orientation: error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
+                // Orientation PID -> desired velocity
+                let targetAngularVelocity = _orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
 
+                // Compute motor steering value based on desired velocity
+                var steering = _steeringFromAngularVelocity.interpolate(x: targetAngularVelocity)
+                steering = clamp(steering, min: -maxThrottle, max: maxThrottle)
+                leftMotorThrottle += -steering
+                rightMotorThrottle += steering
+
+                log("Orientation: error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
+            }
+
+            // Send update this frame (we had a target but may not anymore; we need to at least
+            // send over the stop values)
             pidEnabled = true
         }
 
@@ -275,6 +300,9 @@ class HoverboardController {
             // continuously orients toward goal). We stop when the actual position is close enough.
             if (targetPosition - currentPosition).magnitude <= positionGoalTolerance {
                 _targetPosition = nil
+                _targetForward = nil
+                leftMotorThrottle = 0
+                rightMotorThrottle = 0
             }
 
             if let targetPosition = _targetPosition {
@@ -290,9 +318,10 @@ class HoverboardController {
                 rightMotorThrottle += direction * throttle
                 
                 log("Position: error=\(positionError) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
-                
-                pidEnabled = true
             }
+
+            // Send update this frame
+            pidEnabled = true
         }
 
         // Send to board

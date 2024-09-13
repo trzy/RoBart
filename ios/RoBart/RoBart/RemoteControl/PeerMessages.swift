@@ -13,6 +13,8 @@ enum PeerMessageID: UInt32 {
     case roleMessage = 0x80
     case collaborationMessage = 0x81
     case motorMessage = 0x82
+    case stopMessage = 0x83
+    case occupancyMessage = 0x84
 }
 
 struct PeerRoleMessage: SimpleBinaryMessage {
@@ -29,4 +31,20 @@ struct PeerMotorMessage: SimpleBinaryMessage {
     static let id = PeerMessageID.motorMessage.rawValue
     let leftMotorThrottle: Float
     let rightMotorThrottle: Float
+}
+
+struct PeerStopMessage: SimpleBinaryMessage {
+    static let id = PeerMessageID.stopMessage.rawValue
+}
+
+struct PeerOccupancyMessage: SimpleBinaryMessage {
+    static let id = PeerMessageID.occupancyMessage.rawValue
+    let width: Float
+    let depth: Float
+    let cellWidth: Float
+    let cellDepth: Float
+    let centerPoint: Vector3
+    let occupancy: [Float]
+    let path: [Vector3]
+    let ourTransform: Matrix4x4
 }
