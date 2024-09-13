@@ -213,12 +213,8 @@ class DepthTest: ObservableObject {
             // Path
             let from = ARSessionManager.shared.transform.position;
             let to = occupancy.centerPoint()
-            let path = findPath(occupancy, from, to)
-            var pathCells: [(cellX: Int, cellZ: Int)] = []
-            for cell in path {
-                pathCells.append((cellX: Int(cell.first), cellZ: Int(cell.second)))
-            }
-            image = renderOccupancy(occupancy: occupancy, path: pathCells)
+            let pathCells = findPath(occupancy, from, to)
+            image = renderOccupancy(occupancy: occupancy, path: pathCells.map { $0 })
         }
 
 
@@ -428,7 +424,7 @@ class DepthTest: ObservableObject {
         image = renderOccupancy(occupancy: occupancy)
     }
 
-    private func renderOccupancy(occupancy map: OccupancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
+    private func renderOccupancy(occupancy map: OccupancyMap, path: [OccupancyMap.CellIndices] = []) -> UIImage? {
         let pixLength = 10
         let imageSize = CGSize(width: map.cellsWide() * pixLength, height: map.cellsDeep() * pixLength)
 
@@ -468,13 +464,13 @@ class DepthTest: ObservableObject {
         }
 
         // Draw circle at our current position
-        let ourCell = map.positionToIndices(ARSessionManager.shared.transform.position)
-        let ourCellX = CGFloat(ourCell.first)
-        let ourCellY = CGFloat(ourCell.second)
+        let ourCell = map.positionToCell(ARSessionManager.shared.transform.position)
+        let ourCellX = CGFloat(ourCell.cellX)
+        let ourCellZ = CGFloat(ourCell.cellZ)
         let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
-        let ourPosY = (ourCellY + 0.5) * CGFloat(pixLength)
+        let ourPosZ = (ourCellZ + 0.5) * CGFloat(pixLength)
         context.setFillColor(UIColor.red.cgColor)
-        let center = CGPoint(x: ourPosX, y: ourPosY)
+        let center = CGPoint(x: ourPosX, y: ourPosZ)
         let path = UIBezierPath(
             arcCenter: center,
             radius: 0.5 * CGFloat(pixLength),
@@ -487,8 +483,8 @@ class DepthTest: ObservableObject {
         // Draw a little line in front of our current heading
         let inFront = ARSessionManager.shared.transform.position - 1.0 * ARSessionManager.shared.transform.forward.xzProjected
         let cellInFront = map.positionToFractionalIndices(inFront)
-        let posFarInFront = simd_float2((Float(cellInFront.first) + 0.5 ) * Float(pixLength), (Float(cellInFront.second) + 0.5 ) * Float(pixLength))
-        let posCenter = simd_float2(Float(ourPosX), Float(ourPosY))
+        let posFarInFront = simd_float2((cellInFront.cellX + 0.5 ) * Float(pixLength), (cellInFront.cellZ + 0.5 ) * Float(pixLength))
+        let posCenter = simd_float2(Float(ourPosX), Float(ourPosZ))
         let forwardDir = simd_normalize(posFarInFront - posCenter)
         let linePath = UIBezierPath()
         linePath.move(to: center)

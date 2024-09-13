@@ -11,42 +11,40 @@
 #include <unordered_map>
 
 
-typedef std::pair<size_t, size_t> cell_t;
-
-static void getUnoccupiedNeighbors(std::vector<cell_t> *neighbors, const OccupancyMap &occupancy, cell_t cell)
+static void getUnoccupiedNeighbors(std::vector<OccupancyMap::CellIndices> *neighbors, const OccupancyMap &occupancy, OccupancyMap::CellIndices cell)
 {
-    size_t x = cell.first;
-    size_t z = cell.second;
+    size_t x = cell.cellX;
+    size_t z = cell.cellZ;
 
     neighbors->clear();
 
     if (x > 0 && occupancy.at(x - 1, z) == 0)
     {
-        neighbors->emplace_back(cell_t(x - 1, z));
+        neighbors->emplace_back(OccupancyMap::CellIndices(x - 1, z));
     }
 
     if (x < (occupancy.cellsWide() - 1) && occupancy.at(x + 1, z) == 0)
     {
-        neighbors->emplace_back(cell_t(x + 1, z));
+        neighbors->emplace_back(OccupancyMap::CellIndices(x + 1, z));
     }
 
     if (z > 0 && occupancy.at(x, z - 1) == 0)
     {
-        neighbors->emplace_back(cell_t(x, z - 1));
+        neighbors->emplace_back(OccupancyMap::CellIndices(x, z - 1));
     }
 
     if (z < (occupancy.cellsDeep() - 1) && occupancy.at(x, z + 1) == 0)
     {
-        neighbors->emplace_back(cell_t(x, z + 1));
+        neighbors->emplace_back(OccupancyMap::CellIndices(x, z + 1));
     }
 }
 
-std::vector<std::pair<size_t, size_t>> findPath(const OccupancyMap &occupancy, simd_float3 from, simd_float3 to)
+std::vector<OccupancyMap::CellIndices> findPath(const OccupancyMap &occupancy, simd_float3 from, simd_float3 to)
 {
-    std::vector<std::pair<size_t, size_t>> path;
+    std::vector<OccupancyMap::CellIndices> path;
 
-    cell_t dest = occupancy.positionToIndices(to);
-    cell_t src = occupancy.positionToIndices(from);
+    OccupancyMap::CellIndices dest = occupancy.positionToCell(to);
+    OccupancyMap::CellIndices src = occupancy.positionToCell(from);
 
     if (occupancy.at(dest) != 0)
     {
@@ -60,20 +58,20 @@ std::vector<std::pair<size_t, size_t>> findPath(const OccupancyMap &occupancy, s
         return path;
     }
 
-    std::unordered_map<cell_t, cell_t, OccupancyMap::CellHash> transitions;
-    std::queue<cell_t> frontier;
+    std::unordered_map<OccupancyMap::CellIndices, OccupancyMap::CellIndices, OccupancyMap::CellHash> transitions;
+    std::queue<OccupancyMap::CellIndices> frontier;
     frontier.push(dest);
     transitions[dest] = dest;
 
-    std::vector<cell_t> neighbors;
+    std::vector<OccupancyMap::CellIndices> neighbors;
 
     while (!frontier.empty())
     {
-        cell_t cell = frontier.front();
+        OccupancyMap::CellIndices cell = frontier.front();
         frontier.pop();
 
         getUnoccupiedNeighbors(&neighbors, occupancy, cell);
-        for (cell_t neighbor: neighbors)
+        for (auto neighbor: neighbors)
         {
             bool alreadyVisited = transitions.find(neighbor) != transitions.end();
             if (alreadyVisited)
@@ -97,7 +95,7 @@ std::vector<std::pair<size_t, size_t>> findPath(const OccupancyMap &occupancy, s
 
 foundCompletePath:
     // Trace complete path back from src to dest
-    cell_t currentStep = src;
+    OccupancyMap::CellIndices currentStep = src;
     do
     {
         path.emplace_back(currentStep);
