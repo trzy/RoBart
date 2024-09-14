@@ -8,7 +8,7 @@
 import Metal
 import simd
 
-class GPUOccpancyMap {
+class GPUOccupancyMap {
     private let _device: MTLDevice
     private var _texture: MTLTexture!
     private let _commandQueue: MTLCommandQueue

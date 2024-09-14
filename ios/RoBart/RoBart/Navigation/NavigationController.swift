@@ -17,8 +17,8 @@ class NavigationController {
     private var _nextCommand: NavigationCommand?
     private var _currentTask: Task<Void, Never>?
 
-    private lazy var _occupancyCalculator: GPUOccpancyMap = {
-        return GPUOccpancyMap(
+    private lazy var _occupancyCalculator: GPUOccupancyMap = {
+        return GPUOccupancyMap(
             width: 20,
             depth: 20,
             cellSide: 0.25,

@@ -94,7 +94,7 @@ class DepthTest: ObservableObject {
     private var _occupancy: OccupancyMap?
 
     /// Occupancy map computed from scene mesh vertices on GPU.
-    private var _gpuOccupancy: GPUOccpancyMap?
+    private var _gpuOccupancy: GPUOccupancyMap?
 
     init() {
         assert(_targetDepthSampleRateHz >= _targetOccupancyUpdateRateHz)
@@ -154,7 +154,7 @@ class DepthTest: ObservableObject {
 
         // Lazy instantiate occupancy map on first frame, when we have our initial position
         if _gpuOccupancy == nil {
-            _gpuOccupancy = GPUOccpancyMap(
+            _gpuOccupancy = GPUOccupancyMap(
                 width: 20,
                 depth: 20,
                 cellSide: 0.25,
@@ -274,7 +274,7 @@ class DepthTest: ObservableObject {
 
         // Lazy instantiate occupancy map on first frame, when we have our initial position
         if _gpuOccupancy == nil {
-            _gpuOccupancy = GPUOccpancyMap(
+            _gpuOccupancy = GPUOccupancyMap(
                 width: 20,
                 depth: 20,
                 cellSide: 0.5,
