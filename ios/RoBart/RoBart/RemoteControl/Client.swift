@@ -339,7 +339,7 @@ class Client: ObservableObject {
     }
 
     private func renderOccupancyMap(from msg: PeerOccupancyMessage) {
-        var occupancy = OccupancyMap(msg.width, msg.depth, msg.cellWidth, msg.cellDepth, msg.centerPoint)
+        var occupancy = OccupancyMap(msg.width, msg.depth, msg.cellSide, msg.centerPoint)
         msg.occupancy.withUnsafeBufferPointer { ptr in
             occupancy.updateOccupancyFromArray(ptr.baseAddress, msg.occupancy.count)
         }

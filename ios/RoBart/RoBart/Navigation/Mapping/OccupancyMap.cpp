@@ -12,17 +12,16 @@
 #include <iostream>
 #include <memory>
 
-OccupancyMap::OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint)
+OccupancyMap::OccupancyMap(float width, float depth, float cellSide, simd_float3 centerPoint)
 {
-    assert(cellWidth <= width);
-    assert(cellDepth <= depth);
+    assert(cellSide <= width);
+    assert(cellSide <= depth);
 
     _width = width;
     _depth = depth;
-    _cellWidth = cellWidth;
-    _cellDepth = cellDepth;
-    _cellsWide = size_t(floor(width / cellWidth));
-    _cellsDeep = size_t(floor(depth / cellDepth));
+    _cellSide = cellSide;
+    _cellsWide = size_t(floor(width / cellSide));
+    _cellsDeep = size_t(floor(depth / cellSide));
     _occupancy = std::make_shared<float[]>(_cellsWide * _cellsDeep);
     memset(_occupancy.get(), 0, sizeof(float) * _cellsWide * _cellsDeep);
     _centerPoint = centerPoint;
@@ -30,24 +29,23 @@ OccupancyMap::OccupancyMap(float width, float depth, float cellWidth, float cell
     // World position at center point of each cell
     _worldPosition = std::make_shared<simd_float3[]>(_cellsWide * _cellsDeep);
     auto center = centerCell();
-    float z = centerPoint.z - cellDepth * float(center.cellZ);
+    float z = centerPoint.z - cellSide * float(center.cellZ);
     for (size_t zi = 0; zi < _cellsDeep; zi++)
     {
-        float x = centerPoint.x - cellWidth * float(center.cellX);
+        float x = centerPoint.x - cellSide * float(center.cellX);
         for (size_t xi = 0; xi < _cellsWide; xi++)
         {
             _worldPosition[linearIndex(xi, zi)] = simd_make_float3(x, 0, z);
-            x += cellWidth;
+            x += cellSide;
         }
-        z += cellDepth;
+        z += cellSide;
     }
 }
 
 OccupancyMap::OccupancyMap(const OccupancyMap &rhs)
     : _width(rhs._width),
       _depth(rhs._depth),
-      _cellWidth(rhs._cellWidth),
-      _cellDepth(rhs._cellDepth),
+      _cellSide(rhs._cellSide),
       _cellsWide(rhs._cellsWide),
       _cellsDeep(rhs._cellsDeep),
       _centerPoint(rhs._centerPoint),
@@ -73,8 +71,8 @@ OccupancyMap::CellIndices OccupancyMap::positionToCell(simd_float3 position) con
     auto center = centerCell();
     simd_float3 gridCenterPoint = _worldPosition[centerIndex()];
 
-    long xi = long(floor((position.x - gridCenterPoint.x) / _cellWidth + 0.5)) + center.cellX;
-    long zi = long(floor((position.z - gridCenterPoint.z) / _cellDepth + 0.5)) + center.cellZ;
+    long xi = long(floor((position.x - gridCenterPoint.x) / _cellSide + 0.5)) + center.cellX;
+    long zi = long(floor((position.z - gridCenterPoint.z) / _cellSide + 0.5)) + center.cellZ;
     size_t uxi = std::min(size_t(std::max(long(0), xi)), _cellsWide - 1);
     size_t uzi = std::min(size_t(std::max(long(0), zi)), _cellsDeep - 1);
 
@@ -86,8 +84,8 @@ OccupancyMap::FractionalCellIndices OccupancyMap::positionToFractionalIndices(si
     auto center = centerCell();
     simd_float3 gridCenterPoint = _worldPosition[centerIndex()];
 
-    float xf = ((position.x - gridCenterPoint.x) / _cellWidth) + center.cellX;
-    float zf = ((position.z - gridCenterPoint.z) / _cellDepth) + center.cellZ;
+    float xf = ((position.x - gridCenterPoint.x) / _cellSide) + center.cellX;
+    float zf = ((position.z - gridCenterPoint.z) / _cellSide) + center.cellZ;
 
     // Clamp to edges. Note that the only difference between this function and positionToIndices()
     // is that the latter adds 0.5 and then floors. Therefore, we know the limits are: [-0.5, s_numCells - 1 + 0.5).

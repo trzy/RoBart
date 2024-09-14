@@ -157,16 +157,14 @@ class DepthTest: ObservableObject {
             _gpuOccupancy = GPUOccpancyMap(
                 width: 20,
                 depth: 20,
-                cellWidth: 0.5,
-                cellDepth: 0.5,
+                cellSide: 0.25,
                 centerPoint: ARSessionManager.shared.transform.position
             )
 
             _occupancy = OccupancyMap(
                 _gpuOccupancy!.width,
                 _gpuOccupancy!.depth,
-                _gpuOccupancy!.cellWidth,
-                _gpuOccupancy!.cellDepth,
+                _gpuOccupancy!.cellSide,
                 _gpuOccupancy!.centerPoint
             )
         }
@@ -213,8 +211,9 @@ class DepthTest: ObservableObject {
             // Path
             let from = ARSessionManager.shared.transform.position;
             let to = occupancy.centerPoint()
-            let pathCells = findPath(occupancy, from, to)
-            image = renderOccupancy(occupancy: occupancy, path: pathCells.map { $0 })
+            let robotRadius = 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
+            let pathCells = findPath(occupancy, from, to, robotRadius)
+            image = renderOccupancyMap(occupancy: occupancy, ourTransform: ARSessionManager.shared.transform, path: pathCells.map {occupancy.cellToPosition($0) })
         }
 
 
@@ -278,16 +277,14 @@ class DepthTest: ObservableObject {
             _gpuOccupancy = GPUOccpancyMap(
                 width: 20,
                 depth: 20,
-                cellWidth: 0.5,
-                cellDepth: 0.5,
+                cellSide: 0.5,
                 centerPoint: ARSessionManager.shared.transform.position
             )
 
             _occupancy = OccupancyMap(
                 _gpuOccupancy!.width,
                 _gpuOccupancy!.depth,
-                _gpuOccupancy!.cellWidth,
-                _gpuOccupancy!.cellDepth,
+                _gpuOccupancy!.cellSide,
                 _gpuOccupancy!.centerPoint
             )
         }
@@ -330,7 +327,7 @@ class DepthTest: ObservableObject {
 
         log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
 
-        image = renderOccupancy(occupancy: occupancy)
+        image = renderOccupancyMap(occupancy: occupancy, ourTransform: ARSessionManager.shared.transform)
     }
 
     private func updateOccupancyUsingSceneDepth(frame: ARFrame) {
@@ -358,15 +355,13 @@ class DepthTest: ObservableObject {
             _hitCounts = OccupancyMap(
                 20,     // width (meters)
                 20,     // depth (meters)
-                0.5,    // cell width (meters)
-                0.5,    // cell depth (meters)
+                0.5,    // cell side length (meters)
                 frame.camera.transform.position.xzProjected // world center point
             )
             _occupancy = OccupancyMap(
                 _hitCounts!.width(),
                 _hitCounts!.depth(),
-                _hitCounts!.cellWidth(),
-                _hitCounts!.cellDepth(),
+                _hitCounts!.cellSide(),
                 _hitCounts!.centerPoint()
             )
         }
@@ -421,164 +416,7 @@ class DepthTest: ObservableObject {
         //log("Occupancy update: \(timer.elapsedMilliseconds()) ms")
         //log("Update rate: \(1.0/(frame.timestamp - lastOccupancyUpdateTimestamp)) Hz")
 
-        image = renderOccupancy(occupancy: occupancy)
-    }
-
-    private func renderOccupancy(occupancy map: OccupancyMap, path: [OccupancyMap.CellIndices] = []) -> UIImage? {
-        let pixLength = 10
-        let imageSize = CGSize(width: map.cellsWide() * pixLength, height: map.cellsDeep() * pixLength)
-
-        // Create a graphics context to draw the image
-        UIGraphicsBeginImageContext(imageSize)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-
-        // Loop through the occupancy grid and draw squares
-        for zi in 0..<map.cellsDeep() {
-            for xi in 0..<map.cellsWide() {
-                let isOccupied = map.at(xi, zi) > 0
-
-                // Set the color based on occupancy
-                let color: UIColor = isOccupied ? .blue : .white
-                context.setFillColor(color.cgColor)
-
-                // Define the square's rectangle
-                let rect = CGRect(x: xi * pixLength, y: zi * pixLength, width: pixLength, height: pixLength)
-
-                // Draw the rectangle
-                context.fill(rect)
-            }
-        }
-
-        // Draw path, if one given
-        context.setFillColor(UIColor.black.cgColor)
-        for cell in path {
-            // A slightly smaller rect
-            let crumbLength = pixLength / 2
-            let rect = CGRect(
-                x: cell.cellX * pixLength + (pixLength - crumbLength) / 2,
-                y: cell.cellZ * pixLength + (pixLength - crumbLength) / 2,
-                width: crumbLength,
-                height: crumbLength
-            )
-            context.fill(rect)
-        }
-
-        // Draw circle at our current position
-        let ourCell = map.positionToCell(ARSessionManager.shared.transform.position)
-        let ourCellX = CGFloat(ourCell.cellX)
-        let ourCellZ = CGFloat(ourCell.cellZ)
-        let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
-        let ourPosZ = (ourCellZ + 0.5) * CGFloat(pixLength)
-        context.setFillColor(UIColor.red.cgColor)
-        let center = CGPoint(x: ourPosX, y: ourPosZ)
-        let path = UIBezierPath(
-            arcCenter: center,
-            radius: 0.5 * CGFloat(pixLength),
-            startAngle: 0,
-            endAngle: 2 * .pi,
-            clockwise: true
-        )
-        path.fill()
-
-        // Draw a little line in front of our current heading
-        let inFront = ARSessionManager.shared.transform.position - 1.0 * ARSessionManager.shared.transform.forward.xzProjected
-        let cellInFront = map.positionToFractionalIndices(inFront)
-        let posFarInFront = simd_float2((cellInFront.cellX + 0.5 ) * Float(pixLength), (cellInFront.cellZ + 0.5 ) * Float(pixLength))
-        let posCenter = simd_float2(Float(ourPosX), Float(ourPosZ))
-        let forwardDir = simd_normalize(posFarInFront - posCenter)
-        let linePath = UIBezierPath()
-        linePath.move(to: center)
-        linePath.addLine(to: CGPoint(x: center.x + CGFloat(forwardDir.x) * CGFloat(2 * pixLength), y: center.y + CGFloat(forwardDir.y) * CGFloat(2 * pixLength)))
-        context.setStrokeColor(UIColor.red.cgColor)
-        linePath.stroke()
-        
-        // Retrieve the generated image
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return image
-    }
-
-    private func renderOccupancy(occupancy map: GPUOccpancyMap, path: [(cellX: Int, cellZ: Int)] = []) -> UIImage? {
-        // Get data
-        guard let data = map.getMapArray() else { return nil }
-
-        // Map dimensions
-        let pixLength = 10
-        let imageSize = CGSize(width: map.cellsWide * pixLength, height: map.cellsDeep * pixLength)
-
-        // Create a graphics context to draw the image
-        UIGraphicsBeginImageContext(imageSize)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-
-        // Loop through the occupancy grid and draw squares
-        for zi in 0..<map.cellsDeep {
-            for xi in 0..<map.cellsWide {
-                let idx = map.linearIndex(cellX: xi, cellZ: zi)
-                let isOccupied = data[idx] > 0
-
-                // Set the color based on occupancy
-                let color: UIColor = isOccupied ? .blue : .white
-                context.setFillColor(color.cgColor)
-
-                // Define the square's rectangle
-                let rect = CGRect(x: xi * pixLength, y: zi * pixLength, width: pixLength, height: pixLength)
-
-                // Draw the rectangle
-                context.fill(rect)
-            }
-        }
-
-        // Draw path, if one given
-        context.setFillColor(UIColor.black.cgColor)
-        for cell in path {
-            // A slightly smaller rect
-            let crumbLength = pixLength / 2
-            let rect = CGRect(
-                x: cell.cellX * pixLength + (pixLength - crumbLength) / 2,
-                y: cell.cellZ * pixLength + (pixLength - crumbLength) / 2,
-                width: crumbLength,
-                height: crumbLength
-            )
-            context.fill(rect)
-        }
-
-        // Draw circle at our current position
-        let robotPosition = ARSessionManager.shared.transform.position
-        let robotForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
-        let ourCell = map.positionToIndices(position: robotPosition)
-        let ourCellX = CGFloat(ourCell.cellX)
-        let ourCellZ = CGFloat(ourCell.cellZ)
-        let ourPosX = (ourCellX + 0.5) * CGFloat(pixLength)
-        let ourPosZ = (ourCellZ + 0.5) * CGFloat(pixLength)
-        context.setFillColor(UIColor.red.cgColor)
-        let center = CGPoint(x: ourPosX, y: ourPosZ)
-        let path = UIBezierPath(
-            arcCenter: center,
-            radius: 0.5 * CGFloat(pixLength),
-            startAngle: 0,
-            endAngle: 2 * .pi,
-            clockwise: true
-        )
-        path.fill()
-
-        // Draw a little line in front of our current heading
-        let inFront = robotPosition + 1.0 * robotForward
-        let cellInFront = map.positionToFractionalIndices(position: inFront)
-        let posFarInFront = simd_float2((Float(cellInFront.cellX) + 0.5) * Float(pixLength), (Float(cellInFront.cellZ) + 0.5 ) * Float(pixLength))
-        let posCenter = simd_float2(Float(ourPosX), Float(ourPosZ))
-        let forwardDir = simd_normalize(posFarInFront - posCenter)
-        let linePath = UIBezierPath()
-        linePath.move(to: center)
-        linePath.addLine(to: CGPoint(x: center.x + CGFloat(forwardDir.x) * CGFloat(2 * pixLength), y: center.y + CGFloat(forwardDir.y) * CGFloat(2 * pixLength)))
-        context.setStrokeColor(UIColor.red.cgColor)
-        linePath.stroke()
-
-        // Retrieve the generated image
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return image
+        image = renderOccupancyMap(occupancy: occupancy, ourTransform: ARSessionManager.shared.transform)
     }
 }
 

@@ -20,11 +20,8 @@ class GPUOccpancyMap {
     /// Depth of map (z axis) in meters.
     private(set) var depth: Float
 
-    /// Width of a map cell in meters.
-    private(set) var cellWidth: Float
-
-    /// Depth of a map cell in meters.
-    private(set) var cellDepth: Float
+    /// Side length of a map cell in meters.
+    private(set) var cellSide: Float
 
     /// Width of the map in integral cell units.
     private(set) var cellsWide: Int
@@ -35,7 +32,7 @@ class GPUOccpancyMap {
     /// Center point of the map in world coordinates.
     private(set) var centerPoint: Vector3
 
-    init(width: Float, depth: Float, cellWidth: Float, cellDepth: Float, centerPoint: Vector3) {
+    init(width: Float, depth: Float, cellSide: Float, centerPoint: Vector3) {
         guard let device = MTLCreateSystemDefaultDevice() else {
             fatalError("Failed to create Metal device")
         }
@@ -48,8 +45,7 @@ class GPUOccpancyMap {
         _commandQueue = commandQueue
         self.width = width
         self.depth = depth
-        self.cellWidth = cellWidth
-        self.cellDepth = cellDepth
+        self.cellSide = cellSide
         self.centerPoint = centerPoint
 
         // Create compute pipeline
@@ -64,8 +60,8 @@ class GPUOccpancyMap {
         }
 
         // Create texture (grid)
-        cellsWide = Int(floor(width / cellWidth))
-        cellsDeep = Int(floor(depth / cellDepth))
+        cellsWide = Int(floor(width / cellSide))
+        cellsDeep = Int(floor(depth / cellSide))
         guard let texture = createTexture(width: cellsWide, height: cellsDeep, initialData: Array(repeating: Float(0), count: cellsWide * cellsDeep)) else {
             fatalError("Unable to create texture of size \(cellsWide)x\(cellsDeep)")
         }
@@ -143,8 +139,7 @@ class GPUOccpancyMap {
         let centerPositionBuffer = _device.makeBuffer(bytes: [centerPoint], length: MemoryLayout<Vector3>.size, options: [])
         let cellsWideBuffer = _device.makeBuffer(bytes: [UInt32(_texture.width)], length: MemoryLayout<UInt32>.size, options: [])
         let cellsDeepBuffer = _device.makeBuffer(bytes: [UInt32(_texture.height)], length: MemoryLayout<UInt32>.size, options: [])
-        let cellWidthBuffer = _device.makeBuffer(bytes: [cellWidth], length: MemoryLayout<Float>.size, options: [])
-        let cellDepthBuffer = _device.makeBuffer(bytes: [cellDepth], length: MemoryLayout<Float>.size, options: [])
+        let cellSideBuffer = _device.makeBuffer(bytes: [cellSide], length: MemoryLayout<Float>.size, options: [])
         let minHeightBuffer = _device.makeBuffer(bytes: [minOccupiedHeight], length: MemoryLayout<Float>.size, options: [])
         let maxHeightBuffer = _device.makeBuffer(bytes: [maxOccupiedHeight], length: MemoryLayout<Float>.size, options: [])
 
@@ -156,10 +151,9 @@ class GPUOccpancyMap {
         computeEncoder.setBuffer(centerPositionBuffer, offset: 0, index: 3)
         computeEncoder.setBuffer(cellsWideBuffer, offset: 0, index: 4)
         computeEncoder.setBuffer(cellsDeepBuffer, offset: 0, index: 5)
-        computeEncoder.setBuffer(cellWidthBuffer, offset: 0, index: 6)
-        computeEncoder.setBuffer(cellDepthBuffer, offset: 0, index: 7)
-        computeEncoder.setBuffer(minHeightBuffer, offset: 0, index: 8)
-        computeEncoder.setBuffer(maxHeightBuffer, offset: 0, index: 9)
+        computeEncoder.setBuffer(cellSideBuffer, offset: 0, index: 6)
+        computeEncoder.setBuffer(minHeightBuffer, offset: 0, index: 7)
+        computeEncoder.setBuffer(maxHeightBuffer, offset: 0, index: 8)
 
         // Map vertices to threads. Note that this creates a potential race condition accessing the
         // texture, as multiple vertices in different threads may map to the same texel.
@@ -269,8 +263,8 @@ class GPUOccpancyMap {
     /// the coordinate is out of bounds, the nearest cell on the perimeter.
     func positionToIndices(position: Vector3) -> (cellX: Int, cellZ: Int) {
         let centerCell = centerCell()
-        var xi = Int(floor((position.x - centerPoint.x) / cellWidth + 0.5)) + centerCell.cellX
-        var zi = Int(floor((position.z - centerPoint.z) / cellDepth + 0.5)) + centerCell.cellZ
+        var xi = Int(floor((position.x - centerPoint.x) / cellSide + 0.5)) + centerCell.cellX
+        var zi = Int(floor((position.z - centerPoint.z) / cellSide + 0.5)) + centerCell.cellZ
         xi = min(max(0, xi), cellsWide - 1)
         zi = min(max(0, zi), cellsDeep - 1)
         return (cellX: xi, cellZ: zi)
@@ -283,8 +277,8 @@ class GPUOccpancyMap {
     /// - Returns: The decimal x and z cell indices
     func positionToFractionalIndices(position: Vector3) -> (cellX: Float, cellZ: Float) {
         let centerCell = centerCell()
-        var xf = ((position.x - centerPoint.x) / cellWidth) + Float(centerCell.cellX)
-        var zf = ((position.z - centerPoint.z) / cellDepth) + Float(centerCell.cellZ)
+        var xf = ((position.x - centerPoint.x) / cellSide) + Float(centerCell.cellX)
+        var zf = ((position.z - centerPoint.z) / cellSide) + Float(centerCell.cellZ)
 
         // Clamp to edges. Note that the only difference between this function and positionToIndices()
         // is that the latter adds 0.5 and then floors. Therefore, we know the limits are: [-0.5, s_numCells - 1 + 0.5).

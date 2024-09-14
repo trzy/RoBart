@@ -16,10 +16,9 @@ kernel void processVerticesAndUpdateOccupancy(
     constant float3 &centerPosition [[buffer(3)]],
     constant uint &cellsWide [[buffer(4)]],
     constant uint &cellsDeep [[buffer(5)]],
-    constant float &cellWidth [[buffer(6)]],
-    constant float &cellDepth [[buffer(7)]],
-    constant float &minOccupiedHeight [[buffer(8)]],
-    constant float &maxOccupiedHeight [[buffer(9)]],
+    constant float &cellSide [[buffer(6)]],
+    constant float &minOccupiedHeight [[buffer(7)]],
+    constant float &maxOccupiedHeight [[buffer(8)]],
     uint vid [[thread_position_in_grid]]
 ) 
 {
@@ -47,7 +46,7 @@ kernel void processVerticesAndUpdateOccupancy(
     float2 center = float2(centerPosition.x, centerPosition.z);
 
     // Compute cell that the point lies in
-    float2 cellDimensions = float2(cellWidth, cellDepth);
+    float2 cellDimensions = float2(cellSide, cellSide);
     int2 coord = int2(floor((point - center) / cellDimensions + 0.5)) + centerCell;
     coord = clamp(coord, int2(0, 0), int2(cellsWide - 1, cellsDeep - 1));
     uint2 texCoord = uint2(coord);
