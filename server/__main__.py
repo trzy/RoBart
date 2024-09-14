@@ -10,74 +10,14 @@ import asyncio
 from dataclasses import dataclass
 import platform
 import sys
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
 
 import numpy as np
 from pydantic import BaseModel
 
+from .messages import *
+from .navigation import NavigationUI
 from .networking import Server, Session, handler, MessageHandler
-
-
-####################################################################################################
-# Messages
-#
-# Keep these in sync with the corresponding messages in the iOS app.
-####################################################################################################
-
-class HelloMessage(BaseModel):
-   message: str
-
-class LogMessage(BaseModel):
-    text: str
-
-class DriveForDurationMessage(BaseModel):
-    reverse: bool
-    seconds: float
-    speed: float
-
-class DriveForDistanceMessage(BaseModel):
-    reverse: bool
-    meters: float
-    speed: float
-
-class RotateMessage(BaseModel):
-    degrees: float
-
-class DriveForwardMessage(BaseModel):
-    deltaMeters: float
-
-class WatchdogSettingsMessage(BaseModel):
-    enabled: bool
-    timeoutSeconds: float
-
-class PWMSettingsMessage(BaseModel):
-    pwmFrequency: int
-
-class ThrottleMessage(BaseModel):
-    maxThrottle: float
-
-class PIDGainsMessage(BaseModel):
-    whichPID: str
-    Kp: float
-    Ki: float
-    Kd: float
-
-class HoverboardRTTMeasurementMessage(BaseModel):
-    numSamples: int
-    delay: float
-    rttSeconds: List[float]
-
-class AngularVelocityMeasurementMessage(BaseModel):
-    steering: float
-    numSeconds: float
-    angularVelocityResult: float
-
-class PositionGoalToleranceMessage(BaseModel):
-    positionGoalTolerance: float
-
-class RenderSceneGeometryMessage(BaseModel):
-    planes: bool
-    meshes: bool
 
 
 ####################################################################################################
@@ -87,13 +27,18 @@ class RenderSceneGeometryMessage(BaseModel):
 ####################################################################################################
 
 class RoBartDebugServer(MessageHandler):
-    def __init__(self, port: int):
+    def __init__(self, port: int, navigation_ui: NavigationUI):
         super().__init__()
         self.sessions = set()
         self._server = Server(port=port, message_handler=self)
+        self._navigation_ui = navigation_ui
 
     async def run(self):
         await self._server.run()
+
+    async def send_to_clients(self, message: BaseModel):
+        for session in self._server.sessions:
+            await session.send(message)
 
     async def on_connect(self, session: Session):
         print("Connection from: %s" % session.remote_endpoint)
@@ -134,6 +79,10 @@ class RoBartDebugServer(MessageHandler):
     @handler(AngularVelocityMeasurementMessage)
     async def handle_AngularVelocityMeasurementMessage(self, session: Session, msg: AngularVelocityMeasurementMessage, timestamp: float):
         print(f"Measured angular velocity = {msg.angularVelocityResult} deg/sec")
+    
+    @handler(OccupancyMapMessage)
+    async def handle_OccupancyMapMessage(self, session: Session, msg: OccupancyMapMessage, timestamp: float):
+        self._navigation_ui.show(occupancy_map=msg)
 
 
 ####################################################################################################
@@ -200,12 +149,13 @@ class CommandConsole:
         "render": [
             Param(name="planes", type=bool),
             Param(name="meshes", type=bool)
-        ]
+        ],
+        "map": []
     }
 
-    def __init__(self, tasks: List[asyncio.Task], server: RoBartDebugServer):
+    def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]]):
         self._tasks = tasks
-        self._server = server
+        self._send = send_message
 
         # Validate params have been defined correctly
         for command, params in self._commands.items():
@@ -242,53 +192,55 @@ class CommandConsole:
             elif command == "drive":
                 reverse = True if args["direction"][0] == "b" else False
                 if args["units"] == "s":
-                    await self.send(DriveForDurationMessage(reverse=reverse, seconds=args["amount"], speed=args["speed"]))
+                    await self._send(DriveForDurationMessage(reverse=reverse, seconds=args["amount"], speed=args["speed"]))
                 else:
                     meters = args["amount"] * (0.01 if args["units"] == "cm" else 1.0)
-                    await self.send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
+                    await self._send(DriveForDistanceMessage(reverse=reverse, meters=meters, speed=args["speed"]))
                 print("Sent drive command")
             elif command == "s" or command == "stop":
-                await self.send(DriveForDurationMessage(reverse=False, seconds=1e-3, speed=0))
+                await self._send(DriveForDurationMessage(reverse=False, seconds=1e-3, speed=0))
                 print("Sent stop command")
             elif command == "rot":
-                await self.send(RotateMessage(degrees=args["degrees"]))
+                await self._send(RotateMessage(degrees=args["degrees"]))
                 print("Sent rotate command")
             elif command == "df":
-                await self.send(DriveForwardMessage(deltaMeters=args["delta_meters"]))
+                await self._send(DriveForwardMessage(deltaMeters=args["delta_meters"]))
                 print("Sent drive forward command")
             elif command == "watchdog":
                 timeout = max(0, args["timeout_sec"])
                 enabled = timeout > 0
-                await self.send(WatchdogSettingsMessage(enabled=enabled, timeoutSeconds=timeout))
+                await self._send(WatchdogSettingsMessage(enabled=enabled, timeoutSeconds=timeout))
                 if not enabled:
                     print("Sent request to disable watchdog")
                 else:
                     print(f"Sent request to update watchdog timeout to {timeout} sec")
             elif command == "pwm":
-                await self.send(PWMSettingsMessage(pwmFrequency=args["hz"]))
+                await self._send(PWMSettingsMessage(pwmFrequency=args["hz"]))
                 print("Sent request to change PWM frequency")
             elif command == "throttle":
-                await self.send(ThrottleMessage(minThrottle=args["min"], maxThrottle=args["max"]))
+                await self._send(ThrottleMessage(minThrottle=args["min"], maxThrottle=args["max"]))
                 print("Sent throttle value update")
             elif command == "pid":
                 pid_names = { "o": "orientation", "orientation": "orientation", "p": "position", "position": "position" }
                 which_pid = pid_names[args["which_pid"]]
-                await self.send(PIDGainsMessage(whichPID=which_pid, Kp=args["Kp"], Ki=args["Ki"], Kd=args["Kd"]))
+                await self._send(PIDGainsMessage(whichPID=which_pid, Kp=args["Kp"], Ki=args["Ki"], Kd=args["Kd"]))
                 print(f"Sent PID gain parametrs for \"{which_pid}\" controller")
             elif command == "rtt_test":
                 num_samples = args["samples"]
                 delay = args["delay_ms"] * 1e-3
-                await self.send(HoverboardRTTMeasurementMessage(numSamples=num_samples, delay=delay, rttSeconds=[]))
+                await self._send(HoverboardRTTMeasurementMessage(numSamples=num_samples, delay=delay, rttSeconds=[]))
                 print("Sent hoverboard RTT test request")
             elif command == "measure_angvel":
-                await self.send(AngularVelocityMeasurementMessage(steering=args["steering"], numSeconds=args["seconds"], angularVelocityResult=0))
+                await self._send(AngularVelocityMeasurementMessage(steering=args["steering"], numSeconds=args["seconds"], angularVelocityResult=0))
                 print("Sent angular velocity measurement request")
             elif command == "pos_goal_tolerance":
-                await self.send(PositionGoalToleranceMessage(positionGoalTolerance=args["distance"]))
+                await self._send(PositionGoalToleranceMessage(positionGoalTolerance=args["distance"]))
                 print("Sent position goal tolerance update")
             elif command == "render":
-                await self.send(RenderSceneGeometryMessage(planes=args["planes"], meshes=args["meshes"]))
+                await self._send(RenderSceneGeometryMessage(planes=args["planes"], meshes=args["meshes"]))
                 print("Sent scene mesh render selection update")
+            elif command == "map":
+                await self._send(RequestOccupancyMapMessage())
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
@@ -380,10 +332,6 @@ class CommandConsole:
             # Assume str
             return arg
 
-    async def send(self, message: BaseModel):
-        for session in self._server.sessions:
-            await session.send(message)
-
     def _cancel_tasks(self):
         print("Canceling tasks...")
         for task in self._tasks:
@@ -396,11 +344,13 @@ class CommandConsole:
 
 if __name__ == "__main__":
     tasks = []
-    server = RoBartDebugServer(port=8000)
-    console = CommandConsole(tasks=tasks, server=server)
+    navigation_ui = NavigationUI()
+    server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui)
+    console = CommandConsole(tasks=tasks, send_message=server.send_to_clients)
     loop = asyncio.new_event_loop()
     tasks.append(loop.create_task(server.run()))
     tasks.append(loop.create_task(console.run()))
+    tasks.append(loop.create_task(navigation_ui.run(send_message=server.send_to_clients)))
     try:
         loop.run_until_complete(asyncio.gather(*tasks))
     except asyncio.exceptions.CancelledError:
