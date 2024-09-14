@@ -12,10 +12,11 @@ from pydantic import BaseModel
 import tkinter as tk
 from tkinter import ttk
 
-from .messages import OccupancyMapMessage, DrivePathMessage
+from .messages import RequestOccupancyMapMessage, OccupancyMapMessage, DrivePathMessage
 
 
 CELL_SIZE = 10
+DEGREE_SIGN = u"\N{DEGREE SIGN}"
 
 class MapWindow:
     def __init__(self, occupancy_map: OccupancyMapMessage, send_message: Callable[[BaseModel,], Awaitable[None]]):
@@ -32,8 +33,14 @@ class MapWindow:
         style = ttk.Style()
         style.configure('TButton', foreground='black', background='lightgray')
 
+        self._refresh_button = ttk.Button(self._root, text="Refresh", command=self._refresh_map, style="TButton")
+        self._refresh_button.pack(side=tk.LEFT, padx=5, pady=5)
+
         self._clear_button = ttk.Button(self._root, text="Reset Path", command=self._clear_path, style="TButton")
         self._clear_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self._360_button = ttk.Button(self._root, text=f"360{DEGREE_SIGN}", command=self._scan_360, style="TButton")
+        self._360_button.pack(side=tk.LEFT, padx=5, pady=5)
         
         self._go_button = ttk.Button(self._root, text="Go", command=self._go, style="TButton")
         self._go_button.pack(side=tk.LEFT, padx=5, pady=5)
@@ -117,6 +124,11 @@ class MapWindow:
         self._path.append((x, z))
         self._draw_map()
     
+    def _refresh_map(self):
+        msg = RequestOccupancyMapMessage()
+        asyncio.ensure_future(self._send_message(msg))
+        print("Requested occupancy map refresh")
+
     def _clear_path(self):
         self._path = []
         self._draw_map()
@@ -125,6 +137,11 @@ class MapWindow:
         msg = DrivePathMessage(pathCells=[[x, z] for x, z in self._path])
         asyncio.ensure_future(self._send_message(msg))
         print("Sent path")
+
+    def _scan_360(self):
+        msg = DrivePathMessage(pathCells=[])
+        asyncio.ensure_future(self._send_message(msg))
+        print("Sent 360 scan command")
 
 class NavigationUI:
     _visible: asyncio.Event
