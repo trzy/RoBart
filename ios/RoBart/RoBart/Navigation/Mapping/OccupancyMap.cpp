@@ -136,7 +136,7 @@ void OccupancyMap::updateCellCounts(
     simd_float4x4 cameraToWorld = simd_mul(viewMatrix, rotateDepthToARKit);
 
     // Decay existing
-    for (size_t i = 0; i < _cellsWide * _cellsDeep; i++)
+    for (size_t i = 0; i < numCells(); i++)
     {
         _occupancy[i] *= previousWeight;
     }
@@ -195,8 +195,8 @@ void OccupancyMap::updateCellCounts(
 
 void OccupancyMap::updateOccupancyFromCounts(const OccupancyMap &counts, float thresholdAmount)
 {
-    assert(counts._cellsWide * counts._cellsDeep == _cellsWide * _cellsDeep);
-    for (size_t i = 0; i < counts._cellsWide * counts._cellsDeep; i++)
+    assert(counts.numCells() == numCells());
+    for (size_t i = 0; i < counts.numCells(); i++)
     {
         if (counts._occupancy[i] >= thresholdAmount)
         {
@@ -207,7 +207,7 @@ void OccupancyMap::updateOccupancyFromCounts(const OccupancyMap &counts, float t
 
 void OccupancyMap::updateOccupancyFromHeightMap(const float *heights, size_t size, float occupancyHeightThreshold)
 {
-    if (size != _cellsWide * _cellsDeep)
+    if (size != numCells())
     {
         std::cout << "[OccupancyMap] Error: Height map dimensions do not match occupancy map" << std::endl;
         return;
@@ -221,10 +221,20 @@ void OccupancyMap::updateOccupancyFromHeightMap(const float *heights, size_t siz
 
 void OccupancyMap::updateOccupancyFromArray(const float *occupied, size_t size)
 {
-    if (size != _cellsWide * _cellsDeep)
+    if (size != numCells())
     {
         std::cout << "[OccupancyMap] Error: Array dimensions do not match occupancy map" << std::endl;
         return;
     }
     memcpy(_occupancy.get(), occupied, size * sizeof(float));
+}
+
+void OccupancyMap::getOccupancyArray(float *occupied, size_t size) const
+{
+    if (size != numCells())
+    {
+        std::cout << "[OccupancyMap] Error: Array dimensions do not match occupancy map" << std::endl;
+        return;
+    }
+    memcpy(occupied, _occupancy.get(), size * sizeof(float));
 }

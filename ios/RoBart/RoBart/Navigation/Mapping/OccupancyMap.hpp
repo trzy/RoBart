@@ -8,8 +8,6 @@
 #ifndef OccupancyMap_hpp
 #define OccupancyMap_hpp
 
-#include <swift/bridging>
-
 #include <CoreVideo/CoreVideo.h>
 #include <simd/simd.h>
 #include <algorithm>
@@ -92,6 +90,8 @@ public:
 
     void updateOccupancyFromArray(const float *occupied, size_t size);
 
+    void getOccupancyArray(float *occupied, size_t size) const;
+
     CellIndices positionToCell(simd_float3 position) const;
 
     FractionalCellIndices positionToFractionalIndices(simd_float3 position) const;
@@ -134,6 +134,11 @@ public:
     inline size_t cellsDeep() const
     {
         return _cellsDeep;
+    }
+
+    inline size_t numCells() const
+    {
+        return _cellsWide * _cellsDeep;
     }
 
     inline simd_float3 centerPoint() const
