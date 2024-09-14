@@ -12,20 +12,6 @@
 import Foundation
 
 func navigateToGoal(position goal: Vector3) async throws {
-    // Occupancy map
-    let occupancyCalculator = GPUOccpancyMap(
-        width: 20,
-        depth: 20,
-        cellSide: 0.25,
-        centerPoint: ARSessionManager.shared.transform.position
-    )
-    var occupancy = OccupancyMap(
-        occupancyCalculator.width,
-        occupancyCalculator.depth,
-        occupancyCalculator.cellSide,
-        occupancyCalculator.centerPoint
-    )
-
     // Keep trying to reach the goal
     var rescan = true
     var originalPath: [Vector3]?
@@ -38,7 +24,7 @@ func navigateToGoal(position goal: Vector3) async throws {
         // Obtain new waypoints if needed. If unable, try to rescan unless we already have.
         let currentPosition = ARSessionManager.shared.transform.position
         if originalPath == nil {
-            originalPath = await updatePath(to: goal, from: currentPosition, occupancyCalculator: occupancyCalculator, occupancy: &occupancy)
+            originalPath = await updatePath(to: goal, from: currentPosition)
         }
         guard var path = originalPath else {
             if rescan {
@@ -73,82 +59,39 @@ fileprivate func reachedGoal(_ goal: Vector3) -> Bool {
     return (goal - currentPosition).magnitude <= HoverboardController.shared.positionGoalTolerance
 }
 
-fileprivate func updatePath(to goal: Vector3, from startPosition: Vector3, occupancyCalculator: GPUOccpancyMap, occupancy: inout OccupancyMap) async -> [Vector3]? {
-    var timer = Util.Stopwatch()
-    timer.start()
-
-    // Unbundle all meshes into a linear array of vertices and associate a transform with each
-    var vertices: [Vector3] = []
-    var transforms: [Matrix4x4] = []
-    var transformIdxs: [UInt32] = []
-    let meshes = ARSessionManager.shared.sceneMeshes
-    var transformIdx: UInt32 = 0
-    for mesh in meshes {
-        transforms.append(mesh.transform)
-        for vertex in mesh.vertices {
-            vertices.append(vertex)
-            transformIdxs.append(transformIdx)
-        }
-        transformIdx += 1
-    }
-
-    // Calculate occupancy on GPU
-    let minHeight = ARSessionManager.shared.floorY + 0.25
-    let maxHeight = ARSessionManager.shared.floorY + Calibration.phoneHeightAboveFloor
-    occupancyCalculator.reset(to: 0)
-    guard let _ = await occupancyCalculator.update(
-        vertices: vertices,
-        transforms: transforms,
-        transformIndices: transformIdxs,
-        minOccupiedHeight: minHeight,
-        maxOccupiedHeight: maxHeight
-    ) else {
-        // Operation failed, no path can be produced
+fileprivate func updatePath(to goal: Vector3, from startPosition: Vector3) async -> [Vector3]? {
+    // Update occupancy
+    let succeeded = await NavigationController.shared.updateOccupancy()
+    if !succeeded {
         return nil
     }
-
-    // Update occupancy map from GPU result
-    guard let occupancyArray = occupancyCalculator.getMapArray() else {
-        return nil
-    }
-    occupancyArray.withUnsafeBufferPointer { ptr in
-        occupancy.updateOccupancyFromArray(ptr.baseAddress, occupancyArray.count)
-    }
-    log("Occupancy updated: \(timer.elapsedMilliseconds()) ms")
 
     // Compute path
+    var timer = Util.Stopwatch()
     timer.start()
     let from = ARSessionManager.shared.transform.position;
     let to = goal
     let robotRadius = 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
-    let pathCells = findPath(occupancy, from, to, robotRadius)
+    let pathCells = findPath(NavigationController.shared.occupancy, from, to, robotRadius)
 
     // Convert path to positions
-    let pathPositions = pathCells.map { occupancy.cellToPosition($0) }
+    let pathPositions = pathCells.map { NavigationController.shared.occupancy.cellToPosition($0) }
     log("Path computed: \(timer.elapsedMilliseconds()) ms")
 
     // Debug: send to handheld phones for visualization
-    sendToHandheldPeers(occupancy: occupancy, path: pathPositions)
+    sendToHandheldPeers(path: pathPositions)
 
     return pathPositions.isEmpty ? nil : pathPositions
 }
 
-fileprivate func sendToHandheldPeers(occupancy: OccupancyMap, path: [Vector3]) {
-    // Occupancy as flat array
-    var occupancyArray: [Float] = []
-    for zi in 0..<occupancy.cellsDeep() {
-        for xi in 0..<occupancy.cellsWide() {
-            occupancyArray.append(occupancy.at(xi, zi))
-        }
-    }
-
-    // Send to peers
+fileprivate func sendToHandheldPeers(path: [Vector3]) {
+    // Send occupancy map and path to peers
     let msg = PeerOccupancyMessage(
-        width: occupancy.width(),
-        depth: occupancy.depth(),
-        cellSide: occupancy.cellSide(),
-        centerPoint: occupancy.centerPoint(),
-        occupancy: occupancyArray,
+        width: NavigationController.shared.occupancy.width(),
+        depth: NavigationController.shared.occupancy.depth(),
+        cellSide: NavigationController.shared.occupancy.cellSide(),
+        centerPoint: NavigationController.shared.occupancy.centerPoint(),
+        occupancy: NavigationController.shared.getOccupancyArray(),
         path: path,
         ourTransform: ARSessionManager.shared.transform
     )

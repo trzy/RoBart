@@ -83,3 +83,18 @@ struct RenderSceneGeometryMessage: JSONMessage {
     let planes: Bool
     let meshes: Bool
 }
+
+struct RequestOccupancyMapMessage: JSONMessage {
+    let unused: Bool    // Python side doesn't support empty messages so create a dummy field
+}
+
+struct OccupancyMapMessage: JSONMessage {
+    let cellsWide: Int
+    let cellsDeep: Int
+    let occupancy: [Float]
+    let robotCell: [Int]    // 2 elements: x, z
+}
+
+struct DrivePathMessage: JSONMessage {
+    let pathCells: [[Int]]  // array of [cellX, cellZ]
+}

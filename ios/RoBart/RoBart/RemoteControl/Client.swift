@@ -192,6 +192,28 @@ class Client: ObservableObject {
             ARSessionManager.shared.renderPlanes = msg.planes
             ARSessionManager.shared.renderWorldMeshes = msg.meshes
 
+        case RequestOccupancyMapMessage.id:
+            // Send representation of the occupancy map to debug server
+            let _ = await NavigationController.shared.updateOccupancy()
+            let ourPosition = ARSessionManager.shared.transform.position
+            let ourCell = NavigationController.shared.occupancy.positionToCell(ourPosition)
+            let responseMsg = OccupancyMapMessage(
+                cellsWide: NavigationController.shared.occupancy.cellsWide(),
+                cellsDeep: NavigationController.shared.occupancy.cellsDeep(),
+                occupancy: NavigationController.shared.getOccupancyArray(),
+                robotCell: [ ourCell.cellX, ourCell.cellZ ]
+            )
+            connection.send(responseMsg)
+
+        case DrivePathMessage.id:
+            // Debug server has sent us a path back. Assume map dimensions haven't changed.
+            guard let msg = JSONMessageDeserializer.decode(receivedMessage, as: DrivePathMessage.self) else { break }
+            let path = msg.pathCells.map { (cell: [Int]) -> Vector3 in
+                let cell = OccupancyMap.CellIndices(cell[0], cell[1])
+                return NavigationController.shared.occupancy.cellToPosition(cell)
+            }
+            //TODO: drive along path
+
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")
             break
