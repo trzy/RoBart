@@ -9,6 +9,8 @@ import Foundation
 
 enum NavigationCommand {
     case navigate(to: Vector3)
+    case scan360
+    case follow(path: [Vector3])
 }
 
 class NavigationController {
@@ -54,6 +56,12 @@ class NavigationController {
                     case .navigate(to: let position):
                         log("Navigating to \(position)")
                         try await navigateToGoal(position: position)
+                    case .scan360:
+                        log("Scanning 360 degrees")
+                        try await scan360()
+                    case .follow(path: let path):
+                        log("Following path")
+                        try await followPath(path)
                     }
                 } catch {
                     log("Command interrupted: \(error.localizedDescription)")

@@ -212,7 +212,12 @@ class Client: ObservableObject {
                 let cell = OccupancyMap.CellIndices(cell[0], cell[1])
                 return NavigationController.shared.occupancy.cellToPosition(cell)
             }
-            //TODO: drive along path
+            if path.isEmpty {
+                // No path, just look around in place
+                NavigationController.shared.run(.scan360)
+            } else {
+                NavigationController.shared.run(.follow(path: path))
+            }
 
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")

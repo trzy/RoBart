@@ -266,17 +266,19 @@ class HoverboardController {
         // Orientation target: use target if one set, otherwise use vector toward target position if position set, otherwise none
         let targetForward = _targetForward != nil ? _targetForward! : (_targetPosition != nil ? (_targetPosition! - currentPosition).xzProjected.normalized : nil)
         if let targetForward = targetForward {
+            var runOrientationPID = true
+
             // Orientation error: if heading to a position, we must keep the orientation PID active
             // but if only rotating, we stop when we hit our goal.
             let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
             if _targetPosition == nil && orientationErrorDegrees <= orientationGoalTolerance {
                 _targetForward = nil
+                runOrientationPID = false
                 leftMotorThrottle = 0
                 rightMotorThrottle = 0
             }
 
-            if let _ = _targetForward {
-
+            if runOrientationPID {
                 // Orientation PID -> desired velocity
                 let targetAngularVelocity = _orientationPID.update(deltaTime: deltaTime, error: orientationErrorDegrees)
 

@@ -69,6 +69,7 @@
 		CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1412C62F83400B0401C /* HoverboardControlView.swift */; };
 		CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DPadHoverboardControlView.swift */; };
 		CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1452C62FD1300B0401C /* Clamp.swift */; };
+		CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51242C960D60007F27D7 /* FollowPath.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -140,6 +141,7 @@
 		CCA9A1412C62F83400B0401C /* HoverboardControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverboardControlView.swift; sourceTree = "<group>"; };
 		CCA9A1432C62FAC500B0401C /* DPadHoverboardControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPadHoverboardControlView.swift; sourceTree = "<group>"; };
 		CCA9A1452C62FD1300B0401C /* Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clamp.swift; sourceTree = "<group>"; };
+		CCFF51242C960D60007F27D7 /* FollowPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -226,6 +228,7 @@
 				CC1125322C9384B8007AF247 /* Scan360.swift */,
 				CC1125362C93B8F2007AF247 /* NavigationController.swift */,
 				CC1125382C93BD3B007AF247 /* NavigateToGoal.swift */,
+				CCFF51242C960D60007F27D7 /* FollowPath.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -464,6 +467,7 @@
 				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
+				CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */,
 				CC1125352C93A9A5007AF247 /* Task+Extensions.swift in Sources */,
 				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
 				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,
