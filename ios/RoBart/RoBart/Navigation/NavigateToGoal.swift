@@ -16,21 +16,19 @@ func navigateToGoal(position goal: Vector3) async throws {
     let occupancyCalculator = GPUOccpancyMap(
         width: 20,
         depth: 20,
-        cellWidth: 0.25,
-        cellDepth: 0.25,
+        cellSide: 0.25,
         centerPoint: ARSessionManager.shared.transform.position
     )
     var occupancy = OccupancyMap(
         occupancyCalculator.width,
         occupancyCalculator.depth,
-        occupancyCalculator.cellWidth,
-        occupancyCalculator.cellDepth,
+        occupancyCalculator.cellSide,
         occupancyCalculator.centerPoint
     )
 
     // Keep trying to reach the goal
     var rescan = true
-    var path: [Vector3]?
+    var originalPath: [Vector3]?
     while !reachedGoal(goal) {
         if rescan {
             // Take a look around so ARKit can analyze the environment
@@ -39,10 +37,10 @@ func navigateToGoal(position goal: Vector3) async throws {
 
         // Obtain new waypoints if needed. If unable, try to rescan unless we already have.
         let currentPosition = ARSessionManager.shared.transform.position
-        if path == nil {
-            path = await updatePath(to: goal, from: currentPosition, occupancyCalculator: occupancyCalculator, occupancy: &occupancy)
+        if originalPath == nil {
+            originalPath = await updatePath(to: goal, from: currentPosition, occupancyCalculator: occupancyCalculator, occupancy: &occupancy)
         }
-        guard let path = path else {
+        guard var path = originalPath else {
             if rescan {
                 // Already scanned this iteration, no path found. Must abort.
                 break
@@ -55,11 +53,18 @@ func navigateToGoal(position goal: Vector3) async throws {
         try Task.checkCancellation()
 
         // Drive to next waypoint
-//        let nextPosition = path.first!
-//        HoverboardController.shared.send(.driveTo(position: nextPosition))
-//        try await Task.sleep(timeout: .seconds(10), while: { HoverboardController.shared.isMoving })
-        try await Task.sleep(for: .seconds(1))
-        break
+        guard let nextPosition = path.first else {
+            HoverboardController.shared.send(.drive(leftThrottle: 0, rightThrottle: 0))
+            break
+        }
+        log("Driving to: \(nextPosition), steps remaining: \(path.count)")
+        HoverboardController.shared.send(.driveTo(position: nextPosition))
+        try await Task.sleep(timeout: .seconds(10), while: { HoverboardController.shared.isMoving })
+//        try await Task.sleep(for: .seconds(1))
+//        break
+        originalPath!.removeFirst()  // next
+        log("At: \(ARSessionManager.shared.transform.position.xzProjected)")
+
     }
 }
 
@@ -115,7 +120,8 @@ fileprivate func updatePath(to goal: Vector3, from startPosition: Vector3, occup
     timer.start()
     let from = ARSessionManager.shared.transform.position;
     let to = goal
-    let pathCells = findPath(occupancy, from, to)
+    let robotRadius = 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
+    let pathCells = findPath(occupancy, from, to, robotRadius)
 
     // Convert path to positions
     let pathPositions = pathCells.map { occupancy.cellToPosition($0) }
@@ -140,8 +146,7 @@ fileprivate func sendToHandheldPeers(occupancy: OccupancyMap, path: [Vector3]) {
     let msg = PeerOccupancyMessage(
         width: occupancy.width(),
         depth: occupancy.depth(),
-        cellWidth: occupancy.cellWidth(),
-        cellDepth: occupancy.cellDepth(),
+        cellSide: occupancy.cellSide(),
         centerPoint: occupancy.centerPoint(),
         occupancy: occupancyArray,
         path: path,

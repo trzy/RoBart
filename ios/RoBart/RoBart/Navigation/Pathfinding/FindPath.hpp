@@ -12,6 +12,6 @@
 #include <simd/simd.h>
 #include <vector>
 
-extern std::vector<OccupancyMap::CellIndices> findPath(const OccupancyMap &occupancy, simd_float3 from, simd_float3 to);
+extern std::vector<OccupancyMap::CellIndices> findPath(const OccupancyMap &occupancy, simd_float3 from, simd_float3 to, float robotRadius);
 
 #endif /* FindPath_hpp */

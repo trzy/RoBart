@@ -40,6 +40,11 @@ public:
         {
             return cellX == rhs.cellX && cellZ == rhs.cellZ;
         }
+
+        bool operator!=(const CellIndices &rhs) const
+        {
+            return cellX != rhs.cellX || cellZ != rhs.cellZ;
+        }
     };
 
     /// Fractional X and Z indices into the 2D occupancy map (not floored to integral values). Useful for visualization, pathing, etc.
@@ -60,7 +65,7 @@ public:
         }
     };
 
-    OccupancyMap(float width, float depth, float cellWidth, float cellDepth, simd_float3 centerPoint);
+    OccupancyMap(float width, float depth, float cellSide, simd_float3 centerPoint);
 
     /// Copies the object and uses the same underlying memory as the right-hand side. That is,
     /// modifications to the new occupancy map will also affect the original object.
@@ -116,14 +121,9 @@ public:
         return _depth;
     }
 
-    inline float cellWidth() const
+    inline float cellSide() const
     {
-        return _cellWidth;
-    }
-
-    inline float cellDepth() const
-    {
-        return _cellDepth;
+        return _cellSide;
     }
 
     inline size_t cellsWide() const
@@ -178,8 +178,7 @@ private:
 
     float _width;
     float _depth;
-    float _cellWidth;
-    float _cellDepth;
+    float _cellSide;
     size_t _cellsWide;
     size_t _cellsDeep;
     simd_float3 _centerPoint;

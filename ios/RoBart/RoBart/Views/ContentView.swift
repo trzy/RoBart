@@ -52,15 +52,15 @@ struct ContentView: View {
                         CollaborativeMappingStateView()
                     }
                 }
-//                if let image = _depthTest.image {
-//                    VStack {
-//                        Spacer()
-//                        Image(uiImage: image)
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fit)
-//                        Spacer()
-//                    }
-//                }
+                if let image = _depthTest.image {
+                    VStack {
+                        Spacer()
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                        Spacer()
+                    }
+                }
                 if _settings.role == .handheld,
                    let image = _client.robotOccupancyMapImage {
                     let _ = print("Showing image")

@@ -32,18 +32,32 @@ func renderOccupancyMap(occupancy map: OccupancyMap, ourTransform: Matrix4x4, pa
         }
     }
 
-    // Draw path, if one given
+    // Draw path, if one given. But first need to convert back to cells.
+    let pathCells = path.map { map.positionToCell($0) }
     context.setFillColor(UIColor.black.cgColor)
-    for position in path {
-        // Position -> cell indices
-        let cell = map.positionToCell(position)
+    for i in 0..<pathCells.count {
+        // Draw breadcrumbs between path waypoints
+        let cellFrom = pathCells[i]
+        let cellTo = (i + 1) >= pathCells.count ? cellFrom : pathCells[i + 1]
+        let stepX = (cellTo.cellX - cellFrom.cellX).signum()    // -1, 0, or 1
+        let stepZ = (cellTo.cellZ - cellFrom.cellZ).signum()
+        if stepX != 0 && stepZ != 0 {
+            fatalError("Diagonal paths not yet supported")
+        }
 
-        // A slightly smaller rect
-        let crumbLength = pixLength / 2
-        let x = cell.cellX * pixLength + (pixLength - crumbLength) / 2
-        let y = cell.cellZ * pixLength + (pixLength - crumbLength) / 2
-        let rect = CGRect(x: x, y: y, width: crumbLength, height: crumbLength)
-        context.fill(rect)
+        var cell = cellFrom
+        repeat {
+            // A slightly smaller rect
+            let crumbLength = pixLength / 2
+            let x = cell.cellX * pixLength + (pixLength - crumbLength) / 2
+            let y = cell.cellZ * pixLength + (pixLength - crumbLength) / 2
+            let rect = CGRect(x: x, y: y, width: crumbLength, height: crumbLength)
+            context.fill(rect)
+
+            // Next step (this only works because only one of deltaX, deltaZ will be non-zero)
+            cell.cellX += stepX
+            cell.cellZ += stepZ
+        } while cell != cellTo
     }
 
     // Draw circle at our current position

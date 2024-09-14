@@ -41,8 +41,7 @@ struct PeerOccupancyMessage: SimpleBinaryMessage {
     static let id = PeerMessageID.occupancyMessage.rawValue
     let width: Float
     let depth: Float
-    let cellWidth: Float
-    let cellDepth: Float
+    let cellSide: Float
     let centerPoint: Vector3
     let occupancy: [Float]
     let path: [Vector3]
