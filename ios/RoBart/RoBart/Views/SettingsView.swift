@@ -30,6 +30,13 @@ struct SettingsView: View {
                             Text("Handheld").tag(Role.handheld)
                         }
 
+                        LabeledContent {
+                            TextField("Anthropic API Key", text: $_settings.anthropicAPIKey, prompt: Text("..."))
+                                .multilineTextAlignment(.trailing)
+                        } label: {
+                            Text("Anthropic API Key")
+                        }
+
                         // How the "drive-to" button functions
                         Picker("Drive-To Behavior", selection: $_settings.driveToButtonUsesNavigation) {
                             Text("Uses Navigation").tag(true)

@@ -70,7 +70,86 @@
 		CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DPadHoverboardControlView.swift */; };
 		CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1452C62FD1300B0401C /* Clamp.swift */; };
 		CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51242C960D60007F27D7 /* FollowPath.swift */; };
+		CCFF51282C98BDD2007F27D7 /* SwiftAnthropic in Frameworks */ = {isa = PBXBuildFile; productRef = CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */; };
+		CCFF51FC2C98DC55007F27D7 /* throw_delegate.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51AE2C98DC55007F27D7 /* throw_delegate.h */; };
+		CCFF51FD2C98DC55007F27D7 /* attributes.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B02C98DC55007F27D7 /* attributes.h */; };
+		CCFF51FE2C98DC55007F27D7 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B12C98DC55007F27D7 /* config.h */; };
+		CCFF51FF2C98DC55007F27D7 /* macros.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B22C98DC55007F27D7 /* macros.h */; };
+		CCFF52002C98DC55007F27D7 /* optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B32C98DC55007F27D7 /* optimization.h */; };
+		CCFF52012C98DC55007F27D7 /* options.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B42C98DC55007F27D7 /* options.h */; };
+		CCFF52022C98DC55007F27D7 /* policy_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B52C98DC55007F27D7 /* policy_checks.h */; };
+		CCFF52032C98DC55007F27D7 /* port.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B62C98DC55007F27D7 /* port.h */; };
+		CCFF52042C98DC55007F27D7 /* type_traits.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B82C98DC55007F27D7 /* type_traits.h */; };
+		CCFF52052C98DC55007F27D7 /* string_view.cc in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51BA2C98DC55007F27D7 /* string_view.cc */; };
+		CCFF52062C98DC55007F27D7 /* string_view.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51BB2C98DC55007F27D7 /* string_view.h */; };
+		CCFF52072C98DC55007F27D7 /* scoped_refptr.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51BE2C98DC55007F27D7 /* scoped_refptr.h */; };
+		CCFF52082C98DC55007F27D7 /* signal_processing_library.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51C02C98DC55007F27D7 /* signal_processing_library.h */; };
+		CCFF52092C98DC55007F27D7 /* spl_inl.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51C12C98DC55007F27D7 /* spl_inl.h */; };
+		CCFF520A2C98DC55007F27D7 /* division_operations.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C32C98DC55007F27D7 /* division_operations.c */; };
+		CCFF520B2C98DC55007F27D7 /* dot_product_with_scale.cc in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C42C98DC55007F27D7 /* dot_product_with_scale.cc */; };
+		CCFF520C2C98DC55007F27D7 /* dot_product_with_scale.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51C52C98DC55007F27D7 /* dot_product_with_scale.h */; };
+		CCFF520D2C98DC55007F27D7 /* energy.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C62C98DC55007F27D7 /* energy.c */; };
+		CCFF520E2C98DC55007F27D7 /* get_scaling_square.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C72C98DC55007F27D7 /* get_scaling_square.c */; };
+		CCFF520F2C98DC55007F27D7 /* resample_48khz.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C82C98DC55007F27D7 /* resample_48khz.c */; };
+		CCFF52102C98DC55007F27D7 /* resample_by_2_internal.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51C92C98DC55007F27D7 /* resample_by_2_internal.c */; };
+		CCFF52112C98DC55007F27D7 /* resample_by_2_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51CA2C98DC55007F27D7 /* resample_by_2_internal.h */; };
+		CCFF52122C98DC55007F27D7 /* resample_by_2.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51CB2C98DC55007F27D7 /* resample_by_2.c */; };
+		CCFF52132C98DC55007F27D7 /* resample_fractional.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51CC2C98DC55007F27D7 /* resample_fractional.c */; };
+		CCFF52192C98DC55007F27D7 /* spl_sqrt_floor.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51D32C98DC55007F27D7 /* spl_sqrt_floor.c */; };
+		CCFF521A2C98DC55007F27D7 /* spl_sqrt_floor.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51D42C98DC55007F27D7 /* spl_sqrt_floor.h */; };
+		CCFF521B2C98DC55007F27D7 /* vad.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51D72C98DC55007F27D7 /* vad.h */; };
+		CCFF521C2C98DC55007F27D7 /* webrtc_vad.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51D82C98DC55007F27D7 /* webrtc_vad.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		CCFF521D2C98DC55007F27D7 /* mock_vad.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51DA2C98DC55007F27D7 /* mock_vad.h */; };
+		CCFF521F2C98DC55007F27D7 /* vad_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51DD2C98DC55007F27D7 /* vad_core.c */; };
+		CCFF52202C98DC55007F27D7 /* vad_core.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51DE2C98DC55007F27D7 /* vad_core.h */; };
+		CCFF52222C98DC55007F27D7 /* vad_filterbank.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51E02C98DC55007F27D7 /* vad_filterbank.c */; };
+		CCFF52232C98DC55007F27D7 /* vad_filterbank.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51E12C98DC55007F27D7 /* vad_filterbank.h */; };
+		CCFF52252C98DC55007F27D7 /* vad_gmm.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51E32C98DC55007F27D7 /* vad_gmm.c */; };
+		CCFF52262C98DC55007F27D7 /* vad_gmm.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51E42C98DC55007F27D7 /* vad_gmm.h */; };
+		CCFF52282C98DC55007F27D7 /* vad_sp.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51E62C98DC55007F27D7 /* vad_sp.c */; };
+		CCFF52292C98DC55007F27D7 /* vad_sp.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51E72C98DC55007F27D7 /* vad_sp.h */; };
+		CCFF522C2C98DC55007F27D7 /* vad.cc in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51EA2C98DC55007F27D7 /* vad.cc */; };
+		CCFF522D2C98DC55007F27D7 /* webrtc_vad.c in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51EB2C98DC55007F27D7 /* webrtc_vad.c */; };
+		CCFF522E2C98DC55007F27D7 /* safe_compare.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51EE2C98DC55007F27D7 /* safe_compare.h */; };
+		CCFF522F2C98DC55007F27D7 /* safe_conversions_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51EF2C98DC55007F27D7 /* safe_conversions_impl.h */; };
+		CCFF52302C98DC55007F27D7 /* safe_conversions.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F02C98DC55007F27D7 /* safe_conversions.h */; };
+		CCFF52312C98DC55007F27D7 /* inline.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F22C98DC55007F27D7 /* inline.h */; };
+		CCFF52322C98DC55007F27D7 /* rtc_export.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F32C98DC55007F27D7 /* rtc_export.h */; };
+		CCFF52332C98DC55007F27D7 /* checks.cc in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51F52C98DC55007F27D7 /* checks.cc */; };
+		CCFF52342C98DC55007F27D7 /* checks.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F62C98DC55007F27D7 /* checks.h */; };
+		CCFF52352C98DC55007F27D7 /* compile_assert_c.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F72C98DC55007F27D7 /* compile_assert_c.h */; };
+		CCFF52362C98DC55007F27D7 /* sanitizer.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F82C98DC55007F27D7 /* sanitizer.h */; };
+		CCFF52372C98DC55007F27D7 /* type_traits.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51F92C98DC55007F27D7 /* type_traits.h */; };
+		CCFF523B2C98DC65007F27D7 /* WebRTCVAD.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF52382C98DC65007F27D7 /* WebRTCVAD.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		CCFF523C2C98DC65007F27D7 /* WebRTCVAD.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF52392C98DC65007F27D7 /* WebRTCVAD.swift */; };
+		CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */; };
+		CCFF523E2C98DD3D007F27D7 /* WebRTCVAD.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		CCFF52432C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF52422C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CCFF523F2C98DD3D007F27D7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CCA9A0F02C62D35E00B0401C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CCFF519D2C98DBF8007F27D7;
+			remoteInfo = WebRTCVAD;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CCFF52412C98DD3D007F27D7 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				CCFF523E2C98DD3D007F27D7 /* WebRTCVAD.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		CC1125322C9384B8007AF247 /* Scan360.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scan360.swift; sourceTree = "<group>"; };
@@ -142,6 +221,70 @@
 		CCA9A1432C62FAC500B0401C /* DPadHoverboardControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPadHoverboardControlView.swift; sourceTree = "<group>"; };
 		CCA9A1452C62FD1300B0401C /* Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clamp.swift; sourceTree = "<group>"; };
 		CCFF51242C960D60007F27D7 /* FollowPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPath.swift; sourceTree = "<group>"; };
+		CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebRTCVAD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCFF51AE2C98DC55007F27D7 /* throw_delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = throw_delegate.h; sourceTree = "<group>"; };
+		CCFF51B02C98DC55007F27D7 /* attributes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = attributes.h; sourceTree = "<group>"; };
+		CCFF51B12C98DC55007F27D7 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		CCFF51B22C98DC55007F27D7 /* macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = macros.h; sourceTree = "<group>"; };
+		CCFF51B32C98DC55007F27D7 /* optimization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = optimization.h; sourceTree = "<group>"; };
+		CCFF51B42C98DC55007F27D7 /* options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
+		CCFF51B52C98DC55007F27D7 /* policy_checks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = policy_checks.h; sourceTree = "<group>"; };
+		CCFF51B62C98DC55007F27D7 /* port.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = port.h; sourceTree = "<group>"; };
+		CCFF51B82C98DC55007F27D7 /* type_traits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = type_traits.h; sourceTree = "<group>"; };
+		CCFF51BA2C98DC55007F27D7 /* string_view.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = string_view.cc; sourceTree = "<group>"; };
+		CCFF51BB2C98DC55007F27D7 /* string_view.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = string_view.h; sourceTree = "<group>"; };
+		CCFF51BE2C98DC55007F27D7 /* scoped_refptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scoped_refptr.h; sourceTree = "<group>"; };
+		CCFF51C02C98DC55007F27D7 /* signal_processing_library.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = signal_processing_library.h; sourceTree = "<group>"; };
+		CCFF51C12C98DC55007F27D7 /* spl_inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spl_inl.h; sourceTree = "<group>"; };
+		CCFF51C32C98DC55007F27D7 /* division_operations.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = division_operations.c; sourceTree = "<group>"; };
+		CCFF51C42C98DC55007F27D7 /* dot_product_with_scale.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dot_product_with_scale.cc; sourceTree = "<group>"; };
+		CCFF51C52C98DC55007F27D7 /* dot_product_with_scale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dot_product_with_scale.h; sourceTree = "<group>"; };
+		CCFF51C62C98DC55007F27D7 /* energy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = energy.c; sourceTree = "<group>"; };
+		CCFF51C72C98DC55007F27D7 /* get_scaling_square.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = get_scaling_square.c; sourceTree = "<group>"; };
+		CCFF51C82C98DC55007F27D7 /* resample_48khz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = resample_48khz.c; sourceTree = "<group>"; };
+		CCFF51C92C98DC55007F27D7 /* resample_by_2_internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = resample_by_2_internal.c; sourceTree = "<group>"; };
+		CCFF51CA2C98DC55007F27D7 /* resample_by_2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resample_by_2_internal.h; sourceTree = "<group>"; };
+		CCFF51CB2C98DC55007F27D7 /* resample_by_2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = resample_by_2.c; sourceTree = "<group>"; };
+		CCFF51CC2C98DC55007F27D7 /* resample_fractional.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = resample_fractional.c; sourceTree = "<group>"; };
+		CCFF51CE2C98DC55007F27D7 /* BUILD.gn */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = BUILD.gn; sourceTree = "<group>"; };
+		CCFF51CF2C98DC55007F27D7 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		CCFF51D02C98DC55007F27D7 /* README.chromium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.chromium; sourceTree = "<group>"; };
+		CCFF51D12C98DC55007F27D7 /* spl_sqrt_floor_arm.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = spl_sqrt_floor_arm.S; sourceTree = "<group>"; };
+		CCFF51D22C98DC55007F27D7 /* spl_sqrt_floor_mips.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spl_sqrt_floor_mips.c; sourceTree = "<group>"; };
+		CCFF51D32C98DC55007F27D7 /* spl_sqrt_floor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spl_sqrt_floor.c; sourceTree = "<group>"; };
+		CCFF51D42C98DC55007F27D7 /* spl_sqrt_floor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spl_sqrt_floor.h; sourceTree = "<group>"; };
+		CCFF51D72C98DC55007F27D7 /* vad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad.h; sourceTree = "<group>"; };
+		CCFF51D82C98DC55007F27D7 /* webrtc_vad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = webrtc_vad.h; sourceTree = "<group>"; };
+		CCFF51DA2C98DC55007F27D7 /* mock_vad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mock_vad.h; sourceTree = "<group>"; };
+		CCFF51DC2C98DC55007F27D7 /* vad_core_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad_core_unittest.cc; sourceTree = "<group>"; };
+		CCFF51DD2C98DC55007F27D7 /* vad_core.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vad_core.c; sourceTree = "<group>"; };
+		CCFF51DE2C98DC55007F27D7 /* vad_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad_core.h; sourceTree = "<group>"; };
+		CCFF51DF2C98DC55007F27D7 /* vad_filterbank_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad_filterbank_unittest.cc; sourceTree = "<group>"; };
+		CCFF51E02C98DC55007F27D7 /* vad_filterbank.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vad_filterbank.c; sourceTree = "<group>"; };
+		CCFF51E12C98DC55007F27D7 /* vad_filterbank.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad_filterbank.h; sourceTree = "<group>"; };
+		CCFF51E22C98DC55007F27D7 /* vad_gmm_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad_gmm_unittest.cc; sourceTree = "<group>"; };
+		CCFF51E32C98DC55007F27D7 /* vad_gmm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vad_gmm.c; sourceTree = "<group>"; };
+		CCFF51E42C98DC55007F27D7 /* vad_gmm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad_gmm.h; sourceTree = "<group>"; };
+		CCFF51E52C98DC55007F27D7 /* vad_sp_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad_sp_unittest.cc; sourceTree = "<group>"; };
+		CCFF51E62C98DC55007F27D7 /* vad_sp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vad_sp.c; sourceTree = "<group>"; };
+		CCFF51E72C98DC55007F27D7 /* vad_sp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad_sp.h; sourceTree = "<group>"; };
+		CCFF51E82C98DC55007F27D7 /* vad_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad_unittest.cc; sourceTree = "<group>"; };
+		CCFF51E92C98DC55007F27D7 /* vad_unittest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vad_unittest.h; sourceTree = "<group>"; };
+		CCFF51EA2C98DC55007F27D7 /* vad.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vad.cc; sourceTree = "<group>"; };
+		CCFF51EB2C98DC55007F27D7 /* webrtc_vad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = webrtc_vad.c; sourceTree = "<group>"; };
+		CCFF51EE2C98DC55007F27D7 /* safe_compare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = safe_compare.h; sourceTree = "<group>"; };
+		CCFF51EF2C98DC55007F27D7 /* safe_conversions_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = safe_conversions_impl.h; sourceTree = "<group>"; };
+		CCFF51F02C98DC55007F27D7 /* safe_conversions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = safe_conversions.h; sourceTree = "<group>"; };
+		CCFF51F22C98DC55007F27D7 /* inline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = inline.h; sourceTree = "<group>"; };
+		CCFF51F32C98DC55007F27D7 /* rtc_export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtc_export.h; sourceTree = "<group>"; };
+		CCFF51F52C98DC55007F27D7 /* checks.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = checks.cc; sourceTree = "<group>"; };
+		CCFF51F62C98DC55007F27D7 /* checks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = checks.h; sourceTree = "<group>"; };
+		CCFF51F72C98DC55007F27D7 /* compile_assert_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = compile_assert_c.h; sourceTree = "<group>"; };
+		CCFF51F82C98DC55007F27D7 /* sanitizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sanitizer.h; sourceTree = "<group>"; };
+		CCFF51F92C98DC55007F27D7 /* type_traits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = type_traits.h; sourceTree = "<group>"; };
+		CCFF52382C98DC65007F27D7 /* WebRTCVAD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebRTCVAD.h; sourceTree = "<group>"; };
+		CCFF52392C98DC65007F27D7 /* WebRTCVAD.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebRTCVAD.swift; sourceTree = "<group>"; };
+		CCFF52422C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAudioPCMBuffer+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,7 +293,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */,
+				CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */,
 				CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */,
+				CCFF51282C98BDD2007F27D7 /* SwiftAnthropic in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CCFF519B2C98DBF8007F27D7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,6 +389,7 @@
 			isa = PBXGroup;
 			children = (
 				CCA9A0FA2C62D35E00B0401C /* RoBart */,
+				CCFF512B2C98DB3B007F27D7 /* Thirdparty */,
 				CCA9A0F92C62D35E00B0401C /* Products */,
 				CCA9A13C2C62E5A800B0401C /* Frameworks */,
 			);
@@ -246,6 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				CCA9A0F82C62D35E00B0401C /* RoBart.app */,
+				CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -253,6 +407,7 @@
 		CCA9A0FA2C62D35E00B0401C /* RoBart */ = {
 			isa = PBXGroup;
 			children = (
+				CCFF512A2C98BDF7007F27D7 /* Brain */,
 				CC2AA5DE2C7BF3B000A8DE67 /* Calibration */,
 				CC7C1CB92C76F7B1003BFA0B /* Info.plist */,
 				CCA9A10E2C62D7D700B0401C /* Util */,
@@ -384,7 +539,279 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		CCFF512A2C98BDF7007F27D7 /* Brain */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Brain;
+			sourceTree = "<group>";
+		};
+		CCFF512B2C98DB3B007F27D7 /* Thirdparty */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF523A2C98DC65007F27D7 /* WebRTCVAD */,
+				CCFF51FB2C98DC55007F27D7 /* webrtc */,
+			);
+			path = Thirdparty;
+			sourceTree = "<group>";
+		};
+		CCFF51AF2C98DC55007F27D7 /* internal */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51AE2C98DC55007F27D7 /* throw_delegate.h */,
+			);
+			path = internal;
+			sourceTree = "<group>";
+		};
+		CCFF51B72C98DC55007F27D7 /* base */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51AF2C98DC55007F27D7 /* internal */,
+				CCFF51B02C98DC55007F27D7 /* attributes.h */,
+				CCFF51B12C98DC55007F27D7 /* config.h */,
+				CCFF51B22C98DC55007F27D7 /* macros.h */,
+				CCFF51B32C98DC55007F27D7 /* optimization.h */,
+				CCFF51B42C98DC55007F27D7 /* options.h */,
+				CCFF51B52C98DC55007F27D7 /* policy_checks.h */,
+				CCFF51B62C98DC55007F27D7 /* port.h */,
+			);
+			path = base;
+			sourceTree = "<group>";
+		};
+		CCFF51B92C98DC55007F27D7 /* meta */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51B82C98DC55007F27D7 /* type_traits.h */,
+			);
+			path = meta;
+			sourceTree = "<group>";
+		};
+		CCFF51BC2C98DC55007F27D7 /* strings */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51BA2C98DC55007F27D7 /* string_view.cc */,
+				CCFF51BB2C98DC55007F27D7 /* string_view.h */,
+			);
+			path = strings;
+			sourceTree = "<group>";
+		};
+		CCFF51BD2C98DC55007F27D7 /* absl */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51B72C98DC55007F27D7 /* base */,
+				CCFF51B92C98DC55007F27D7 /* meta */,
+				CCFF51BC2C98DC55007F27D7 /* strings */,
+			);
+			path = absl;
+			sourceTree = "<group>";
+		};
+		CCFF51BF2C98DC55007F27D7 /* api */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51BE2C98DC55007F27D7 /* scoped_refptr.h */,
+			);
+			path = api;
+			sourceTree = "<group>";
+		};
+		CCFF51C22C98DC55007F27D7 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51C02C98DC55007F27D7 /* signal_processing_library.h */,
+				CCFF51C12C98DC55007F27D7 /* spl_inl.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		CCFF51CD2C98DC55007F27D7 /* signal_processing */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51C22C98DC55007F27D7 /* include */,
+				CCFF51C32C98DC55007F27D7 /* division_operations.c */,
+				CCFF51C42C98DC55007F27D7 /* dot_product_with_scale.cc */,
+				CCFF51C52C98DC55007F27D7 /* dot_product_with_scale.h */,
+				CCFF51C62C98DC55007F27D7 /* energy.c */,
+				CCFF51C72C98DC55007F27D7 /* get_scaling_square.c */,
+				CCFF51C82C98DC55007F27D7 /* resample_48khz.c */,
+				CCFF51C92C98DC55007F27D7 /* resample_by_2_internal.c */,
+				CCFF51CA2C98DC55007F27D7 /* resample_by_2_internal.h */,
+				CCFF51CB2C98DC55007F27D7 /* resample_by_2.c */,
+				CCFF51CC2C98DC55007F27D7 /* resample_fractional.c */,
+			);
+			path = signal_processing;
+			sourceTree = "<group>";
+		};
+		CCFF51D52C98DC55007F27D7 /* spl_sqrt_floor */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51CE2C98DC55007F27D7 /* BUILD.gn */,
+				CCFF51CF2C98DC55007F27D7 /* LICENSE */,
+				CCFF51D02C98DC55007F27D7 /* README.chromium */,
+				CCFF51D12C98DC55007F27D7 /* spl_sqrt_floor_arm.S */,
+				CCFF51D22C98DC55007F27D7 /* spl_sqrt_floor_mips.c */,
+				CCFF51D32C98DC55007F27D7 /* spl_sqrt_floor.c */,
+				CCFF51D42C98DC55007F27D7 /* spl_sqrt_floor.h */,
+			);
+			path = spl_sqrt_floor;
+			sourceTree = "<group>";
+		};
+		CCFF51D62C98DC55007F27D7 /* third_party */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51D52C98DC55007F27D7 /* spl_sqrt_floor */,
+			);
+			path = third_party;
+			sourceTree = "<group>";
+		};
+		CCFF51D92C98DC55007F27D7 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51D72C98DC55007F27D7 /* vad.h */,
+				CCFF51D82C98DC55007F27D7 /* webrtc_vad.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		CCFF51DB2C98DC55007F27D7 /* mock */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51DA2C98DC55007F27D7 /* mock_vad.h */,
+			);
+			path = mock;
+			sourceTree = "<group>";
+		};
+		CCFF51EC2C98DC55007F27D7 /* vad */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51D92C98DC55007F27D7 /* include */,
+				CCFF51DB2C98DC55007F27D7 /* mock */,
+				CCFF51DC2C98DC55007F27D7 /* vad_core_unittest.cc */,
+				CCFF51DD2C98DC55007F27D7 /* vad_core.c */,
+				CCFF51DE2C98DC55007F27D7 /* vad_core.h */,
+				CCFF51DF2C98DC55007F27D7 /* vad_filterbank_unittest.cc */,
+				CCFF51E02C98DC55007F27D7 /* vad_filterbank.c */,
+				CCFF51E12C98DC55007F27D7 /* vad_filterbank.h */,
+				CCFF51E22C98DC55007F27D7 /* vad_gmm_unittest.cc */,
+				CCFF51E32C98DC55007F27D7 /* vad_gmm.c */,
+				CCFF51E42C98DC55007F27D7 /* vad_gmm.h */,
+				CCFF51E52C98DC55007F27D7 /* vad_sp_unittest.cc */,
+				CCFF51E62C98DC55007F27D7 /* vad_sp.c */,
+				CCFF51E72C98DC55007F27D7 /* vad_sp.h */,
+				CCFF51E82C98DC55007F27D7 /* vad_unittest.cc */,
+				CCFF51E92C98DC55007F27D7 /* vad_unittest.h */,
+				CCFF51EA2C98DC55007F27D7 /* vad.cc */,
+				CCFF51EB2C98DC55007F27D7 /* webrtc_vad.c */,
+			);
+			path = vad;
+			sourceTree = "<group>";
+		};
+		CCFF51ED2C98DC55007F27D7 /* common_audio */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51CD2C98DC55007F27D7 /* signal_processing */,
+				CCFF51D62C98DC55007F27D7 /* third_party */,
+				CCFF51EC2C98DC55007F27D7 /* vad */,
+			);
+			path = common_audio;
+			sourceTree = "<group>";
+		};
+		CCFF51F12C98DC55007F27D7 /* numerics */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51EE2C98DC55007F27D7 /* safe_compare.h */,
+				CCFF51EF2C98DC55007F27D7 /* safe_conversions_impl.h */,
+				CCFF51F02C98DC55007F27D7 /* safe_conversions.h */,
+			);
+			path = numerics;
+			sourceTree = "<group>";
+		};
+		CCFF51F42C98DC55007F27D7 /* system */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51F22C98DC55007F27D7 /* inline.h */,
+				CCFF51F32C98DC55007F27D7 /* rtc_export.h */,
+			);
+			path = system;
+			sourceTree = "<group>";
+		};
+		CCFF51FA2C98DC55007F27D7 /* rtc_base */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51F12C98DC55007F27D7 /* numerics */,
+				CCFF51F42C98DC55007F27D7 /* system */,
+				CCFF51F52C98DC55007F27D7 /* checks.cc */,
+				CCFF51F62C98DC55007F27D7 /* checks.h */,
+				CCFF51F72C98DC55007F27D7 /* compile_assert_c.h */,
+				CCFF51F82C98DC55007F27D7 /* sanitizer.h */,
+				CCFF51F92C98DC55007F27D7 /* type_traits.h */,
+			);
+			path = rtc_base;
+			sourceTree = "<group>";
+		};
+		CCFF51FB2C98DC55007F27D7 /* webrtc */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF51BD2C98DC55007F27D7 /* absl */,
+				CCFF51BF2C98DC55007F27D7 /* api */,
+				CCFF51ED2C98DC55007F27D7 /* common_audio */,
+				CCFF51FA2C98DC55007F27D7 /* rtc_base */,
+			);
+			path = webrtc;
+			sourceTree = "<group>";
+		};
+		CCFF523A2C98DC65007F27D7 /* WebRTCVAD */ = {
+			isa = PBXGroup;
+			children = (
+				CCFF52382C98DC65007F27D7 /* WebRTCVAD.h */,
+				CCFF52392C98DC65007F27D7 /* WebRTCVAD.swift */,
+				CCFF52422C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift */,
+			);
+			path = WebRTCVAD;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		CCFF51992C98DBF8007F27D7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCFF51FC2C98DC55007F27D7 /* throw_delegate.h in Headers */,
+				CCFF52032C98DC55007F27D7 /* port.h in Headers */,
+				CCFF52112C98DC55007F27D7 /* resample_by_2_internal.h in Headers */,
+				CCFF52372C98DC55007F27D7 /* type_traits.h in Headers */,
+				CCFF52062C98DC55007F27D7 /* string_view.h in Headers */,
+				CCFF52082C98DC55007F27D7 /* signal_processing_library.h in Headers */,
+				CCFF52012C98DC55007F27D7 /* options.h in Headers */,
+				CCFF523B2C98DC65007F27D7 /* WebRTCVAD.h in Headers */,
+				CCFF520C2C98DC55007F27D7 /* dot_product_with_scale.h in Headers */,
+				CCFF52352C98DC55007F27D7 /* compile_assert_c.h in Headers */,
+				CCFF52342C98DC55007F27D7 /* checks.h in Headers */,
+				CCFF521B2C98DC55007F27D7 /* vad.h in Headers */,
+				CCFF51FD2C98DC55007F27D7 /* attributes.h in Headers */,
+				CCFF52292C98DC55007F27D7 /* vad_sp.h in Headers */,
+				CCFF52022C98DC55007F27D7 /* policy_checks.h in Headers */,
+				CCFF52322C98DC55007F27D7 /* rtc_export.h in Headers */,
+				CCFF522F2C98DC55007F27D7 /* safe_conversions_impl.h in Headers */,
+				CCFF521D2C98DC55007F27D7 /* mock_vad.h in Headers */,
+				CCFF52312C98DC55007F27D7 /* inline.h in Headers */,
+				CCFF52302C98DC55007F27D7 /* safe_conversions.h in Headers */,
+				CCFF52092C98DC55007F27D7 /* spl_inl.h in Headers */,
+				CCFF521C2C98DC55007F27D7 /* webrtc_vad.h in Headers */,
+				CCFF51FE2C98DC55007F27D7 /* config.h in Headers */,
+				CCFF52232C98DC55007F27D7 /* vad_filterbank.h in Headers */,
+				CCFF52042C98DC55007F27D7 /* type_traits.h in Headers */,
+				CCFF52262C98DC55007F27D7 /* vad_gmm.h in Headers */,
+				CCFF52072C98DC55007F27D7 /* scoped_refptr.h in Headers */,
+				CCFF51FF2C98DC55007F27D7 /* macros.h in Headers */,
+				CCFF52362C98DC55007F27D7 /* sanitizer.h in Headers */,
+				CCFF522E2C98DC55007F27D7 /* safe_compare.h in Headers */,
+				CCFF52002C98DC55007F27D7 /* optimization.h in Headers */,
+				CCFF521A2C98DC55007F27D7 /* spl_sqrt_floor.h in Headers */,
+				CCFF52202C98DC55007F27D7 /* vad_core.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		CCA9A0F72C62D35E00B0401C /* RoBart */ = {
@@ -394,15 +821,38 @@
 				CCA9A0F42C62D35E00B0401C /* Sources */,
 				CCA9A0F52C62D35E00B0401C /* Frameworks */,
 				CCA9A0F62C62D35E00B0401C /* Resources */,
+				CCFF52412C98DD3D007F27D7 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CCFF52402C98DD3D007F27D7 /* PBXTargetDependency */,
+			);
+			name = RoBart;
+			packageProductDependencies = (
+				CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */,
+			);
+			productName = Robart;
+			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CCFF519D2C98DBF8007F27D7 /* WebRTCVAD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CCFF51A22C98DBF8007F27D7 /* Build configuration list for PBXNativeTarget "WebRTCVAD" */;
+			buildPhases = (
+				CCFF51992C98DBF8007F27D7 /* Headers */,
+				CCFF519A2C98DBF8007F27D7 /* Sources */,
+				CCFF519B2C98DBF8007F27D7 /* Frameworks */,
+				CCFF519C2C98DBF8007F27D7 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = RoBart;
-			productName = Robart;
-			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
-			productType = "com.apple.product-type.application";
+			name = WebRTCVAD;
+			productName = WebRTCVAD;
+			productReference = CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -418,6 +868,9 @@
 						CreatedOnToolsVersion = 15.4;
 						LastSwiftMigration = 1540;
 					};
+					CCFF519D2C98DBF8007F27D7 = {
+						CreatedOnToolsVersion = 15.4;
+					};
 				};
 			};
 			buildConfigurationList = CCA9A0F32C62D35E00B0401C /* Build configuration list for PBXProject "RoBart" */;
@@ -429,11 +882,15 @@
 				Base,
 			);
 			mainGroup = CCA9A0EF2C62D35E00B0401C;
+			packageReferences = (
+				CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */,
+			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				CCA9A0F72C62D35E00B0401C /* RoBart */,
+				CCFF519D2C98DBF8007F27D7 /* WebRTCVAD */,
 			);
 		};
 /* End PBXProject section */
@@ -446,6 +903,13 @@
 				CCA9A1032C62D35F00B0401C /* Preview Assets.xcassets in Resources */,
 				CCA9A1002C62D35F00B0401C /* Assets.xcassets in Resources */,
 				CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CCFF519C2C98DBF8007F27D7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,7 +981,41 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CCFF519A2C98DBF8007F27D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CCFF520A2C98DC55007F27D7 /* division_operations.c in Sources */,
+				CCFF52102C98DC55007F27D7 /* resample_by_2_internal.c in Sources */,
+				CCFF52332C98DC55007F27D7 /* checks.cc in Sources */,
+				CCFF52282C98DC55007F27D7 /* vad_sp.c in Sources */,
+				CCFF52052C98DC55007F27D7 /* string_view.cc in Sources */,
+				CCFF523C2C98DC65007F27D7 /* WebRTCVAD.swift in Sources */,
+				CCFF522C2C98DC55007F27D7 /* vad.cc in Sources */,
+				CCFF520E2C98DC55007F27D7 /* get_scaling_square.c in Sources */,
+				CCFF52192C98DC55007F27D7 /* spl_sqrt_floor.c in Sources */,
+				CCFF522D2C98DC55007F27D7 /* webrtc_vad.c in Sources */,
+				CCFF52122C98DC55007F27D7 /* resample_by_2.c in Sources */,
+				CCFF520B2C98DC55007F27D7 /* dot_product_with_scale.cc in Sources */,
+				CCFF521F2C98DC55007F27D7 /* vad_core.c in Sources */,
+				CCFF52252C98DC55007F27D7 /* vad_gmm.c in Sources */,
+				CCFF520F2C98DC55007F27D7 /* resample_48khz.c in Sources */,
+				CCFF52222C98DC55007F27D7 /* vad_filterbank.c in Sources */,
+				CCFF52132C98DC55007F27D7 /* resample_fractional.c in Sources */,
+				CCFF520D2C98DC55007F27D7 /* energy.c in Sources */,
+				CCFF52432C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CCFF52402C98DD3D007F27D7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CCFF519D2C98DBF8007F27D7 /* WebRTCVAD */;
+			targetProxy = CCFF523F2C98DD3D007F27D7 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		CCA9A1042C62D35F00B0401C /* Debug */ = {
@@ -714,6 +1212,86 @@
 			};
 			name = Release;
 		};
+		CCFF51A32C98DBF8007F27D7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 7T2874S592;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Thirdparty/webrtc;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.WebRTCVAD;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 10.5;
+			};
+			name = Debug;
+		};
+		CCFF51A42C98DBF8007F27D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 7T2874S592;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = Thirdparty/webrtc;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.WebRTCVAD;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 10.5;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -735,7 +1313,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		CCFF51A22C98DBF8007F27D7 /* Build configuration list for PBXNativeTarget "WebRTCVAD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CCFF51A32C98DBF8007F27D7 /* Debug */,
+				CCFF51A42C98DBF8007F27D7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jamesrochabrun/SwiftAnthropic";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */;
+			productName = SwiftAnthropic;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CCA9A0F02C62D35E00B0401C /* Project object */;
 }
