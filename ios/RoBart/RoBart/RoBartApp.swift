@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WebRTCVAD
 
 @main
 struct RoBartApp: App {
