@@ -12,6 +12,9 @@
 		CC1125372C93B8F2007AF247 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1125362C93B8F2007AF247 /* NavigationController.swift */; };
 		CC1125392C93BD3B007AF247 /* NavigateToGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1125382C93BD3B007AF247 /* NavigateToGoal.swift */; };
 		CC11253B2C93F213007AF247 /* RenderOccupancyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11253A2C93F213007AF247 /* RenderOccupancyMap.swift */; };
+		CC26CF542C9A0A5A00ACC82E /* Brain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF532C9A0A5A00ACC82E /* Brain.swift */; };
+		CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */; };
+		CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -157,6 +160,9 @@
 		CC1125362C93B8F2007AF247 /* NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		CC1125382C93BD3B007AF247 /* NavigateToGoal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigateToGoal.swift; sourceTree = "<group>"; };
 		CC11253A2C93F213007AF247 /* RenderOccupancyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderOccupancyMap.swift; sourceTree = "<group>"; };
+		CC26CF532C9A0A5A00ACC82E /* Brain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brain.swift; sourceTree = "<group>"; };
+		CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechDetector.swift; sourceTree = "<group>"; };
+		CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceExtractor.swift; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -332,6 +338,15 @@
 			path = Pathfinding;
 			sourceTree = "<group>";
 		};
+		CC26CF552C9A0AC900ACC82E /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */,
+				CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
 		CC2AA5DE2C7BF3B000A8DE67 /* Calibration */ = {
 			isa = PBXGroup;
 			children = (
@@ -412,6 +427,7 @@
 				CC7C1CB92C76F7B1003BFA0B /* Info.plist */,
 				CCA9A10E2C62D7D700B0401C /* Util */,
 				CCA9A1092C62D71B00B0401C /* AR */,
+				CC26CF552C9A0AC900ACC82E /* Audio */,
 				CCA9A12B2C62E07F00B0401C /* Networking */,
 				CCA9A1282C62E02A00B0401C /* Hoverboard */,
 				CCA3B9292C8CE02100F15F9F /* Navigation */,
@@ -542,6 +558,7 @@
 		CCFF512A2C98BDF7007F27D7 /* Brain */ = {
 			isa = PBXGroup;
 			children = (
+				CC26CF532C9A0A5A00ACC82E /* Brain.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -920,6 +937,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CC26CF542C9A0A5A00ACC82E /* Brain.swift in Sources */,
 				CC1125332C9384B8007AF247 /* Scan360.swift in Sources */,
 				CCA9A1272C62DBFB00B0401C /* PerMotorControlView.swift in Sources */,
 				CC38DE3D2C7D23B5003EEBDE /* ParticipantRenderer.swift in Sources */,
@@ -944,6 +962,7 @@
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
+				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,
 				CC1125372C93B8F2007AF247 /* NavigationController.swift in Sources */,
 				CC8C395F2C912AA50040559F /* ComputeShaders.metal in Sources */,
 				CC8C395D2C911EBA0040559F /* GPUOccupancyMap.swift in Sources */,
@@ -956,6 +975,7 @@
 				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
 				CCA3B93C2C8ECB2F00F15F9F /* OccupancyMap.cpp in Sources */,
+				CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */,
 				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
@@ -1154,6 +1174,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Robot voice commands.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1192,6 +1213,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Communication with motor control board.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Robot voice commands.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
