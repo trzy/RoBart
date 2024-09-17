@@ -18,5 +18,5 @@ FOUNDATION_EXPORT const unsigned char WebRTC_VADVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <WebRTC_VAD/PublicHeader.h>
 
-#import "webrtc_vad.h"
+#import <WebRTCVAD/webrtc_vad.h>
 
