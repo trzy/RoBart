@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-import WebRTCVAD
 
 @main
 struct RoBartApp: App {
+    private let _brain = Brain.shared
     private let _client = Client()
     private let _peerManager = PeerManager.shared
 
