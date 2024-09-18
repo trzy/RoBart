@@ -15,6 +15,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
 import numpy as np
 from pydantic import BaseModel
 
+from .image_viewer import ImageViewer
 from .messages import *
 from .navigation import NavigationUI
 from .networking import Server, Session, handler, MessageHandler
@@ -150,12 +151,16 @@ class CommandConsole:
             Param(name="planes", type=bool),
             Param(name="meshes", type=bool)
         ],
-        "map": []
+        "map": [],
+        "image": [
+            Param(name="filepath", type=str)
+        ]
     }
 
-    def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]]):
+    def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]], image_viewer: ImageViewer):
         self._tasks = tasks
         self._send = send_message
+        self._image_viewer = image_viewer
 
         # Validate params have been defined correctly
         for command, params in self._commands.items():
@@ -241,6 +246,13 @@ class CommandConsole:
                 print("Sent scene mesh render selection update")
             elif command == "map":
                 await self._send(RequestOccupancyMapMessage())
+            elif command == "image":
+                try:
+                    with open(file=args["filepath"], mode="rb") as fp:
+                        self._image_viewer.show(image=fp.read(), name=args["filepath"], height=600)
+                except Exception as e:
+                    print(f"Error: Failed to display image: {e}")
+                    self._image_viewer.hide()
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
@@ -345,12 +357,14 @@ class CommandConsole:
 if __name__ == "__main__":
     tasks = []
     navigation_ui = NavigationUI()
+    image_viewer = ImageViewer()
     server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui)
-    console = CommandConsole(tasks=tasks, send_message=server.send_to_clients)
+    console = CommandConsole(tasks=tasks, send_message=server.send_to_clients, image_viewer=image_viewer)
     loop = asyncio.new_event_loop()
     tasks.append(loop.create_task(server.run()))
     tasks.append(loop.create_task(console.run()))
     tasks.append(loop.create_task(navigation_ui.run(send_message=server.send_to_clients)))
+    tasks.append(loop.create_task(image_viewer.run()))
     try:
         loop.run_until_complete(asyncio.gather(*tasks))
     except asyncio.exceptions.CancelledError:
