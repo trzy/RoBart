@@ -103,6 +103,8 @@ struct ContentView: View {
     }
 
     private func updateRaycast(event: SceneEvents.Update, arView: ARView) {
+        // Handheld phone raycasts to select positions for robot navigation
+        guard Settings.shared.role == .handheld else { return }
         guard let query = arView.makeRaycastQuery(from: arView.center, allowing: .estimatedPlane, alignment: .any) else { return }
         if let hit = arView.session.raycast(query).first {
             let cursor = getCursor(in: event.scene)
