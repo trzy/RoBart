@@ -55,7 +55,7 @@ class Brain {
     }
 
     private func parseBlocks(from text: String) -> [String: String] {
-        
+        return [:]
     }
 }
 
