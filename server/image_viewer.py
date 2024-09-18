@@ -7,6 +7,7 @@
 
 import asyncio
 from io import BytesIO
+from typing import Tuple
 
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -18,6 +19,7 @@ class ImageViewer:
     def __init__(self):
         self._visible = asyncio.Event()
         self._image: ImageTk.PhotoImage | None = None
+        self._image_size: Tuple[int, int] | None = None
         self._image_name: str | None = None
 
         self._root = tk.Tk()
@@ -37,6 +39,7 @@ class ImageViewer:
         pil_image = Image.open(BytesIO(image))
         pil_image = self._resize_image(image=pil_image, width=width, height=height)
         self._image = ImageTk.PhotoImage(image=pil_image)
+        self._image_size = pil_image.size
         self._window_title = name if name is not None else "Image"
         self._visible.set()
     
@@ -44,13 +47,14 @@ class ImageViewer:
         while True:
             # Wait until visible, then show if window exists
             await self._visible.wait()
-            self._label.config(image=self._image)
-            self._label.image = self._image
-            self._root.title(self._window_title)
             self._root.deiconify()
 
             # While visible, update
             while self._visible.is_set():
+                self._label.config(image=self._image)
+                self._label.image = self._image
+                self._root.title(self._window_title)
+                self._root.geometry(f"{self._image_size[0]}x{self._image_size[1]}")
                 self._root.update()
                 await asyncio.sleep(0.1)
             
