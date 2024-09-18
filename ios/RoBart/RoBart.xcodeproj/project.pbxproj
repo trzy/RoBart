@@ -15,7 +15,6 @@
 		CC26CF542C9A0A5A00ACC82E /* Brain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF532C9A0A5A00ACC82E /* Brain.swift */; };
 		CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */; };
 		CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */; };
-		CC26CF5C2C9A55B000ACC82E /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = CC26CF5B2C9A55B000ACC82E /* Starscream */; };
 		CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
@@ -304,7 +303,6 @@
 				CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */,
 				CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */,
 				CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */,
-				CC26CF5C2C9A55B000ACC82E /* Starscream in Frameworks */,
 				CCFF51282C98BDD2007F27D7 /* SwiftAnthropic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -853,7 +851,6 @@
 			name = RoBart;
 			packageProductDependencies = (
 				CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */,
-				CC26CF5B2C9A55B000ACC82E /* Starscream */,
 			);
 			productName = Robart;
 			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
@@ -907,7 +904,6 @@
 			mainGroup = CCA9A0EF2C62D35E00B0401C;
 			packageReferences = (
 				CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */,
-				CC26CF5A2C9A55B000ACC82E /* XCRemoteSwiftPackageReference "Starscream" */,
 			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
 			projectDirPath = "";
@@ -1357,14 +1353,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CC26CF5A2C9A55B000ACC82E /* XCRemoteSwiftPackageReference "Starscream" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/daltoniam/Starscream";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.8;
-			};
-		};
 		CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jamesrochabrun/SwiftAnthropic";
@@ -1376,11 +1364,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CC26CF5B2C9A55B000ACC82E /* Starscream */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CC26CF5A2C9A55B000ACC82E /* XCRemoteSwiftPackageReference "Starscream" */;
-			productName = Starscream;
-		};
 		CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */;
