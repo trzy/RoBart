@@ -219,6 +219,9 @@ class Client: ObservableObject {
                 NavigationController.shared.run(.follow(path: path))
             }
 
+        case RequestAnnotatedViewMessage.id:
+            await getAnnotatedView(connection: connection)
+
         default:
             log("Error: Unhandled message: \(receivedMessage.id)")
             break
@@ -372,6 +375,12 @@ class Client: ObservableObject {
         }
         robotOccupancyMapImage = RoBart.renderOccupancyMap(occupancy: occupancy, ourTransform: msg.ourTransform, path: msg.path)
         log("Rendered occupancy map image")
+    }
+
+    private func getAnnotatedView(connection: AsyncTCPConnection) async {
+        if let imageData = await takePhotoWithAnnotations() {
+            connection.send(AnnotatedViewMessage(imageBase64: imageData.base64EncodedString()))
+        }
     }
 }
 
