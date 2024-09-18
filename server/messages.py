@@ -77,3 +77,9 @@ class OccupancyMapMessage(BaseModel):
 
 class DrivePathMessage(BaseModel):
     pathCells: List[List[int]]  # list of [cellX, cellZ]
+
+class RequestAnnotatedViewMessage(BaseModel):
+    unused: bool = False
+
+class AnnotatedViewMessage(BaseModel):
+    imageBase64: str

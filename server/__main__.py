@@ -7,6 +7,7 @@
 #
 
 import asyncio
+import base64
 from dataclasses import dataclass
 import platform
 import sys
@@ -28,11 +29,12 @@ from .networking import Server, Session, handler, MessageHandler
 ####################################################################################################
 
 class RoBartDebugServer(MessageHandler):
-    def __init__(self, port: int, navigation_ui: NavigationUI):
+    def __init__(self, port: int, navigation_ui: NavigationUI, image_viewer: ImageViewer):
         super().__init__()
         self.sessions = set()
         self._server = Server(port=port, message_handler=self)
         self._navigation_ui = navigation_ui
+        self._image_viewer = image_viewer
 
     async def run(self):
         await self._server.run()
@@ -84,6 +86,10 @@ class RoBartDebugServer(MessageHandler):
     @handler(OccupancyMapMessage)
     async def handle_OccupancyMapMessage(self, session: Session, msg: OccupancyMapMessage, timestamp: float):
         self._navigation_ui.show(occupancy_map=msg)
+    
+    @handler(AnnotatedViewMessage)
+    async def handle_AnnotatedViewMessage(self, session: Session, msg: AnnotatedViewMessage, timestamp: float):
+        self._image_viewer.show(image=base64.b64decode(msg.imageBase64), name="Robot Annotated View")
 
 
 ####################################################################################################
@@ -154,7 +160,8 @@ class CommandConsole:
         "map": [],
         "image": [
             Param(name="filepath", type=str)
-        ]
+        ],
+        "get_view": []
     }
 
     def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]], image_viewer: ImageViewer):
@@ -253,6 +260,8 @@ class CommandConsole:
                 except Exception as e:
                     print(f"Error: Failed to display image: {e}")
                     self._image_viewer.hide()
+            elif command == "get_view":
+                await self._send(RequestAnnotatedViewMessage())
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
@@ -358,7 +367,7 @@ if __name__ == "__main__":
     tasks = []
     navigation_ui = NavigationUI()
     image_viewer = ImageViewer()
-    server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui)
+    server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui, image_viewer=image_viewer)
     console = CommandConsole(tasks=tasks, send_message=server.send_to_clients, image_viewer=image_viewer)
     loop = asyncio.new_event_loop()
     tasks.append(loop.create_task(server.run()))
