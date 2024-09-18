@@ -16,6 +16,7 @@
 		CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */; };
 		CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */; };
 		CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */; };
+		CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5F2C9A913A00ACC82E /* Prompts.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -165,6 +166,7 @@
 		CC26CF562C9A0AE100ACC82E /* SpeechDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechDetector.swift; sourceTree = "<group>"; };
 		CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceExtractor.swift; sourceTree = "<group>"; };
 		CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deepgram.swift; sourceTree = "<group>"; };
+		CC26CF5F2C9A913A00ACC82E /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -562,6 +564,7 @@
 			isa = PBXGroup;
 			children = (
 				CC26CF532C9A0A5A00ACC82E /* Brain.swift */,
+				CC26CF5F2C9A913A00ACC82E /* Prompts.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -950,6 +953,7 @@
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
 				CC11253B2C93F213007AF247 /* RenderOccupancyMap.swift in Sources */,
 				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
+				CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
 				CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */,
