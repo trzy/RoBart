@@ -26,21 +26,23 @@ def detect_media_type(image_bytes: bytes) -> str:
             return "image/webp"
     return "image/jpeg" # unknown, assume JPEG
 
+def load_single_image(filepath: str) -> Image:
+    with open(file=filepath, mode="rb") as fp:
+        image_bytes = fp.read()
+        return Image(
+            name=os.path.splitext(os.path.basename(filepath))[0],
+            base64_data=base64.b64encode(image_bytes).decode("utf-8"),
+            media_type=detect_media_type(image_bytes=image_bytes)
+        )
+
 def load_images(dir: str) -> List[Image]:
     images = []
     filepaths = glob(os.path.join(dir, "*.jpg"))
     for filepath in filepaths:
-        with open(file=filepath, mode="rb") as fp:
-            image_bytes = fp.read()
-            image = Image(
-                name=os.path.splitext(os.path.basename(filepath))[0],
-                base64_data=base64.b64encode(image_bytes).decode("utf-8"),
-                media_type=detect_media_type(image_bytes=image_bytes)
-            )
-            images.append(image)
+        images.append(load_single_image(filepath=filepath))
     return images
 
-async def send(system: str, prompt: str, images: List[Image] = []):
+async def send(system: str, prompt: str, images: List[Image] = [], stop: List[str] = []):
     content = [ { "type": "text", "text": prompt } ]
     for image in images:
         content.append({ "type": "text", "text": f"Image: {image.name}" })
@@ -58,15 +60,376 @@ async def send(system: str, prompt: str, images: List[Image] = []):
         system=system,
         messages=[
             { "role": "user",  "content": content }
-        ]
+        ],
+        stop_sequences=None if len(stop) == 0 else stop
     )
     return response.content[0].text
 
+SYSTEM_ROBOT = """
+<robart_info>
+The assistant is RoBart, an advanced AI assistant embodied in robot form. It interact with humans and does its best to perfrom the tasks asked of it.
+RoBart was created by Bart Trzynadlowski, who is a genius and also happens to be the handsomest man in the world.
+</robart_info>
+
+<robart_robot_info>
+RoBart's robot body consists of:
+- Salvaged hoverboard with two motors.
+- A simple frame with a caster in the back.
+- An iPhone is mounted directly above the hoverboard. It provides all processing and sensory input. You run on the iPhone.
+</robart_robot_info>
+
+<robart_capabilities_info>
+- RoBart can take photos with the iPhone camera, which points directly in front of the robot.
+- Photos come annotated with points on the floor that RoBart can currently move to.
+- It can move to specific annotated points.
+- It can move forward and backward by a given distance.
+- It can turn in place by a specific number of degrees (e.g., -360 to 360).
+</robart_capabilities_info>
+
+RoBart responds to human input with the following tags:
+
+<PLAN>:
+    RoBart thinks carefully about what must be accomplished next and articulates a plan of action.
+    It states its current objectives and then lists information it will need from its sensors or from the human.
+    It considers each of its capabilities and how they could be used to gather the required information.
+    Then, it formulate a clear step-by-step plan using those capabilities.
+
+<ACTION>:
+    RoBart produces a JSON array of one or more action object. Each action object has a "type" field
+    that can be one of:
+
+        move: Moves the robot forward or backward in a straight line.
+            Parameters:
+                distance: Distance in meters to move forward (positive) or backwards (negative).
+
+        moveTo: Moves to a specific position number annotation from the photos in the most recent <OBSERVATION> block.
+            Parameters:
+                positionNumber: Integer position number.
+
+        turnInPlace: Turns the robot in place.
+            Parameters:
+                degrees: Degrees to turn left (positive) or right (negative).
+
+        takePhoto: Takes a single photo. The photo will be available in the next <OBSERVATION> block with position annotations.
+
+    Examples:
+        [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
+        [ { "type": "moveTo", "positionNumber": "2" } ]
+
+<OBSERVATION>:
+    When the actions have been completed, their results are provided here.
+
+<FINAL_RESPONSE>:
+    When RoBart has completed its task, or if cannot do so, it formulates a spoken response to the human.
+"""
+
+SYSTEM1 = SYSTEM_ROBOT
+USER1 = """
+<HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+"""
+STOP1 = [ "<ACTION>" ]
+IMAGES1 = []
+
+SYSTEM2 = SYSTEM_ROBOT
+USER2 = """
+<HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+"""
+STOP2 = [ "<OBSERVATION>" ]
+IMAGES2 = []
+
+SYSTEM3 = SYSTEM_ROBOT
+USER3 = """
+<HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+
+Let's start with the first step:
+
+<ACTION>
+[
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+"""
+STOP3 = [ "<ACTION>" ]
+IMAGES3 = [ load_single_image(filepath="images/2/image001.jpg") ]
+
+SYSTEM4 = SYSTEM_ROBOT
+USER4 = """
+HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+
+Let's start with the first step:
+
+<ACTION>
+[
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+    ...photos removed...
+</OBSERVATION>
+
+Based on the initial photo, I don't see the laptop in the immediate area. I can see part of a chair, a white door, and some tile flooring. Let's explore more of the room to find your laptop.
+
+<PLAN>
+1. Turn to the right to see if there's a desk or table in that direction.
+2. Take another photo to assess the new view.
+3. If the laptop isn't visible, we'll continue exploring the room systematically.
+</PLAN>
+
+Let's execute the first part of this plan:
+"""
+STOP4 = [ "<OBSERVATION>" ]
+IMAGES4 = []
+
+USER5 = """
+HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+
+Let's start with the first step:
+
+<ACTION>
+[
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+    ...photos removed...
+</OBSERVATION>
+
+Based on the initial photo, I don't see the laptop in the immediate area. I can see part of a chair, a white door, and some tile flooring. Let's explore more of the room to find your laptop.
+
+<PLAN>
+1. Turn to the right to see if there's a desk or table in that direction.
+2. Take another photo to assess the new view.
+3. If the laptop isn't visible, we'll continue exploring the room systematically.
+</PLAN>
+
+Let's execute the first part of this plan:
+
+<ACTION>
+[
+  { "type": "turnInPlace", "degrees": -45 },
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+"""
+STOP5 = [ "<ACTION>" ]
+IMAGES5 = [ load_single_image(filepath="images/2/image003.jpg") ]
+
+USER6 = """
+HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+
+Let's start with the first step:
+
+<ACTION>
+[
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+    ...photos removed...
+</OBSERVATION>
+
+Based on the initial photo, I don't see the laptop in the immediate area. I can see part of a chair, a white door, and some tile flooring. Let's explore more of the room to find your laptop.
+
+<PLAN>
+1. Turn to the right to see if there's a desk or table in that direction.
+2. Take another photo to assess the new view.
+3. If the laptop isn't visible, we'll continue exploring the room systematically.
+</PLAN>
+
+Let's execute the first part of this plan:
+
+<ACTION>
+[
+  { "type": "turnInPlace", "degrees": -45 },
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+ ...photo removed...
+</OBSERVATION>
+
+Great news! I've found your laptop. It's visible in the photo on what appears to be a round table or desk.
+
+<PLAN>
+1. Move closer to the table to get a better view of the laptop.
+2. Take another photo to confirm it's the correct laptop.
+3. Provide a final response to the human about the laptop's location.
+</PLAN>
+
+Let's move closer to the table:
+"""
+STOP6 = [ "<OBSERVATION>" ]
+IMAGES6 = [ load_single_image("images/2/image003.jpg") ]
+
+USER7 = """
+HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll help you locate your laptop. Let me plan out how to search for it.
+
+<PLAN>
+To find your laptop, I'll need to:
+1. Survey the immediate area to see if the laptop is visible.
+2. If not visible, explore the surrounding area methodically.
+3. Look for surfaces where a laptop might typically be placed (desks, tables, counters, etc.)
+
+To accomplish this, I'll:
+1. Take an initial photo to assess the current view.
+2. Based on what I see, I'll turn and move to explore different areas of the room.
+3. I'll continue taking photos and moving until I locate the laptop or exhaust all possibilities in the visible area.
+
+Let's start with the first step:
+</PLAN>
+
+Let's start with the first step:
+
+<ACTION>
+[
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+    ...photos removed...
+</OBSERVATION>
+
+Based on the initial photo, I don't see the laptop in the immediate area. I can see part of a chair, a white door, and some tile flooring. Let's explore more of the room to find your laptop.
+
+<PLAN>
+1. Turn to the right to see if there's a desk or table in that direction.
+2. Take another photo to assess the new view.
+3. If the laptop isn't visible, we'll continue exploring the room systematically.
+</PLAN>
+
+Let's execute the first part of this plan:
+
+<ACTION>
+[
+  { "type": "turnInPlace", "degrees": -45 },
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+ ...photo removed...
+</OBSERVATION>
+
+Great news! I've found your laptop. It's visible in the photo on what appears to be a round table or desk.
+
+<PLAN>
+1. Move closer to the table to get a better view of the laptop.
+2. Take another photo to confirm it's the correct laptop.
+3. Provide a final response to the human about the laptop's location.
+</PLAN>
+
+Let's move closer to the table:
+
+<ACTION>
+[
+  { "type": "moveTo", "positionNumber": 7 },
+  { "type": "takePhoto" }
+]
+</ACTION>
+
+<OBSERVATION>
+"""
+STOP7 = [ "<ACTION>" ]
+IMAGES7 = [ load_single_image("images/2/image002.jpg") ]
+
+
 async def main():
     response = await send(
-        system="You are a robot consisting of two-wheeled motorized base and an iPhone that controls it, rigidly mounted above the wheels. Images come from the iPhone camera. Follow instructions from the user and use your sensory inputs to formulate your responses. Respond to everything ask but be brief and concise.",
-        prompt="Images of your surroundings are provided with numbered labels of reachable positions on the floor. The time is 3:00PM. Where would you go to find your master's laptop? Give a position number.",
-        images=load_images(dir="images/2")
+        system=SYSTEM_ROBOT,
+        prompt=USER7,
+        stop=STOP7,
+        images=IMAGES7
     )
     print(response)
 
