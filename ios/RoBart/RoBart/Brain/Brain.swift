@@ -13,8 +13,5 @@ class Brain {
     private let _speechDetector = SpeechDetector()
 
     fileprivate init() {
-        if Settings.shared.role == .robot {
-            _speechDetector.startListening()
-        }
     }
 }

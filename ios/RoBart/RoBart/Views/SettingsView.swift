@@ -37,6 +37,13 @@ struct SettingsView: View {
                             Text("Anthropic API Key")
                         }
 
+                        LabeledContent {
+                            TextField("Deepgram API Key", text: $_settings.deepgramAPIKey, prompt: Text("..."))
+                                .multilineTextAlignment(.trailing)
+                        } label: {
+                            Text("Deepgram API Key")
+                        }
+
                         // How the "drive-to" button functions
                         Picker("Drive-To Behavior", selection: $_settings.driveToButtonUsesNavigation) {
                             Text("Uses Navigation").tag(true)

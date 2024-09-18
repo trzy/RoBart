@@ -23,7 +23,15 @@ class Settings: ObservableObject {
         didSet {
             // API key is saved
             UserDefaults.standard.set(anthropicAPIKey, forKey: Self.k_anthropicAPIKey)
-            log("Set: \(Self.k_anthropicAPIKey) = \(anthropicAPIKey)")
+            log("Set: \(Self.k_anthropicAPIKey) = <redacted>")
+        }
+    }
+
+    @Published var deepgramAPIKey: String = "" {
+        didSet {
+            // API key is saved
+            UserDefaults.standard.set(deepgramAPIKey, forKey: Self.k_deepgramAPIKey)
+            log("Set: \(Self.k_deepgramAPIKey) = <redacted>")
         }
     }
 
@@ -31,11 +39,20 @@ class Settings: ObservableObject {
 
     private static let k_roleKey = "role"
     private static let k_anthropicAPIKey = "anthropic_api_key"
+    private static let k_deepgramAPIKey = "deepgram_api_key"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),
            let role = Role(rawValue: value) {
             self.role = role
+        }
+
+        if let value = UserDefaults.standard.string(forKey: Self.k_anthropicAPIKey) {
+            self.anthropicAPIKey = value
+        }
+
+        if let value = UserDefaults.standard.string(forKey: Self.k_deepgramAPIKey) {
+            self.deepgramAPIKey = value
         }
     }
 }

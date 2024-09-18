@@ -30,6 +30,7 @@ class VoiceExtractor {
     private var _speechFramesWrittenToOutput: AVAudioFrameCount = 0
     private var _silentFramesDetected: AVAudioFrameCount = 0
     private var _silentEndpointFrames: AVAudioFrameCount = 0
+    private var _minimumSpeechFrames: AVAudioFrameCount = 0
 
 
     init() {
@@ -130,7 +131,10 @@ class VoiceExtractor {
                     // We have filled up the output buffer. Reset state and return a detection.
                     let speechFrames = _speechFramesWrittenToOutput
                     reset()
-                    return speechFrames
+                    if speechFrames >= _minimumSpeechFrames {
+                        return speechFrames
+                    }
+                    continue
                 }
             } 
 
@@ -142,7 +146,10 @@ class VoiceExtractor {
                     // Enough silence has elapsed to endpoint the speech segment
                     let speechFrames = _speechFramesWrittenToOutput
                     reset()
-                    return speechFrames
+                    if speechFrames >= _minimumSpeechFrames {
+                        return speechFrames
+                    }
+                    continue
                 }
             }
         }
@@ -158,6 +165,7 @@ class VoiceExtractor {
 
         _framesPerChunk = AVAudioFrameCount(ceil(format.sampleRate * Self._chunkSeconds))
         _silentEndpointFrames = AVAudioFrameCount(ceil(format.sampleRate * Self._endpointSeconds))
+        _minimumSpeechFrames = AVAudioFrameCount(ceil(format.sampleRate * Self._minimumSpeechSeconds))
 
         let numChunks = _voiceChunks.count
         let numFrames = AVAudioFrameCount(numChunks) * _framesPerChunk
