@@ -98,3 +98,11 @@ struct OccupancyMapMessage: JSONMessage {
 struct DrivePathMessage: JSONMessage {
     let pathCells: [[Int]]  // array of [cellX, cellZ]
 }
+
+struct RequestAnnotatedViewMessage: JSONMessage {
+    let unused: Bool
+}
+
+struct AnnotatedViewMessage: JSONMessage {
+    let imageBase64: String
+}

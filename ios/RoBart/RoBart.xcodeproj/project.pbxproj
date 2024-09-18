@@ -17,6 +17,9 @@
 		CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */; };
 		CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */; };
 		CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5F2C9A913A00ACC82E /* Prompts.swift */; };
+		CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */; };
+		CC26CF642C9B6CB800ACC82E /* AnnotatedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */; };
+		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -167,6 +170,9 @@
 		CC26CF582C9A150700ACC82E /* VoiceExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceExtractor.swift; sourceTree = "<group>"; };
 		CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deepgram.swift; sourceTree = "<group>"; };
 		CC26CF5F2C9A913A00ACC82E /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
+		CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
+		CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotatedView.swift; sourceTree = "<group>"; };
+		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -473,6 +479,7 @@
 				CCA9A10F2C62D7F600B0401C /* UtilNamespace.swift */,
 				CCA9A1112C62D81900B0401C /* HexDump.swift */,
 				CCA9A1132C62D8A200B0401C /* float+Extensions.swift */,
+				CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */,
 				CCA9A1152C62D8BA00B0401C /* simd_float3+Extensions.swift */,
 				CCA3B9302C8D00DF00F15F9F /* simd_float4+Extensions.swift */,
 				CCA9A1172C62D8D700B0401C /* simd_quatf+Extensions.swift */,
@@ -485,6 +492,7 @@
 				CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */,
 				CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */,
 				CC1125342C93A9A5007AF247 /* Task+Extensions.swift */,
+				CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -565,6 +573,7 @@
 			children = (
 				CC26CF532C9A0A5A00ACC82E /* Brain.swift */,
 				CC26CF5F2C9A913A00ACC82E /* Prompts.swift */,
+				CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -955,9 +964,11 @@
 				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
 				CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
+				CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */,
 				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
 				CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */,
 				CC1125352C93A9A5007AF247 /* Task+Extensions.swift in Sources */,
+				CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */,
 				CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */,
 				CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */,
 				CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */,
@@ -967,6 +978,7 @@
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
+				CC26CF642C9B6CB800ACC82E /* AnnotatedView.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,
