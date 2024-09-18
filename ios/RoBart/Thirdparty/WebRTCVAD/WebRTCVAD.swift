@@ -67,15 +67,22 @@ public class WebRTCVAD {
         _inputAudioBuffer.frameLength = 0
         _inputAudioBuffer.safeCopyWithResize(destIdx: 0, from: buffer, srcIdx: startIdx, frameCount: _inputChunkFrames)
 
-        guard tryConvertAudioToVADFormat() else {
-            return false
+        // Convert only if necessary
+        var vadAudioBuffer: AVAudioPCMBuffer?
+        if _inputAudioBuffer.format == _vadFormat {
+            vadAudioBuffer = _inputAudioBuffer
+        } else {
+            guard tryConvertAudioToVADFormat() else {
+                return false
+            }
+            vadAudioBuffer = _vadAudioBuffer
         }
 
-        guard let samples = _vadAudioBuffer.int16ChannelData else {
+        // Run VAD
+        guard let samples = vadAudioBuffer!.int16ChannelData else {
             return false
         }
-
-        return WebRtcVad_Process(_handle, Int32(_vadFormat.sampleRate), samples.pointee, Int(_vadAudioBuffer.frameLength)) == 1
+        return WebRtcVad_Process(_handle, Int32(_vadFormat.sampleRate), samples.pointee, Int(vadAudioBuffer!.frameLength)) == 1
     }
 
     private func tryConvertAudioToVADFormat() -> Bool {
