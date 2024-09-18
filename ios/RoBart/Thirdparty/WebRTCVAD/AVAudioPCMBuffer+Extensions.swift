@@ -10,7 +10,7 @@ import AVFoundation
 extension AVAudioPCMBuffer {
     /// Creates a new copy of the buffer.
     /// - Returns: A copy of the buffer.
-    func copy() -> AVAudioPCMBuffer? {
+    public func duplicate() -> AVAudioPCMBuffer? {
         guard let copyBuffer = AVAudioPCMBuffer(pcmFormat: self.format, frameCapacity: self.frameCapacity) else { return nil }
 
         copyBuffer.frameLength = self.frameLength
