@@ -8,7 +8,9 @@
 import Combine
 import AVFoundation
 
-class SpeechDetector {
+class SpeechDetector: ObservableObject {
+    @Published private(set) var speech: String = ""
+
     private let _maxSpeechSeconds = 30
     private var _speechBuffer: AVAudioPCMBuffer!
 
@@ -22,7 +24,6 @@ class SpeechDetector {
     private let _outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false)!
 
     private let _voiceExtractor = VoiceExtractor()
-
 
     init() {
         // Create output buffer to hold detected speech
@@ -211,6 +212,9 @@ class SpeechDetector {
         _ = Task {
             if let transcript = await uploadAudioToDeepgram(sampleData) {
                 log("Transcript: \(transcript)")
+                DispatchQueue.main.async { [weak self] in
+                    self?.speech = transcript
+                }
             }
             let elapsedMilliseconds = Int((Date.timeIntervalSinceReferenceDate - start) / 1e-3)
             log("Deepgram took: \(elapsedMilliseconds) ms")
