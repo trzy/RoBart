@@ -8,6 +8,39 @@
 import AVFoundation
 
 extension AVAudioPCMBuffer {
+    /// Creates a new copy of the buffer.
+    /// - Returns: A copy of the buffer.
+    func copy() -> AVAudioPCMBuffer? {
+        guard let copyBuffer = AVAudioPCMBuffer(pcmFormat: self.format, frameCapacity: self.frameCapacity) else { return nil }
+
+        copyBuffer.frameLength = self.frameLength
+
+        let channelCount = Int(self.format.channelCount)
+
+        if let selfFloatChannelData = self.floatChannelData,
+           let copyFloatChannelData = copyBuffer.floatChannelData {
+            for channel in 0..<channelCount {
+                memcpy(copyFloatChannelData[channel], selfFloatChannelData[channel], Int(self.frameLength) * MemoryLayout<Float>.size)
+            }
+        }
+
+        if let selfInt16ChannelData = self.int16ChannelData,
+           let copyInt16ChannelData = copyBuffer.int16ChannelData {
+            for channel in 0..<channelCount {
+                memcpy(copyInt16ChannelData[channel], selfInt16ChannelData[channel],Int(self.frameLength) * MemoryLayout<Int16>.size)
+            }
+        }
+
+        if let selfInt32ChannelData = self.int32ChannelData,
+           let copyInt32ChannelData = copyBuffer.int32ChannelData {
+            for channel in 0..<channelCount {
+                memcpy(copyInt32ChannelData[channel], selfInt32ChannelData[channel], Int(self.frameLength) * MemoryLayout<Int32>.size)
+            }
+        }
+
+        return copyBuffer
+    }
+
     /// Appends samples from a source buffer into this one, expanding the length of the buffer until it reaches the capacity.
     /// - Parameter from: Buffer to append, beginning at index 0. Only the number of samples that will fit within the remaining capacity available are copied over.
     public func appendSamples(from src: AVAudioPCMBuffer) {
