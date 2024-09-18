@@ -95,7 +95,7 @@ RoBart responds to human input with the following tags:
     Then, it formulate a clear step-by-step plan using those capabilities.
 
 <ACTION>:
-    RoBart produces a JSON array of one or more action object. Each action object has a "type" field
+    RoBart produces a JSON array of one or more action objects. Each action object has a "type" field
     that can be one of:
 
         move: Moves the robot forward or backward in a straight line.
@@ -110,14 +110,20 @@ RoBart responds to human input with the following tags:
             Parameters:
                 degrees: Degrees to turn left (positive) or right (negative).
 
-        takePhoto: Takes a single photo. The photo will be available in the next <OBSERVATION> block with position annotations.
+        takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTION> block and all photos will be available in the next <OBSERVATION> block with position annotations.
 
     Examples:
         [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
         [ { "type": "moveTo", "positionNumber": "2" } ]
 
+    RoBart understands that it is more efficient to perform multiple actions, if possible, and then analyze the results after they are all complete.
+    For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs.
+
 <OBSERVATION>:
     When the actions have been completed, their results are provided here.
+
+<INTERMEDIATE_RESPONSE>:
+    Any time after thinking or before acting, RoBart may generate short single sentence statements to inform the user what it will do or is doing, without overwhelming them with details of its plan. Just enough to understand what is happening.
 
 <FINAL_RESPONSE>:
     When RoBart has completed its task, or if cannot do so, it formulates a spoken response to the human.
@@ -127,7 +133,7 @@ SYSTEM1 = SYSTEM_ROBOT
 USER1 = """
 <HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
 """
-STOP1 = [ "<ACTION>" ]
+STOP1 = [ "<OBSERVATION>" ]
 IMAGES1 = []
 
 SYSTEM2 = SYSTEM_ROBOT
@@ -423,13 +429,45 @@ Let's move closer to the table:
 STOP7 = [ "<ACTION>" ]
 IMAGES7 = [ load_single_image("images/2/image002.jpg") ]
 
+# New example following set 1
+USER8 = """
+<HUMAN_INPUT>Where is my laptop?</HUMAN_INPUT>
+
+Certainly! I'll do my best to locate your laptop. Let me formulate a plan to search for it.
+
+<PLAN>
+Objective: Locate the human's laptop in the surrounding area.
+
+Information needed:
+1. Visual scan of the environment to identify potential surfaces where a laptop might be placed.
+2. Detailed views of any areas that look promising for a laptop.
+
+Capabilities to use:
+1. Take photos of the surroundings using the iPhone camera.
+2. Move to different positions to get better views if necessary.
+3. Turn in place to capture a 360-degree view of the area.
+
+Step-by-step plan:
+1. Take an initial photo of the current view.
+2. Turn 90 degrees to the right and take another photo.
+3. Repeat step 2 three more times to complete a full 360-degree scan.
+4. Analyze the photos for any signs of a laptop or surfaces where it might be placed.
+5. If the laptop is not immediately visible, move to areas of interest for closer inspection.
+6. Report findings to the human.
+
+Let's start with the initial 360-degree scan.
+</PLAN>
+"""
+STOP8 = [ "<OBSERVATION>" ]
+IMAGES8 = []
+
 
 async def main():
     response = await send(
         system=SYSTEM_ROBOT,
-        prompt=USER7,
-        stop=STOP7,
-        images=IMAGES7
+        prompt=USER1,
+        stop=STOP1,
+        images=IMAGES1
     )
     print(response)
 
