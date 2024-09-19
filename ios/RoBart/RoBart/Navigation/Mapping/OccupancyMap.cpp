@@ -238,3 +238,72 @@ void OccupancyMap::getOccupancyArray(float *occupied, size_t size) const
     }
     memcpy(occupied, _occupancy.get(), size * sizeof(float));
 }
+
+static float sign(float value)
+{
+    return (value > 0) - (value < 0);
+}
+
+bool OccupancyMap::isLineUnobstructed(simd_float3 from, simd_float3 to) const
+{
+    // Amanatides-Woo method of voxel traversal: http://www.cse.yorku.ca/~amana/research/grid.pdf
+
+    // Get fractional grid indices
+    FractionalCellIndices fromCell = positionToFractionalIndices(from);
+    FractionalCellIndices toCell = positionToFractionalIndices(to);
+
+    // Ray: u + v*t
+    float ux = fromCell.cellX;
+    float uz = fromCell.cellZ;
+    float vx = toCell.cellX - ux;
+    float vz = toCell.cellZ - uz;
+
+    // Integral starting indices in grid (initial cell)
+    int x = floor(ux + 0.5f);
+    int z = floor(uz + 0.5f);
+
+    // Integral step increments
+    int stepX = sign(vx);
+    int stepZ = sign(vz);
+
+    // Integral index limits in grid: one step beyond final cell
+    int xEnd = int(floor(toCell.cellX + 0.5f)) + stepX;
+    int zEnd = int(floor(toCell.cellZ + 0.5f)) + stepZ;
+
+    /*
+     * Values of t at which ray crosses the vertical and horizontal boundaries of the initial cell.
+     * To compute e.g. the first vertical boundary, solve for t where:
+     *
+     *          ux + vx * t = (x + 0.5 + stepX)
+     *      ->  t = ((x + 0.5 * stepX) - ux) / vx
+     */
+    float tMaxX = ((x + 0.5f * stepX) - ux) / vx;
+    float tMaxZ = ((z + 0.5f * stepZ) - uz) / vz;
+
+    // Compute change in t required to move exactly one cell horizontally and vertically:
+    // ux + vx * dt = ux + stepX  ->  dt = stepX / vx
+    float tDeltaX = stepX / vx;
+    float tDeltaZ = stepZ / vz;
+
+    // Traverse ray in order
+    do {
+        bool isOccupied = at(x, z) != 0;
+        if (isOccupied)
+        {
+            return false;
+        }
+
+        if (tMaxX < tMaxZ)
+        {
+            x += stepX;
+            tMaxX += tDeltaX;
+        }
+        else
+        {
+            z += stepZ;
+            tMaxZ += tDeltaZ;
+        }
+    } while (x != xEnd && z != zEnd);
+
+    return true;
+}
