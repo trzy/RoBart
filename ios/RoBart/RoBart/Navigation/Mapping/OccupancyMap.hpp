@@ -85,15 +85,13 @@ public:
     );
     
     void updateOccupancyFromCounts(const OccupancyMap &counts, float thresholdAmount);
-
     void updateOccupancyFromHeightMap(const float *heights, size_t size, float occupancyHeightThreshold);
-
     void updateOccupancyFromArray(const float *occupied, size_t size);
-
     void getOccupancyArray(float *occupied, size_t size) const;
 
-    CellIndices positionToCell(simd_float3 position) const;
+    bool isLineUnobstructed(simd_float3 from, simd_float3 to) const;
 
+    CellIndices positionToCell(simd_float3 position) const;
     FractionalCellIndices positionToFractionalIndices(simd_float3 position) const;
 
     simd_float3 cellToPosition(CellIndices cell) const
