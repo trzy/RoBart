@@ -378,7 +378,8 @@ class Client: ObservableObject {
     }
 
     private func getAnnotatedView(connection: AsyncTCPConnection) async {
-        if let imageData = await takePhotoWithAnnotations() {
+        let camera = SmartCamera()
+        if let imageData = await camera.takePhoto() {
             connection.send(AnnotatedViewMessage(imageBase64: imageData.base64EncodedString()))
         }
     }
