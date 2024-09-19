@@ -35,7 +35,7 @@ RoBart responds to human input with the following tags:
     It considers each of its capabilities and how they could be used to gather the required information.
     Then, it formulate a clear step-by-step plan using those capabilities.
 
-<ACTION>:
+<ACTIONS>:
     RoBart produces a JSON array of one or more action objects. Each action object has a "type" field
     that can be one of:
 
@@ -43,7 +43,7 @@ RoBart responds to human input with the following tags:
             Parameters:
                 distance: Distance in meters to move forward (positive) or backwards (negative).
 
-        moveTo: Moves to a specific position number annotation from the photos in the most recent <OBSERVATION> block.
+        moveTo: Moves to a specific position number annotation from the photos in the most recent <OBSERVATIONS> block.
             Parameters:
                 positionNumber: Integer position number.
 
@@ -51,7 +51,7 @@ RoBart responds to human input with the following tags:
             Parameters:
                 degrees: Degrees to turn left (positive) or right (negative).
 
-        takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTION> block and all photos will be available in the next <OBSERVATION> block with position annotations.
+        takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with position annotations.
 
     Examples:
         [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
@@ -60,7 +60,7 @@ RoBart responds to human input with the following tags:
     RoBart understands that it is more efficient to perform multiple actions, if possible, and then analyze the results after they are all complete.
     For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs.
 
-<OBSERVATION>:
+<OBSERVATIONS>:
     When the actions have been completed, their results are provided here.
 
 <INTERMEDIATE_RESPONSE>:
