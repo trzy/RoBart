@@ -7,27 +7,35 @@
 //  Takes a photo (of the robot's current view) and adds annotations for the AI to analyze.
 //
 
-import Foundation
-import RealityKit
+import ARKit
 import UIKit
 
-fileprivate func placeEntityInScene(offset: Vector3) -> Vector3 {
-    let mesh = MeshResource.generateBox(size: 0.1)
-    let modelEntity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: UIColor.gray, isMetallic: true) ])
-    let inFront = ARSessionManager.shared.transform.position - ARSessionManager.shared.transform.forward
-    let inFrontOnFloor = Vector3(inFront.x, ARSessionManager.shared.floorY, inFront.z) + offset
-    let entity = AnchorEntity(world: inFrontOnFloor)
-    entity.addChild(modelEntity)
-    ARSessionManager.shared.scene?.addAnchor(entity)
-    return inFrontOnFloor
-}
+@MainActor
+func takePhotoWithAnnotations() async -> Data? {
+    // Update occupancy
+    _ = await NavigationController.shared.updateOccupancy()
 
-fileprivate func placePoint(at position: Vector3) {
-    let mesh = MeshResource.generateBox(size: 0.1)
-    let modelEntity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: UIColor.red, isMetallic: true) ])
-    let entity = AnchorEntity(world: position)
-    entity.addChild(modelEntity)
-    ARSessionManager.shared.scene?.addAnchor(entity)
+    // Wait for next frame and acquire photo with necessary transforms for converting from world
+    // -> image space
+    guard let frame = try? await ARSessionManager.shared.nextFrame(),
+          let cameraImage = getCameraImage(from: frame) else {
+        return nil
+    }
+    let worldToCamera = frame.camera.transform.inverse
+
+    // Get navigable points
+    let possibleNagivablePoints = generateProspectiveNavigablePoints(worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics)
+    let navigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ARSessionManager.shared.transform.position, occupancy: NavigationController.shared.occupancy)
+
+    // Rotate photo and render navigable points as annotations
+    guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
+          let annotatedPhoto = annotate(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
+        return nil
+    }
+
+    // Get JPEG
+    guard let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
+    return jpeg
 }
 
 fileprivate struct NavigablePoint {
@@ -91,22 +99,46 @@ fileprivate struct NavigablePoint {
     }
 }
 
-fileprivate func adjustIntrinsicsForClockwise90RotationAndNewSize(intrinsics: Matrix3x3, scale: Vector2) -> Matrix3x3 {
-    /*
-     * ARKit frame appears rotated counter-clockwise when holding the phone in portrait
-     * orientation, with the image's horizontal dimension being the phone's vertical one.
-     * Therefore, we rotate the image clockwise and then downsample it to be more efficient when
-     * submitting to the AI.
-     *
-     * The camera intrinsics need to be adjusted for these changes by swapping x and y and then
-     * scaling appropriately by newDimension / oldDimension.
-     */
-    let fx = intrinsics[0,0]
-    let fy = intrinsics[1,1]
-    let cx = intrinsics[2,0]
-    let cy = intrinsics[2,1]
-    let cw = intrinsics[2,2]
-    return Matrix3x3(columns: ([ scale.x * fy, 0, 0 ], [ 0, scale.y * fx, 0 ], [ scale.x * cy, scale.y * cx, cw ]))
+/// Generate a series of potential navigable points on the floor in front of the robot.
+/// - Parameter worldToCamera: Inverse camera transform matrix (i.e., world to camera-local space).
+/// - Parameter intrinsics: Camera intrinsics. Used with `worldToCamera`to convert world-space
+/// points to image-space annotations.
+/// - Returns: Array of prospective navigable points. None are guaranteed to be reachable.
+fileprivate func generateProspectiveNavigablePoints(worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [NavigablePoint] {
+    // Generate points on the floor in world space in front of the robot
+    var worldPoints: [Vector3] = []
+    let ourTransform = ARSessionManager.shared.transform
+    let ourPosition = Vector3(x: ourTransform.position.x, y: ARSessionManager.shared.floorY, z: ourTransform.position.z)
+    let forward = -ourTransform.forward.xzProjected.normalized
+    for angle in [ 20.0, 0.0, -20.0 ] {
+        let forward = forward.rotated(by: Float(angle), about: .up)
+        for i in 2...5 {
+            let position = ourPosition + forward * Float(i) * 0.75
+            worldPoints.append(position)
+        }
+    }
+
+    // Convert to navigable points
+    var navigablePoints: [NavigablePoint] = []
+    for i in 0..<worldPoints.count {
+        navigablePoints.append(NavigablePoint(id: i, worldPoint: worldPoints[i], worldToCamera: worldToCamera, intrinsics: intrinsics))
+    }
+    return navigablePoints
+}
+
+fileprivate func excludeUnreachable(_ points: [NavigablePoint], ourPosition: Vector3, occupancy: OccupancyMap) -> [NavigablePoint] {
+    return points.filter { occupancy.isLineUnobstructed(ourPosition, $0.worldPoint) }
+}
+
+/// Obtains the camera image from the frame and scales it down to be more manageable to process.
+/// This image is oriented horizontally, as the camera sensor on iPhone returns images.
+fileprivate func getCameraImage(from frame: ARFrame) -> (image: UIImage, intrinsics: Matrix3x3)? {
+    let originalSize = frame.camera.imageResolution
+    let newSize = CGSize(width: 640, height: 480)   // before rotation!
+    guard let cameraImage = UIImage(pixelBuffer: frame.capturedImage)?.resized(to: newSize) else { return nil }
+    let scale = Vector2(x: Float(newSize.width / originalSize.width), y: Float(newSize.height / originalSize.height))
+    let intrinsics = scaleIntrinsics(intrinsics: frame.camera.intrinsics, scale: scale)
+    return (image: cameraImage, intrinsics: intrinsics)
 }
 
 fileprivate func scaleIntrinsics(intrinsics: Matrix3x3, scale: Vector2) -> Matrix3x3 {
@@ -159,46 +191,4 @@ fileprivate func annotate(image: UIImage, with points: [NavigablePoint], rotated
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     return newImage
-}
-
-
-@MainActor
-func takePhotoWithAnnotations() async -> Data? {
-    var worldPoints: [Vector3] = []
-    let ourTransform = ARSessionManager.shared.transform
-    let ourPosition = Vector3(x: ourTransform.position.x, y: ARSessionManager.shared.floorY, z: ourTransform.position.z)
-    let forward = -ourTransform.forward.xzProjected.normalized
-    for angle in [ 15.0, 0.0, -15.0 ] {
-        let forward = forward.rotated(by: Float(angle), about: .up)
-        for i in 2...5 {
-            let position = ourPosition + forward * Float(i) * 0.75
-            placePoint(at: position)
-            worldPoints.append(position)
-        }
-    }
-
-    // Wait for next frame
-    guard let frame = try? await ARSessionManager.shared.nextFrame() else { return nil }
-
-    // Scale photo down
-    let originalSize = frame.camera.imageResolution
-    let newSize = CGSize(width: 640, height: 480)   // before rotation!
-    guard let photo = UIImage(pixelBuffer: frame.capturedImage)?.resized(to: newSize) else { return nil }
-    let scale = Vector2(x: Float(newSize.width / originalSize.width), y: Float(newSize.height / originalSize.height))
-    let intrinsics = scaleIntrinsics(intrinsics: frame.camera.intrinsics, scale: scale)
-
-    // Annotations
-    var points: [NavigablePoint] = []
-    let worldToCamera = frame.camera.transform.inverse
-    for i in 0..<worldPoints.count {
-        points.append(NavigablePoint(id: i, worldPoint: worldPoints[i], worldToCamera: worldToCamera, intrinsics: intrinsics))
-    }
-
-    // Rotate photo and render annotations
-    guard let rotatedPhoto = photo.rotatedClockwise90(),
-          let annotatedPhoto = annotate(image: rotatedPhoto, with: points, rotated: true) else { return nil }
-
-    // Get JPEG
-    guard let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
-    return jpeg
 }
