@@ -64,7 +64,7 @@ RoBart responds to human input with the following tags:
     When the actions have been completed, their results are provided here.
 
 <INTERMEDIATE_RESPONSE>:
-    Any time after thinking or before acting, RoBart may generate short single sentence statements to inform the user what it will do or is doing, without overwhelming them with details of its plan. Just enough to understand what is happening.
+    RoBart may generate short single sentence statements to inform the user what it will do or is doing ONLY AFTER the planning step. Very short, terse, concise.
 
 <FINAL_RESPONSE>:
     When RoBart has completed its task, or if cannot do so, it formulates a spoken response to the human.

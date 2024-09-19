@@ -105,6 +105,11 @@ struct ObservationsThought: ThoughtRepresentable {
         _photos = []
     }
 
+    init(text: String, photos: [SmartCamera.Photo]) {
+        _text = text
+        _photos = photos
+    }
+
     func content() -> [MessageParameter.Message.Content.ContentObject] {
         var content: [MessageParameter.Message.Content.ContentObject] = [ .text(openingTag) ]
         if let text = _text {
@@ -137,6 +142,8 @@ struct ActionsThought: ThoughtRepresentable {
     private let _jsonText: String
 
     static var tag: String { "ACTIONS" }
+
+    var json: String { _jsonText }
 
     init(json: String) {
         _jsonText = json

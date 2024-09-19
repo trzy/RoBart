@@ -41,6 +41,7 @@ class Brain {
     }
 
     private func runTask(humanInput: String) async {
+        _speechDetector.stopListening()
         var history: [ThoughtRepresentable] = []
         
         // Human speaking to RoBart kicks off the process
@@ -70,6 +71,7 @@ class Brain {
 
         log("Completed task!")
         _task = nil
+        _speechDetector.startListening()
     }
 
     private func actionableThoughts(in thoughts: [ThoughtRepresentable]) -> [ThoughtRepresentable] {
@@ -107,9 +109,47 @@ class Brain {
         log("RoBart says: \(wordsToSpeak)")
     }
 
-    private func perform(_ actions: ActionsThought) async -> ObservationsThought {
-        //TODO
-        return ObservationsThought(text: "nothing happened!")
+    private func perform(_ actionsThought: ActionsThought) async -> ObservationsThought {
+        guard let actions = decodeActions(from: actionsThought.json) else {
+            return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
+        }
+
+        var resultsDescription: [String] = []
+        var photos: [SmartCamera.Photo] = []
+
+        for action in actions {
+            switch action {
+            case .move(let move):
+                let startPosition = ARSessionManager.shared.transform.position
+                let safeDistance = clamp(move.distance, min: -3.0, max: 3.0)
+                //HoverboardController.shared.send(.driveForward(distance: safeDistance))
+                //try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                let endPosition = ARSessionManager.shared.transform.position
+                let actualDistanceMoved = (endPosition - startPosition).magnitude
+                resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
+
+            case .moveTo(let moveTo):
+                resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because this function is not implemented")
+
+            case .turnInPlace(let turnInPlace):
+                let startForward = ARSessionManager.shared.transform.forward.xzProjected
+                //HoverboardController.shared.send(.rotateInPlaceBy(degrees: turnInPlace.degrees))
+                //try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                let endForward = ARSessionManager.shared.transform.forward.xzProjected
+                let actualDegreesTurned = Vector3.angle(startForward, endForward)
+                resultsDescription.append("Turned \(actualDegreesTurned) degrees")
+
+            case .takePhoto:
+                if let photo = await _camera.takePhoto() {
+                    resultsDescription.append("Took photo \(photo.name)")
+                    photos.append(photo)
+                } else {
+                    resultsDescription.append("Camera malfunctioned. No photo.")
+                }
+            }
+        }
+
+        return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
     }
 }
 

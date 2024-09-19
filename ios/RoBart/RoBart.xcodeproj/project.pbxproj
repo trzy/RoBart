@@ -22,6 +22,7 @@
 		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC26CF682C9BE68E00ACC82E /* BlockParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF672C9BE68E00ACC82E /* BlockParser.swift */; };
 		CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF692C9BE89A00ACC82E /* Thoughts.swift */; };
+		CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6C2C9CA06B00ACC82E /* Actions.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -177,6 +178,7 @@
 		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC26CF672C9BE68E00ACC82E /* BlockParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockParser.swift; sourceTree = "<group>"; };
 		CC26CF692C9BE89A00ACC82E /* Thoughts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thoughts.swift; sourceTree = "<group>"; };
+		CC26CF6C2C9CA06B00ACC82E /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -580,6 +582,7 @@
 				CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */,
 				CC26CF672C9BE68E00ACC82E /* BlockParser.swift */,
 				CC26CF692C9BE89A00ACC82E /* Thoughts.swift */,
+				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -1009,6 +1012,7 @@
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */,
 				CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */,
+				CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
 				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
