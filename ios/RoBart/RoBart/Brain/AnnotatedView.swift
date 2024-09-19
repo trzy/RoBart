@@ -38,9 +38,46 @@ fileprivate struct NavigablePoint {
 
     /// Image point with origin in lower-left (+y is up).
     var imagePoint: CGPoint {
-        // Transform and project to image space
-        let cameraPoint = worldToCamera.transformPoint(worldPoint)
-        let homogeneous = Vector3(x: -cameraPoint.y / cameraPoint.z, y: cameraPoint.x / cameraPoint.z, z: 1) // need to swap x<->y to compensate for image rotation
+        /*
+         * Transform world point to view space. Note that the *camera* space in ARKit is:
+         *      ---> +y
+         *      +----+
+         *      |    | |
+         *      |    | |
+         *      |    | V
+         *      |    | +x
+         *      +----+
+         *
+         * Assuming the phone is held in portrait mode. The way the camera sensor is oriented, the
+         * image we get is:
+         *
+         *      --> +x
+         *   +y +------------+
+         *    ^ |            |
+         *    | |            |
+         *    | +------------+
+         *
+         * With +z pointing out of the screen. However, the viewspace coordinates are not quite the
+         * same. They are:
+         *
+         *      --> +x
+         *    | +------------+
+         *    | |            |
+         *    V |            |
+         *   +y +------------+
+         *
+         * With +z pointing into the screen (into the scene from the back side of the phone). This
+         * is what the intrinsic matrix assumes. Therefore, we must rotate 180 degrees about the x
+         * axis to invert both y and z. Or just multiply these components on a position in camera
+         * space by -1, as we do here. Note that this coordinate system maps onto the typical
+         * upper-left origin 2D bitmap (x,y) space.
+         */
+        var cameraPoint = worldToCamera.transformPoint(worldPoint)
+        cameraPoint.y *= -1
+        cameraPoint.z *= -1
+
+        // Project onto the 2D frame where the origin is in the upper-left and +y is down
+        let homogeneous = Vector3(x: cameraPoint.x / cameraPoint.z, y: cameraPoint.y / cameraPoint.z, z: 1)
         let projected = intrinsics * homogeneous
         return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
     }
@@ -72,7 +109,16 @@ fileprivate func adjustIntrinsicsForClockwise90RotationAndNewSize(intrinsics: Ma
     return Matrix3x3(columns: ([ scale.x * fy, 0, 0 ], [ 0, scale.y * fx, 0 ], [ scale.x * cy, scale.y * cx, cw ]))
 }
 
-fileprivate func annotate(image: UIImage, with points: [NavigablePoint]) -> UIImage? {
+fileprivate func scaleIntrinsics(intrinsics: Matrix3x3, scale: Vector2) -> Matrix3x3 {
+    var scaled = intrinsics
+    scaled[0,0] *= scale.x  // fx
+    scaled[2,0] *= scale.x  // cx
+    scaled[1,1] *= scale.y  // fy
+    scaled[2,1] *= scale.y  // cy
+    return scaled
+}
+
+fileprivate func annotate(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
     let sideLength = CGFloat(20)
 
     // Get the image size
@@ -86,9 +132,13 @@ fileprivate func annotate(image: UIImage, with points: [NavigablePoint]) -> UIIm
 
     // Draw annotations
     for point in points {
-        // Draw square
-        let y = imageSize.height - point.imagePoint.y   // to UIKit upper-left origin
-        let squareRect = CGRect(x: point.imagePoint.x, y: y, width: sideLength, height: sideLength)
+        // Draw square. Note that when rotating image clockwise and using an upper-left
+        // origin with +y as down, it is necessary to invert x (because +y in the original
+        // image moves down, but rotated clockwise, that direction is -x instead of +x).
+        let imagePoint = point.imagePoint
+        let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
+        let y = rotated ? imagePoint.x : imagePoint.y
+        let squareRect = CGRect(x: x, y: y, width: sideLength, height: sideLength)
         context.setFillColor(point.backgroundColor)
         context.fill(squareRect)
 
@@ -118,7 +168,7 @@ func takePhotoWithAnnotations() async -> Data? {
     let ourTransform = ARSessionManager.shared.transform
     let ourPosition = Vector3(x: ourTransform.position.x, y: ARSessionManager.shared.floorY, z: ourTransform.position.z)
     let forward = -ourTransform.forward.xzProjected.normalized
-    for angle in [ 15.0, 0.0, 15.0  ] {
+    for angle in [ 15.0, 0.0, -15.0 ] {
         let forward = forward.rotated(by: Float(angle), about: .up)
         for i in 2...5 {
             let position = ourPosition + forward * Float(i) * 0.75
@@ -130,12 +180,12 @@ func takePhotoWithAnnotations() async -> Data? {
     // Wait for next frame
     guard let frame = try? await ARSessionManager.shared.nextFrame() else { return nil }
 
-    // Produce rotate (portrait mode) image and corresponding intrinsics
+    // Scale photo down
     let originalSize = frame.camera.imageResolution
     let newSize = CGSize(width: 640, height: 480)   // before rotation!
-    guard let photo = UIImage(pixelBuffer: frame.capturedImage)?.resized(to: newSize).rotatedClockwise90() else { return nil }
-    let scale = Vector2(x: Float(newSize.height / originalSize.height), y: Float(newSize.width / originalSize.width))
-    let intrinsics = adjustIntrinsicsForClockwise90RotationAndNewSize(intrinsics: frame.camera.intrinsics, scale: scale)
+    guard let photo = UIImage(pixelBuffer: frame.capturedImage)?.resized(to: newSize) else { return nil }
+    let scale = Vector2(x: Float(newSize.width / originalSize.width), y: Float(newSize.height / originalSize.height))
+    let intrinsics = scaleIntrinsics(intrinsics: frame.camera.intrinsics, scale: scale)
 
     // Annotations
     var points: [NavigablePoint] = []
@@ -143,7 +193,12 @@ func takePhotoWithAnnotations() async -> Data? {
     for i in 0..<worldPoints.count {
         points.append(NavigablePoint(id: i, worldPoint: worldPoints[i], worldToCamera: worldToCamera, intrinsics: intrinsics))
     }
-    guard let annotatedPhoto = annotate(image: photo, with: points),
-          let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
+
+    // Rotate photo and render annotations
+    guard let rotatedPhoto = photo.rotatedClockwise90(),
+          let annotatedPhoto = annotate(image: rotatedPhoto, with: points, rotated: true) else { return nil }
+
+    // Get JPEG
+    guard let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
     return jpeg
 }
