@@ -11,7 +11,7 @@
 //    in the depth image (moving from first row to bottom row) moves from right to left in the
 //    viewfinder.
 //
-//      Veritcally-oriented             Depth image
+//      Vertically-oriented             Depth image
 //      phone
 //
 //      <--- +y of depth image          (0,0) --> +x
