@@ -83,7 +83,8 @@ class Brain {
                     model: .claude35Sonnet,
                     messages: [ thoughts.toClaudeMessage(role: .user) ],
                     maxTokens: _maxTokens,
-                    system: .text(Prompts.system)
+                    system: .text(Prompts.system),
+                    stopSequences: stopAt.isEmpty ? nil : stopAt
                 )
             )
 
