@@ -12,7 +12,7 @@ import RealityKit
 import UIKit
 
 fileprivate func placeEntityInScene(offset: Vector3) -> Vector3 {
-    let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.05)
+    let mesh = MeshResource.generateBox(size: 0.1)
     let modelEntity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: UIColor.gray, isMetallic: true) ])
     let inFront = ARSessionManager.shared.transform.position - ARSessionManager.shared.transform.forward
     let inFrontOnFloor = Vector3(inFront.x, ARSessionManager.shared.floorY, inFront.z) + offset
@@ -22,13 +22,16 @@ fileprivate func placeEntityInScene(offset: Vector3) -> Vector3 {
     return inFrontOnFloor
 }
 
-fileprivate struct Annotation {
-    enum AnnotationType {
-        case navigablePoint
-    }
+fileprivate func placePoint(at position: Vector3) {
+    let mesh = MeshResource.generateBox(size: 0.1)
+    let modelEntity = ModelEntity(mesh: mesh, materials: [ SimpleMaterial(color: UIColor.red, isMetallic: true) ])
+    let entity = AnchorEntity(world: position)
+    entity.addChild(modelEntity)
+    ARSessionManager.shared.scene?.addAnchor(entity)
+}
 
-    let type: AnnotationType
-    let id: UInt
+fileprivate struct NavigablePoint {
+    let id: Int
     let worldPoint: Vector3
     let worldToCamera: Matrix4x4
     let intrinsics: Matrix3x3
@@ -37,23 +40,17 @@ fileprivate struct Annotation {
     var imagePoint: CGPoint {
         // Transform and project to image space
         let cameraPoint = worldToCamera.transformPoint(worldPoint)
-        let homogeneous = Vector3(x: cameraPoint.y / cameraPoint.z, y: cameraPoint.x / cameraPoint.z, z: 1) // need to swap x<->y to compensate for image rotation
+        let homogeneous = Vector3(x: -cameraPoint.y / cameraPoint.z, y: cameraPoint.x / cameraPoint.z, z: 1) // need to swap x<->y to compensate for image rotation
         let projected = intrinsics * homogeneous
         return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
     }
 
     var textColor: UIColor {
-        switch type {
-        case .navigablePoint:
-            return UIColor.white
-        }
+        return UIColor.white
     }
 
     var backgroundColor: CGColor {
-        switch type {
-        case .navigablePoint:
-            return UIColor.black.cgColor
-        }
+        return UIColor.black.cgColor
     }
 }
 
@@ -75,7 +72,7 @@ fileprivate func adjustIntrinsicsForClockwise90RotationAndNewSize(intrinsics: Ma
     return Matrix3x3(columns: ([ scale.x * fy, 0, 0 ], [ 0, scale.y * fx, 0 ], [ scale.x * cy, scale.y * cx, cw ]))
 }
 
-fileprivate func annotate(image: UIImage, with annotations: [Annotation]) -> UIImage? {
+fileprivate func annotate(image: UIImage, with points: [NavigablePoint]) -> UIImage? {
     let sideLength = CGFloat(20)
 
     // Get the image size
@@ -88,18 +85,18 @@ fileprivate func annotate(image: UIImage, with annotations: [Annotation]) -> UII
     image.draw(in: CGRect(origin: .zero, size: imageSize))
 
     // Draw annotations
-    for annotation in annotations {
+    for point in points {
         // Draw square
-        let y = imageSize.height - annotation.imagePoint.y  // to UIKit upper-left origin
-        let squareRect = CGRect(x: annotation.imagePoint.x, y: y, width: sideLength, height: sideLength)
-        context.setFillColor(annotation.backgroundColor)
+        let y = imageSize.height - point.imagePoint.y   // to UIKit upper-left origin
+        let squareRect = CGRect(x: point.imagePoint.x, y: y, width: sideLength, height: sideLength)
+        context.setFillColor(point.backgroundColor)
         context.fill(squareRect)
 
         // Draw number in center of square
-        let text = "\(annotation.id)"
+        let text = "\(point.id)"
         let textAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: sideLength / 2, weight: .bold),
-            .foregroundColor: annotation.textColor
+            .foregroundColor: point.textColor
         ]
         let textSize = text.size(withAttributes: textAttributes)
         let textX = squareRect.midX - textSize.width / 2
@@ -117,9 +114,18 @@ fileprivate func annotate(image: UIImage, with annotations: [Annotation]) -> UII
 
 @MainActor
 func takePhotoWithAnnotations() async -> Data? {
-    let worldPoint1 = placeEntityInScene(offset: .zero)
-    let worldPoint2 = placeEntityInScene(offset: Vector3(x: 0.2, y: 0, z: 0.3))
-    let worldPoint3 = placeEntityInScene(offset: Vector3(x: -0.3, y: 0.1, z: 0.3))
+    var worldPoints: [Vector3] = []
+    let ourTransform = ARSessionManager.shared.transform
+    let ourPosition = Vector3(x: ourTransform.position.x, y: ARSessionManager.shared.floorY, z: ourTransform.position.z)
+    let forward = -ourTransform.forward.xzProjected.normalized
+    for angle in [ 15.0, 0.0, 15.0  ] {
+        let forward = forward.rotated(by: Float(angle), about: .up)
+        for i in 2...5 {
+            let position = ourPosition + forward * Float(i) * 0.75
+            placePoint(at: position)
+            worldPoints.append(position)
+        }
+    }
 
     // Wait for next frame
     guard let frame = try? await ARSessionManager.shared.nextFrame() else { return nil }
@@ -132,12 +138,12 @@ func takePhotoWithAnnotations() async -> Data? {
     let intrinsics = adjustIntrinsicsForClockwise90RotationAndNewSize(intrinsics: frame.camera.intrinsics, scale: scale)
 
     // Annotations
-    let annotations = [
-        Annotation(type: .navigablePoint, id: 99, worldPoint: worldPoint1, worldToCamera: ARSessionManager.shared.transform.inverse, intrinsics: intrinsics),
-        Annotation(type: .navigablePoint, id: 99, worldPoint: worldPoint2, worldToCamera: ARSessionManager.shared.transform.inverse, intrinsics: intrinsics),
-        Annotation(type: .navigablePoint, id: 99, worldPoint: worldPoint3, worldToCamera: ARSessionManager.shared.transform.inverse, intrinsics: intrinsics)
-    ]
-    guard let annotatedPhoto = annotate(image: photo, with: annotations),
+    var points: [NavigablePoint] = []
+    let worldToCamera = frame.camera.transform.inverse
+    for i in 0..<worldPoints.count {
+        points.append(NavigablePoint(id: i, worldPoint: worldPoints[i], worldToCamera: worldToCamera, intrinsics: intrinsics))
+    }
+    guard let annotatedPhoto = annotate(image: photo, with: points),
           let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
     return jpeg
 }
