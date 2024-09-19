@@ -18,7 +18,7 @@
 		CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */; };
 		CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5F2C9A913A00ACC82E /* Prompts.swift */; };
 		CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */; };
-		CC26CF642C9B6CB800ACC82E /* AnnotatedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */; };
+		CC26CF642C9B6CB800ACC82E /* SmartCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */; };
 		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
@@ -171,7 +171,7 @@
 		CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deepgram.swift; sourceTree = "<group>"; };
 		CC26CF5F2C9A913A00ACC82E /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
-		CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotatedView.swift; sourceTree = "<group>"; };
+		CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCamera.swift; sourceTree = "<group>"; };
 		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
@@ -573,7 +573,7 @@
 			children = (
 				CC26CF532C9A0A5A00ACC82E /* Brain.swift */,
 				CC26CF5F2C9A913A00ACC82E /* Prompts.swift */,
-				CC26CF632C9B6CB800ACC82E /* AnnotatedView.swift */,
+				CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -978,7 +978,7 @@
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
-				CC26CF642C9B6CB800ACC82E /* AnnotatedView.swift in Sources */,
+				CC26CF642C9B6CB800ACC82E /* SmartCamera.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,

@@ -15,6 +15,8 @@ class Brain {
     private let _speechDetector = SpeechDetector()
     private var _subscriptions: Set<AnyCancellable> = []
 
+    private let _camera = SmartCamera()
+
     private let _claude = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
     private let _maxTokens = 1024
 
@@ -40,8 +42,16 @@ class Brain {
 
     private func runTask(humanInput: String) async {
         do {
+            // Initial human input
+            let jpeg = await _camera.takePhoto()
             let messages = [
-                MessageParameter.Message(role: .user, content: .text("<HUMAN_INPUT>\(humanInput)</HUMAN_INPUT>"))
+                MessageParameter.Message(
+                    role: .user,
+                    content: .list([
+                        .text("<HUMAN_INPUT>\(humanInput)</HUMAN_INPUT>"),
+                        .image(.init(type: .base64, mediaType: .jpeg, data: jpeg!.base64EncodedString()))
+                    ])
+                )
             ]
             let params = MessageParameter(model: .claude35Sonnet, messages: messages, maxTokens: _maxTokens, system: .text(Prompts.system))
             let response = try await _claude.createMessage(params)
