@@ -11,9 +11,16 @@ import ARKit
 import UIKit
 
 class SmartCamera {
+    private var _imageID = 0
     private var _pointID = 0
 
-    private struct NavigablePoint {
+    struct Photo {
+        let name: String
+        let jpegBase64: String
+        let navigablePoints: [NavigablePoint]
+    }
+
+    struct NavigablePoint {
         let id: Int
         let worldPoint: Vector3
         let worldToCamera: Matrix4x4
@@ -75,7 +82,7 @@ class SmartCamera {
     }
 
     @MainActor
-    func takePhoto() async -> Data? {
+    func takePhoto() async -> Photo? {
         // Update occupancy
         _ = await NavigationController.shared.updateOccupancy()
 
@@ -98,8 +105,12 @@ class SmartCamera {
         }
 
         // Get JPEG
-        guard let jpeg = annotatedPhoto.jpegData(compressionQuality: 0.8) else { return nil }
-        return jpeg
+        guard let jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
+
+        // Return all data
+        let name = "photo\(_imageID)"
+        _imageID += 1
+        return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints)
     }
 
     /// Generate a series of potential navigable points on the floor in front of the robot.

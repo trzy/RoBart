@@ -28,44 +28,87 @@ class Brain {
 
     fileprivate init() {
         // Tasks are kicked off by human speech input
-        _speechDetector.$speech.sink { [weak self] (speech: String) in
+        _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
             guard let self = self,
-                  !speech.isEmpty,
+                  !spokenWords.isEmpty,
                   !isWorking else {
                 return
             }
             _task = Task { [weak self] in
-                await self?.runTask(humanInput: speech)
+                await self?.runTask(humanInput: spokenWords)
             }
         }.store(in: &_subscriptions)
     }
 
     private func runTask(humanInput: String) async {
-        do {
-            // Initial human input
-            let jpeg = await _camera.takePhoto()
-            let messages = [
-                MessageParameter.Message(
-                    role: .user,
-                    content: .list([
-                        .text("<HUMAN_INPUT>\(humanInput)</HUMAN_INPUT>"),
-                        .image(.init(type: .base64, mediaType: .jpeg, data: jpeg!.base64EncodedString()))
-                    ])
-                )
-            ]
-            let params = MessageParameter(model: .claude35Sonnet, messages: messages, maxTokens: _maxTokens, system: .text(Prompts.system))
-            let response = try await _claude.createMessage(params)
-            if case let .text(responseText) = response.content[0] {
-                log("Response: \(responseText)")
+        var history: [ThoughtRepresentable] = []
+        
+        // Human speaking to RoBart kicks off the process
+        let photo = await _camera.takePhoto()
+        let input = HumanInputThought(spokenWords: humanInput, photo: photo)    //TODO: should we move photo into initial observation? "Human spoke. Photo captured."
+        history.append(input)
+
+        // Continuously think and act until final response
+        var stop = false
+        while !stop {
+            guard let response = await submitToClaude(thoughts: history, stopAt: [ObservationsThought.openingTag]) else { break }
+            history += response
+
+            for thought in actionableThoughts(in: response) {
+                if let intermediateResponse = thought as? IntermediateResponseThought {
+                    await speak(intermediateResponse.wordsToSpeak)
+                } else if let finalResponse = thought as? FinalResponseThought {
+                    await speak(finalResponse.wordsToSpeak)
+                    stop = true
+                    break
+                } else if let actions = thought as? ActionsThought {
+                    let observations = await perform(actions)
+                    history.append(observations)
+                }
             }
-        } catch {
-            log("Error: \(error)")
         }
+
+        log("Completed task!")
         _task = nil
     }
 
-    private func parseBlocks(from text: String) -> [String: String] {
-        return [:]
+    private func actionableThoughts(in thoughts: [ThoughtRepresentable]) -> [ThoughtRepresentable] {
+        return thoughts.filter { [ IntermediateResponseThought.tag, FinalResponseThought.tag, ActionsThought.tag ].firstIndex(of: $0.tag) != nil }
+    }
+
+    private func submitToClaude(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+        do {
+            let response = try await _claude.createMessage(
+                MessageParameter(
+                    model: .claude35Sonnet,
+                    messages: [ thoughts.toClaudeMessage(role: .user) ],
+                    maxTokens: _maxTokens,
+                    system: .text(Prompts.system)
+                )
+            )
+
+            if case let .text(responseText) = response.content[0] {
+                log("Response: \(responseText)")
+                let responseThoughts = parseBlocks(from: responseText).toThoughts()
+                return responseThoughts.isEmpty ? nil : responseThoughts
+            }
+
+            log("Error: No content!")
+        } catch {
+            log("Error: \(error.localizedDescription)")
+        }
+
+        return nil
+    }
+
+    private func speak(_ wordsToSpeak: String) async {
+        //TODO
+        log("RoBart says: \(wordsToSpeak)")
+    }
+
+    private func perform(_ actions: ActionsThought) async -> ObservationsThought {
+        //TODO
+        return ObservationsThought(text: "nothing happened!")
     }
 }
 
