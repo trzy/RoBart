@@ -30,11 +30,24 @@ struct SettingsView: View {
                             Text("Handheld").tag(Role.handheld)
                         }
 
+                        Picker("AI Model", selection: $_settings.model) {
+                            Text("Claude 3.5 Sonnet").tag(Brain.Model.claude35Sonnet)
+                            Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
+                            Text("GPT-4o").tag(Brain.Model.gpt4o)
+                        }
+
                         LabeledContent {
                             TextField("Anthropic API Key", text: $_settings.anthropicAPIKey, prompt: Text("..."))
                                 .multilineTextAlignment(.trailing)
                         } label: {
                             Text("Anthropic API Key")
+                        }
+
+                        LabeledContent {
+                            TextField("OpenAI API Key", text: $_settings.openAIAPIKey, prompt: Text("..."))
+                                .multilineTextAlignment(.trailing)
+                        } label: {
+                            Text("OpenAI API Key")
                         }
 
                         LabeledContent {
