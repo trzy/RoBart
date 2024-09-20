@@ -29,10 +29,10 @@ fileprivate let _jsonDecoder: JSONDecoder = {
     return decoder
 }()
 
-/// Uploads audio bytes to Deepgram and produces a transcript.
+/// Transcribes audio to text using Deepgram.
 /// - Parameter sampleData: Audio bytes in single-channel 16 KHz signed 16-bit PCM format.
 /// - Returns: Transcript text if successful otherwise `nil`.
-func uploadAudioToDeepgram(_ sampleData: Data) async -> String? {
+func transcribeWithDeepgram(_ sampleData: Data) async -> String? {
     let url = URL(string: "https://api.deepgram.com/v1/listen?encoding=linear16&channels=1&sample_rate=16000")!
     var request = URLRequest(url: url)
     request.addValue("Token \(Settings.shared.deepgramAPIKey)", forHTTPHeaderField: "Authorization")
@@ -53,6 +53,38 @@ func uploadAudioToDeepgram(_ sampleData: Data) async -> String? {
         } catch {
             log("Error: Unable to decode response: \(error)")
         }
+    } catch {
+        log("Error: Upload failed: \(error.localizedDescription)")
+    }
+
+    return nil
+}
+
+/// Converts text to synthesized speech using Deepgram.
+/// - Parameter text: Text to vocalize.
+/// - Returns: MP3 file data if successful, otherwise `nil`.
+func vocalizeWithDeepgram(_ text: String) async -> Data? {
+    guard let url = URL(string: "https://api.deepgram.com/v1/speak?model=aura-orpheus-en") else { return nil }
+    var request = URLRequest(url: url)
+    request.addValue("Token \(Settings.shared.deepgramAPIKey)", forHTTPHeaderField: "Authorization")
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+
+    guard let requestBody = try? JSONEncoder().encode([ "text": text ]) else {
+        log("Error: Unable to encode request body")
+        return nil
+    }
+
+    do {
+        let (data, response) = try await URLSession.shared.upload(for: request, from: requestBody)
+        guard let response = response as? HTTPURLResponse,
+              (200...299).contains(response.statusCode) else {
+            log("Error: Upload failed")
+            return nil
+        }
+        log("Received voice: \(data.count) bytes")
+        return data
+
     } catch {
         log("Error: Upload failed: \(error.localizedDescription)")
     }

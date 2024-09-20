@@ -13,17 +13,12 @@ class SpeechDetector: ObservableObject {
 
     private let _maxSpeechSeconds = 30
     private var _speechBuffer: AVAudioPCMBuffer!
+    private var _converter: AVAudioConverter?
+    private let _outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false)!
+    private let _voiceExtractor = VoiceExtractor()
 
     private var _isListening = false
     private var _subscription: Cancellable?
-
-    private var _audioEngine = AVAudioEngine()
-    private var _silenceInputMixerNode = AVAudioMixerNode()
-    private var _playerNode = AVAudioPlayerNode()
-    private var _converter: AVAudioConverter?
-    private let _outputFormat = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false)!
-
-    private let _voiceExtractor = VoiceExtractor()
 
     init() {
         // Create output buffer to hold detected speech
@@ -50,79 +45,11 @@ class SpeechDetector: ObservableObject {
         guard !_isListening else { return }
         log("Starting speech detector")
         _isListening = true
-        setupAudioSession()
-        setupAudioGraph()
-        startAudioEngine()
-    }
-
-    func stopListening() {
-        guard _isListening else { return }
-        log("Stopping speech detector")
-        _isListening = false
-        _silenceInputMixerNode.removeTap(onBus: 0)
-        _audioEngine.stop()
-        tearDownAudioGraph()
-    }
-
-    private func setupAudioSession() {
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [ .defaultToSpeaker ])
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            log("Error: AVAudioSession: \(error)")
-        }
-    }
-
-    private func setupAudioGraph() {
-        // Feed input into mixer node that suppresses audio to avoid feedback while recording. For
-        // some reason, need to reduce input volume to 0 (which doesn't affect taps on this node,
-        // evidently). Output volume has no effect unless changed *after* the node is attached to
-        // the engine and then ends up silencing output as well.
-        _silenceInputMixerNode.volume = 0
-        _audioEngine.attach(_silenceInputMixerNode)
-
-        // Input node -> silencing mixer node
-        let inputNode = _audioEngine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        _audioEngine.connect(inputNode, to: _silenceInputMixerNode, format: inputFormat)
-
-        // Connect to main mixer node. We can change the number of samples but not the sample rate
-        // here.
-        let mainMixerNode = _audioEngine.mainMixerNode
-        let mixerFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: inputFormat.sampleRate, channels: 1, interleaved: false)
-        _audioEngine.connect(_silenceInputMixerNode, to: mainMixerNode, format: mixerFormat)
-
-        // Create an output node for playback
-        _audioEngine.attach(_playerNode)    // output player
-        _audioEngine.connect(_playerNode, to: _audioEngine.mainMixerNode, format: mixerFormat)
-
-        // Start audio engine
-        _audioEngine.prepare()
-    }
-
-    private func tearDownAudioGraph() {
-        _audioEngine.disconnectNodeInput(_silenceInputMixerNode)
-        _audioEngine.disconnectNodeOutput(_silenceInputMixerNode)
-        _audioEngine.disconnectNodeInput(_playerNode)
-        _audioEngine.disconnectNodeOutput(_playerNode)
-        _audioEngine.disconnectNodeInput(_audioEngine.inputNode)
-        _audioEngine.disconnectNodeOutput(_audioEngine.inputNode)
-        _audioEngine.disconnectNodeInput(_audioEngine.mainMixerNode)
-        _audioEngine.disconnectNodeOutput(_audioEngine.mainMixerNode)
-        _audioEngine.detach(_silenceInputMixerNode)
-        _audioEngine.detach(_playerNode)
-    }
-
-    private func startAudioEngine() {
-        // Create converter to convert audio to Deepgram and VAD format
-        let format = _silenceInputMixerNode.outputFormat(forBus: 0)
-        _converter = createConverter(from: format, to: _outputFormat)
-
-        // Install a tap to acquire microphone audio
-        _silenceInputMixerNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] (buffer: AVAudioPCMBuffer, time: AVAudioTime) in
+        AudioManager.shared.startRecording() { [weak self] (buffer: AVAudioPCMBuffer, time: AVAudioTime) in
             guard let self = self else { return }
 
+            // Convert audio to Deepgram and VAD format
+            _converter = createConverter(from: buffer.format, to: _outputFormat)
             guard let audioBuffer = convertAudio(buffer) else { return }
 
             // Use VAD to minimize voice uploads
@@ -137,14 +64,13 @@ class SpeechDetector: ObservableObject {
                 _speechBuffer.frameLength = 0
             }
         }
+    }
 
-        // Start recording
-        do {
-            try _audioEngine.start()
-            log("Started audio engine")
-        } catch {
-            print("[AudioRecorder] Audio Engine error: \(error)")
-        }
+    func stopListening() {
+        guard _isListening else { return }
+        log("Stopping speech detector")
+        _isListening = false
+        AudioManager.shared.stopRecording()
     }
 
     private func createSpeechBuffer(format: AVAudioFormat) -> AVAudioPCMBuffer? {
@@ -210,7 +136,7 @@ class SpeechDetector: ObservableObject {
         let start = Date.timeIntervalSinceReferenceDate
         guard let sampleData = toData(buffer) else { return }
         _ = Task {
-            if let transcript = await uploadAudioToDeepgram(sampleData) {
+            if let transcript = await transcribeWithDeepgram(sampleData) {
                 log("Transcript: \(transcript)")
                 DispatchQueue.main.async { [weak self] in
                     self?.speech = transcript
