@@ -13,13 +13,16 @@ import Foundation
 import MultipeerConnectivity
 
 class Client: ObservableObject {
+    static let shared = Client()
+
     @Published var robotOccupancyMapImage: UIImage?
 
     private var _task: Task<Void, Never>!
+    private var _connection: AsyncTCPConnection?
     private let _decoder = JSONDecoder()
     private var _subscription: Cancellable?
 
-    init() {
+    private init() {
         _subscription = PeerManager.shared.$receivedMessage.sink { [weak self] (received: (peerID: MCPeerID, data: Data)?) in
             guard let received = received else { return }
             self?.handlePeerMessage(received.data, from: received.peerID)
@@ -28,6 +31,10 @@ class Client: ObservableObject {
         _task = Task {
             await runTask()
         }
+    }
+
+    func send(_ message: JSONMessage) {
+        _connection?.send(message)
     }
 
     func stopRobot() {
@@ -40,12 +47,14 @@ class Client: ObservableObject {
         while true {
             do {
                 let connection = try await AsyncTCPConnection(host: "192.168.0.123", port: 8000)
+                _connection = connection
                 connection.send(HelloMessage(message: "Hello from iOS!"))
                 for try await receivedMessage in connection {
                     await handleDebugServerMessage(receivedMessage, connection: connection)
                 }
             } catch {
                 log("Error: \(error.localizedDescription)")
+                _connection = nil
             }
             try? await Task.sleep(for: .seconds(5))
         }
@@ -378,7 +387,7 @@ class Client: ObservableObject {
     }
 
     private func getAnnotatedView(connection: AsyncTCPConnection) async {
-        let camera = SmartCamera()
+        let camera = AnnotatingCamera()
         if let photo = await camera.takePhoto() {
             connection.send(AnnotatedViewMessage(imageBase64: photo.jpegBase64))
         }

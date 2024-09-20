@@ -14,12 +14,8 @@ struct ContentView: View {
     @ObservedObject private var _settings = Settings.shared
     @State private var _cursor: Entity?
     @State private var _subscription: Cancellable?
-    @ObservedObject private var _client: Client
+    @ObservedObject private var _client = Client.shared
     @StateObject private var _depthTest = DepthTest()
-
-    init(client: Client) {
-        _client = client
-    }
 
     var body: some View {
         NavigationView {
@@ -163,5 +159,5 @@ fileprivate func log(_ message: String) {
 }
 
 #Preview {
-    ContentView(client: Client())
+    ContentView()
 }

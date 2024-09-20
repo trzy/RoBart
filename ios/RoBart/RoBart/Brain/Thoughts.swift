@@ -14,7 +14,8 @@ import SwiftAnthropic
 
 protocol ThoughtRepresentable {
     static var tag: String { get }
-    var photos: [SmartCamera.Photo] { get }
+    var photos: [AnnotatingCamera.Photo] { get }
+    func humanReadableContent() -> String
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject]
     func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content]
     func withPhotosRemoved() -> ThoughtRepresentable
@@ -22,7 +23,7 @@ protocol ThoughtRepresentable {
 
 extension ThoughtRepresentable {
     var tag: String { Self.tag }
-    var photos: [SmartCamera.Photo] { [] }
+    var photos: [AnnotatingCamera.Photo] { [] }
     func withPhotosRemoved() -> ThoughtRepresentable {
         return self
     }
@@ -50,6 +51,14 @@ extension Array where Element == ThoughtRepresentable {
         return self.flatMap { $0.anthropicContent() }
     }
 
+    /// Converts an array of `ThoughtRepresentable` to a raw human-readable string closely
+    /// approximating what is actually passed to the LLM.
+    /// - Returns: String.
+    func toHumanReadableContent() -> String {
+        let contents = self.map { $0.humanReadableContent() }
+        return contents.joined(separator: "\n\n")
+    }
+
     /// Converts an array of `ThoughtRepresentable` objects to a list of `ChatCompletionUserMessageParam`
     /// objects (user message content), for use with GPT-4.
     /// - Returns: Array of `ChatCompletionUserMessageParam`.
@@ -58,7 +67,7 @@ extension Array where Element == ThoughtRepresentable {
         return content.map { ChatQuery.ChatCompletionMessageParam.user(.init(content: $0)) }
     }
 
-    func findNavigablePoint(_ pointID: Int) -> SmartCamera.NavigablePoint? {
+    func findNavigablePoint(_ pointID: Int) -> AnnotatingCamera.NavigablePoint? {
         // Search all photos in all thoughts (in reverse order because it is more likely that a
         // recent photo will contain the desired point)
         for thought in self.reversed() {
@@ -100,20 +109,29 @@ extension Array where Element == (tag: String, contents: String) {
 
 struct HumanInputThought: ThoughtRepresentable {
     private let _spokenWords: String
-    private let _photo: SmartCamera.Photo?
+    private let _photo: AnnotatingCamera.Photo?
 
     static var tag: String { "HUMAN_INPUT" }
 
-    var photos: [SmartCamera.Photo] {
+    var photos: [AnnotatingCamera.Photo] {
         if let photo = _photo {
             return [photo]
         }
         return []
     }
 
-    init(spokenWords: String, photo: SmartCamera.Photo?) {
+    init(spokenWords: String, photo: AnnotatingCamera.Photo?) {
         _spokenWords = spokenWords
         _photo = photo
+    }
+
+    func humanReadableContent() -> String {
+        var content = "\(openingTag)\(_spokenWords)"
+        if let photo = _photo {
+            content += "\n\(photo.name): <image>\n"
+        }
+        content += closingTag
+        return content
     }
 
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
@@ -142,13 +160,13 @@ struct HumanInputThought: ThoughtRepresentable {
 
 struct ObservationsThought: ThoughtRepresentable {
     private let _text: String?
-    private let _photos: [SmartCamera.Photo]
+    private let _photos: [AnnotatingCamera.Photo]
 
     static var tag: String { "OBSERVATIONS" }
 
-    var photos: [SmartCamera.Photo] { _photos }
+    var photos: [AnnotatingCamera.Photo] { _photos }
 
-    init(photos: [SmartCamera.Photo]) {
+    init(photos: [AnnotatingCamera.Photo]) {
         _text = nil
         _photos = photos
     }
@@ -158,9 +176,21 @@ struct ObservationsThought: ThoughtRepresentable {
         _photos = []
     }
 
-    init(text: String, photos: [SmartCamera.Photo]) {
+    init(text: String, photos: [AnnotatingCamera.Photo]) {
         _text = text
         _photos = photos
+    }
+
+    func humanReadableContent() -> String {
+        var content = openingTag
+        if let text = _text {
+            content += text
+        }
+        for photo in _photos {
+            content += "\n\(photo.name): <image>\n"
+        }
+        content += closingTag
+        return content
     }
 
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
@@ -210,6 +240,10 @@ struct PlanThought: ThoughtRepresentable {
         _text = plan
     }
 
+    func humanReadableContent() -> String {
+        return "\(openingTag)\(_text)\(closingTag)"
+    }
+
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
         return [ .text("\(openingTag)\(_text)\(closingTag)") ]
     }
@@ -230,12 +264,16 @@ struct ActionsThought: ThoughtRepresentable {
         _jsonText = json
     }
 
+    func humanReadableContent() -> String {
+        return "\(openingTag)\(_jsonText)\(closingTag)"
+    }
+
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
-        return [ .text("\(openingTag)\(_jsonText)\(closingTag)") ]
+        return [ .text(humanReadableContent()) ]
     }
 
     func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
-        return [ .string("\(openingTag)\(_jsonText)\(closingTag)") ]
+        return [ .string(humanReadableContent()) ]
     }
 }
 
@@ -250,12 +288,16 @@ struct IntermediateResponseThought: ThoughtRepresentable {
         _spokenWords = spokenWords
     }
 
+    func humanReadableContent() -> String {
+        return "\(openingTag)\(_spokenWords)\(closingTag)"
+    }
+
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
-        return [ .text("\(openingTag)\(_spokenWords)\(closingTag)") ]
+        return [ .text(humanReadableContent()) ]
     }
 
     func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
-        return [ .string("\(openingTag)\(_spokenWords)\(closingTag)") ]
+        return [ .string(humanReadableContent()) ]
     }
 }
 
@@ -270,11 +312,15 @@ struct FinalResponseThought: ThoughtRepresentable {
         _spokenWords = spokenWords
     }
 
+    func humanReadableContent() -> String {
+        return "\(openingTag)\(_spokenWords)\(closingTag)"
+    }
+
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
-        return [ .text("\(openingTag)\(_spokenWords)\(closingTag)") ]
+        return [ .text(humanReadableContent()) ]
     }
 
     func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
-        return [ .string("\(openingTag)\(_spokenWords)\(closingTag)") ]
+        return [ .string(humanReadableContent()) ]
     }
 }
