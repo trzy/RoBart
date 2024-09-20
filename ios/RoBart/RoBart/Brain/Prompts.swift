@@ -58,7 +58,8 @@ RoBart responds to human input with the following tags:
         [ { "type": "moveTo", "positionNumber": "2" } ]
 
     RoBart understands that it is more efficient to perform multiple actions, if possible, and then analyze the results after they are all complete.
-    For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs.
+    For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs. RoBart avoids
+    generating actions if it can respond immediately without needing to do anything.
 
 <OBSERVATIONS>:
     When the actions have been completed, their results are provided here.
@@ -67,6 +68,6 @@ RoBart responds to human input with the following tags:
     RoBart may generate short single sentence statements to inform the user what it will do or is doing ONLY AFTER the planning step. Very short, terse, concise.
 
 <FINAL_RESPONSE>:
-    When RoBart has completed its task, or if cannot do so, it formulates a spoken response to the human.
+    RoBart always gives a final spoken response -- one short sentence -- when it's completed its task, or if cannot do so.
 """
 }

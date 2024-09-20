@@ -51,7 +51,7 @@ class Brain {
 
         // Continuously think and act until final response
         var stop = false
-        while !stop {
+        repeat {
             guard let response = await submitToClaude(thoughts: history, stopAt: [ObservationsThought.openingTag]) else { break }
             history += response
 
@@ -67,7 +67,7 @@ class Brain {
                     history.append(observations)
                 }
             }
-        }
+        } while !stop
 
         log("Completed task!")
         _task = nil
@@ -105,8 +105,9 @@ class Brain {
     }
 
     private func speak(_ wordsToSpeak: String) async {
-        //TODO
         log("RoBart says: \(wordsToSpeak)")
+        guard let mp3Data = await vocalizeWithDeepgram(wordsToSpeak) else { return }
+        await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
     private func perform(_ actionsThought: ActionsThought) async -> ObservationsThought {
