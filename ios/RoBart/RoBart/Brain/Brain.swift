@@ -22,7 +22,7 @@ class Brain {
     private let _speechDetector = SpeechDetector()
     private var _subscriptions: Set<AnyCancellable> = []
 
-    private let _camera = SmartCamera()
+    private let _camera = AnnotatingCamera()
 
     private let _anthropic = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
@@ -50,8 +50,11 @@ class Brain {
 
     private func runTask(humanInput: String) async {
         _speechDetector.stopListening()
+        let timeStarted = Date.now
+        var stepNumber = 0
+
         var history: [ThoughtRepresentable] = []
-        
+
         // Human speaking to RoBart kicks off the process
         let photo = await _camera.takePhoto()
         let input = HumanInputThought(spokenWords: humanInput, photo: photo)    //TODO: should we move photo into initial observation? "Human spoke. Photo captured."
@@ -62,6 +65,7 @@ class Brain {
         repeat {
             history = prune(history)
             guard let response = await submitToAI(thoughts: history, stopAt: [ObservationsThought.openingTag]) else { break }
+            sendDebugLog(modelInput: history, modelOutput: response, timestamp: timeStarted, stepNumber: stepNumber)
             history += response
 
             for thought in actionableThoughts(in: response) {
@@ -76,6 +80,8 @@ class Brain {
                     history.append(observations)
                 }
             }
+
+            stepNumber += 1
         } while !stop
 
         log("Completed task!")
@@ -203,7 +209,7 @@ class Brain {
         }
 
         var resultsDescription: [String] = []
-        var photos: [SmartCamera.Photo] = []
+        var photos: [AnnotatingCamera.Photo] = []
 
         let startPosition = ARSessionManager.shared.transform.position
         let startForward = ARSessionManager.shared.transform.forward.xzProjected
@@ -247,6 +253,31 @@ class Brain {
         }
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
+    }
+
+    private func sendDebugLog(modelInput: [ThoughtRepresentable], modelOutput: [ThoughtRepresentable], timestamp: Date, stepNumber: Int) {
+        // Timestamp string will be used to create directories on server
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+        let timestampString = dateFormatter.string(from: timestamp)
+
+        // Get all photos
+        var imageBase64ByName: [String: String] = [:]
+        for thought in modelInput {
+            for photo in thought.photos {
+                imageBase64ByName["\(photo.name)"] = photo.jpegBase64
+            }
+        }
+
+        // Send message to server
+        let msg = AIStepMessage(
+            timestamp: timestampString,
+            stepNumber: stepNumber,
+            modelInput: modelInput.toHumanReadableContent(),
+            modelOutput: modelOutput.toHumanReadableContent(),
+            imagesBase64: imageBase64ByName
+        )
+        Client.shared.send(msg)
     }
 }
 

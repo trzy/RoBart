@@ -18,7 +18,7 @@
 		CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */; };
 		CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF5F2C9A913A00ACC82E /* Prompts.swift */; };
 		CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */; };
-		CC26CF642C9B6CB800ACC82E /* SmartCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */; };
+		CC26CF642C9B6CB800ACC82E /* AnnotatingCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF632C9B6CB800ACC82E /* AnnotatingCamera.swift */; };
 		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC26CF682C9BE68E00ACC82E /* BlockParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF672C9BE68E00ACC82E /* BlockParser.swift */; };
 		CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF692C9BE89A00ACC82E /* Thoughts.swift */; };
@@ -176,7 +176,7 @@
 		CC26CF5D2C9A5FD600ACC82E /* Deepgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deepgram.swift; sourceTree = "<group>"; };
 		CC26CF5F2C9A913A00ACC82E /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
-		CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCamera.swift; sourceTree = "<group>"; };
+		CC26CF632C9B6CB800ACC82E /* AnnotatingCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotatingCamera.swift; sourceTree = "<group>"; };
 		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC26CF672C9BE68E00ACC82E /* BlockParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockParser.swift; sourceTree = "<group>"; };
 		CC26CF692C9BE89A00ACC82E /* Thoughts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thoughts.swift; sourceTree = "<group>"; };
@@ -584,7 +584,7 @@
 			children = (
 				CC26CF532C9A0A5A00ACC82E /* Brain.swift */,
 				CC26CF5F2C9A913A00ACC82E /* Prompts.swift */,
-				CC26CF632C9B6CB800ACC82E /* SmartCamera.swift */,
+				CC26CF632C9B6CB800ACC82E /* AnnotatingCamera.swift */,
 				CC26CF672C9BE68E00ACC82E /* BlockParser.swift */,
 				CC26CF692C9BE89A00ACC82E /* Thoughts.swift */,
 				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
@@ -995,7 +995,7 @@
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
 				CC26CF682C9BE68E00ACC82E /* BlockParser.swift in Sources */,
 				CCA3B92B2C8CE0D400F15F9F /* DepthTest.swift in Sources */,
-				CC26CF642C9B6CB800ACC82E /* SmartCamera.swift in Sources */,
+				CC26CF642C9B6CB800ACC82E /* AnnotatingCamera.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,

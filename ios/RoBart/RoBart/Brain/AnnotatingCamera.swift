@@ -1,5 +1,5 @@
 //
-//  SmartCamera.swift
+//  AnnotatingCamera.swift
 //  RoBart
 //
 //  Created by Bart Trzynadlowski on 9/18/24.
@@ -10,7 +10,7 @@
 import ARKit
 import UIKit
 
-class SmartCamera {
+class AnnotatingCamera {
     private var _imageID = 0
     private var _pointID = 0
 

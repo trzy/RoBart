@@ -106,3 +106,11 @@ struct RequestAnnotatedViewMessage: JSONMessage {
 struct AnnotatedViewMessage: JSONMessage {
     let imageBase64: String
 }
+
+struct AIStepMessage: JSONMessage {
+    let timestamp: String
+    let stepNumber: Int
+    let modelInput: String
+    let modelOutput: String
+    let imagesBase64: [String: String]
+}
