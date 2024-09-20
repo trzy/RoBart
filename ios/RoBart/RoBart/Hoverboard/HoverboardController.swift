@@ -271,7 +271,7 @@ class HoverboardController {
             // Orientation error: if heading to a position, we must keep the orientation PID active
             // but if only rotating, we stop when we hit our goal.
             let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
-            if _targetPosition == nil && orientationErrorDegrees <= orientationGoalTolerance {
+            if _targetPosition == nil && abs(orientationErrorDegrees) <= abs(orientationGoalTolerance) {
                 _targetForward = nil
                 runOrientationPID = false
                 leftMotorThrottle = 0
