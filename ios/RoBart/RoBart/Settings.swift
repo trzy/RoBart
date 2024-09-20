@@ -19,11 +19,27 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var model: Brain.Model = .claude35Sonnet {
+        didSet {
+            // Model is saved
+            UserDefaults.standard.set(role.rawValue, forKey: Self.k_modelKey)
+            log("Set: \(Self.k_modelKey) = \(model)")
+        }
+    }
+
     @Published var anthropicAPIKey: String = "" {
         didSet {
             // API key is saved
             UserDefaults.standard.set(anthropicAPIKey, forKey: Self.k_anthropicAPIKey)
             log("Set: \(Self.k_anthropicAPIKey) = <redacted>")
+        }
+    }
+
+    @Published var openAIAPIKey: String = "" {
+        didSet {
+            // API key is saved
+            UserDefaults.standard.set(openAIAPIKey, forKey: Self.k_openAIAPIKey)
+            log("Set: \(Self.k_openAIAPIKey) = <redacted>")
         }
     }
 
@@ -38,7 +54,9 @@ class Settings: ObservableObject {
     @Published var driveToButtonUsesNavigation = true
 
     private static let k_roleKey = "role"
+    private static let k_modelKey = "model"
     private static let k_anthropicAPIKey = "anthropic_api_key"
+    private static let k_openAIAPIKey = "openai_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
 
     fileprivate init() {
@@ -47,8 +65,17 @@ class Settings: ObservableObject {
             self.role = role
         }
 
+        if let value = UserDefaults.standard.string(forKey: Self.k_modelKey),
+           let model = Brain.Model(rawValue: value) {
+            self.model = model
+        }
+
         if let value = UserDefaults.standard.string(forKey: Self.k_anthropicAPIKey) {
             self.anthropicAPIKey = value
+        }
+
+        if let value = UserDefaults.standard.string(forKey: Self.k_openAIAPIKey) {
+            self.openAIAPIKey = value
         }
 
         if let value = UserDefaults.standard.string(forKey: Self.k_deepgramAPIKey) {

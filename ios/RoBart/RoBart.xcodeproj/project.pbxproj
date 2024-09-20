@@ -24,6 +24,7 @@
 		CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF692C9BE89A00ACC82E /* Thoughts.swift */; };
 		CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6C2C9CA06B00ACC82E /* Actions.swift */; };
 		CC26CF6F2C9CE98500ACC82E /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */; };
+		CC26CF762C9D14D100ACC82E /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = CC26CF752C9D14D100ACC82E /* OpenAI */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -316,6 +317,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CC26CF762C9D14D100ACC82E /* OpenAI in Frameworks */,
 				CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */,
 				CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */,
 				CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */,
@@ -875,6 +877,7 @@
 			name = RoBart;
 			packageProductDependencies = (
 				CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */,
+				CC26CF752C9D14D100ACC82E /* OpenAI */,
 			);
 			productName = Robart;
 			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
@@ -928,6 +931,7 @@
 			mainGroup = CCA9A0EF2C62D35E00B0401C;
 			packageReferences = (
 				CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */,
+				CC26CF742C9D14D000ACC82E /* XCRemoteSwiftPackageReference "OpenAI" */,
 			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
 			projectDirPath = "";
@@ -1385,6 +1389,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		CC26CF742C9D14D000ACC82E /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.0;
+			};
+		};
 		CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jamesrochabrun/SwiftAnthropic";
@@ -1396,6 +1408,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		CC26CF752C9D14D100ACC82E /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC26CF742C9D14D000ACC82E /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
+		};
 		CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */;
