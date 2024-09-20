@@ -9,6 +9,7 @@
 import asyncio
 import base64
 from dataclasses import dataclass
+import os
 import platform
 import sys
 from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
@@ -90,6 +91,20 @@ class RoBartDebugServer(MessageHandler):
     @handler(AnnotatedViewMessage)
     async def handle_AnnotatedViewMessage(self, session: Session, msg: AnnotatedViewMessage, timestamp: float):
         self._image_viewer.show(image=base64.b64decode(msg.imageBase64), name="Robot Annotated View")
+    
+    @handler(AIStepMessage)
+    async def handle_AIStepMessage(self, session: Session, msg: AIStepMessage, timestamp: float):
+        dir = os.path.join("data", msg.timestamp, f"{msg.stepNumber}")
+        os.makedirs(dir)
+        with open(file=os.path.join(dir, "input.txt"), mode="w") as fp:
+            fp.write(msg.modelInput)
+        with open(file=os.path.join(dir, "output.txt"), mode="w") as fp:
+            fp.write(msg.modelOutput)
+        for (name, image_base64) in msg.imagesBase64.items():
+            image_bytes = base64.b64decode(image_base64)
+            with open(file=os.path.join(dir, f"{name}.jpg"), mode="wb") as fp:
+                fp.write(image_bytes)
+        print(f"Logged AI step to: {dir}")
 
 
 ####################################################################################################
