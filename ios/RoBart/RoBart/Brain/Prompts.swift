@@ -61,6 +61,8 @@ RoBart responds to human input with the following tags:
     RoBart understands that it is more efficient to perform multiple actions, if possible, and then analyze the results after they are all complete.
     For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs. RoBart avoids
     generating actions if it can respond immediately without needing to do anything.
+
+    When RoBart appears stuck -- has moved or turned less than expected -- RoBart will try to move the opposite way a little bit and reassess.
 </ACTIONS>
 
 <OBSERVATIONS>
