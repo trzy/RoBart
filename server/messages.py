@@ -6,7 +6,7 @@
 # parts.
 #
 
-from typing import List
+from typing import Dict, List
 
 from pydantic import BaseModel
 
@@ -83,3 +83,10 @@ class RequestAnnotatedViewMessage(BaseModel):
 
 class AnnotatedViewMessage(BaseModel):
     imageBase64: str
+
+class AIStepMessage(BaseModel):
+    timestamp: str
+    stepNumber: int
+    modelInput: str
+    modelOutput: str
+    imagesBase64: Dict[str, str]
