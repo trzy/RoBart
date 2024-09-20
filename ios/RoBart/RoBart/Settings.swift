@@ -22,7 +22,7 @@ class Settings: ObservableObject {
     @Published var model: Brain.Model = .claude35Sonnet {
         didSet {
             // Model is saved
-            UserDefaults.standard.set(role.rawValue, forKey: Self.k_modelKey)
+            UserDefaults.standard.set(model.rawValue, forKey: Self.k_modelKey)
             log("Set: \(Self.k_modelKey) = \(model)")
         }
     }
