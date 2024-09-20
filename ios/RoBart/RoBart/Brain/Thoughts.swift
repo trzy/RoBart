@@ -13,11 +13,13 @@ import SwiftAnthropic
 
 protocol ThoughtRepresentable {
     static var tag: String { get }
+    var photos: [SmartCamera.Photo] { get }
     func content() -> [MessageParameter.Message.Content.ContentObject]
 }
 
 extension ThoughtRepresentable {
     var tag: String { Self.tag }
+    var photos: [SmartCamera.Photo] { [] }
 
     static var openingTag: String { "<\(Self.tag)>" }
     static var closingTag: String { "</\(Self.tag)>" }
@@ -40,6 +42,21 @@ extension Array where Element == ThoughtRepresentable {
     /// - Returns: Array of `ContentObject` objects for use with Claude via SwiftAnthropic.
     func toClaudeContentObjects() -> [MessageParameter.Message.Content.ContentObject] {
         return self.flatMap { $0.content() }
+    }
+
+    func findNavigablePoint(_ pointID: Int) -> SmartCamera.NavigablePoint? {
+        // Search all photos in all thoughts (in reverse order because it is more likely that a
+        // recent photo will contain the desired point)
+        for thought in self.reversed() {
+            for photo in thought.photos {
+                for navigablePoint in photo.navigablePoints {
+                    if navigablePoint.id == pointID {
+                        return navigablePoint
+                    }
+                }
+            }
+        }
+        return nil
     }
 }
 
@@ -73,6 +90,13 @@ struct HumanInputThought: ThoughtRepresentable {
 
     static var tag: String { "HUMAN_INPUT" }
 
+    var photos: [SmartCamera.Photo] {
+        if let photo = _photo {
+            return [photo]
+        }
+        return []
+    }
+
     init(spokenWords: String, photo: SmartCamera.Photo?) {
         _spokenWords = spokenWords
         _photo = photo
@@ -94,6 +118,8 @@ struct ObservationsThought: ThoughtRepresentable {
     private let _photos: [SmartCamera.Photo]
 
     static var tag: String { "OBSERVATIONS" }
+
+    var photos: [SmartCamera.Photo] { _photos }
 
     init(photos: [SmartCamera.Photo]) {
         _text = nil
