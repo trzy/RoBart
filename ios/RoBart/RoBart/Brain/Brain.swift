@@ -63,7 +63,7 @@ class Brain {
                     stop = true
                     break
                 } else if let actions = thought as? ActionsThought {
-                    let observations = await perform(actions)
+                    let observations = await perform(actions, history: history)
                     history.append(observations)
                 }
             }
@@ -110,7 +110,7 @@ class Brain {
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
-    private func perform(_ actionsThought: ActionsThought) async -> ObservationsThought {
+    private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable]) async -> ObservationsThought {
         guard let actions = decodeActions(from: actionsThought.json) else {
             return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
         }
@@ -118,24 +118,33 @@ class Brain {
         var resultsDescription: [String] = []
         var photos: [SmartCamera.Photo] = []
 
+        let startPosition = ARSessionManager.shared.transform.position
+        let startForward = ARSessionManager.shared.transform.forward.xzProjected
+
         for action in actions {
             switch action {
             case .move(let move):
-                let startPosition = ARSessionManager.shared.transform.position
                 let safeDistance = clamp(move.distance, min: -3.0, max: 3.0)
-                //HoverboardController.shared.send(.driveForward(distance: safeDistance))
-                //try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                HoverboardController.shared.send(.driveForward(distance: safeDistance))
+                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
                 let endPosition = ARSessionManager.shared.transform.position
                 let actualDistanceMoved = (endPosition - startPosition).magnitude
                 resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
 
             case .moveTo(let moveTo):
-                resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because this function is not implemented")
+                guard let navigablePoint = history.findNavigablePoint(moveTo.positionNumber) else {
+                    resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because it was not found in any photos")
+                    break
+                }
+                HoverboardController.shared.send(.driveTo(position: navigablePoint.worldPoint))
+                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                let endPosition = ARSessionManager.shared.transform.position
+                let actualDistanceMoved = (endPosition - startPosition).magnitude
+                resultsDescription.append("Moved \(actualDistanceMoved) meters toward position \(moveTo.positionNumber)")
 
             case .turnInPlace(let turnInPlace):
-                let startForward = ARSessionManager.shared.transform.forward.xzProjected
-                //HoverboardController.shared.send(.rotateInPlaceBy(degrees: turnInPlace.degrees))
-                //try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                HoverboardController.shared.send(.rotateInPlaceBy(degrees: turnInPlace.degrees))
+                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
                 let endForward = ARSessionManager.shared.transform.forward.xzProjected
                 let actualDegreesTurned = Vector3.angle(startForward, endForward)
                 resultsDescription.append("Turned \(actualDegreesTurned) degrees")
