@@ -85,6 +85,7 @@ class Brain {
         } while !stop
 
         log("Completed task!")
+        HoverboardController.shared.send(.drive(leftThrottle: 0, rightThrottle: 0))
         _task = nil
         _speechDetector.startListening()
     }
@@ -208,21 +209,28 @@ class Brain {
             return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
         }
 
+        let maxMoveTime = 6
+        let maxTurnTime = 2
+
         var resultsDescription: [String] = []
         var photos: [AnnotatingCamera.Photo] = []
 
         let startPosition = ARSessionManager.shared.transform.position
-        let startForward = ARSessionManager.shared.transform.forward.xzProjected
+        let startForward = ARSessionManager.shared.transform.forward.xzProjected.normalized
 
         for action in actions {
             switch action {
             case .move(let move):
-                let safeDistance = clamp(move.distance, min: -3.0, max: 3.0)
-                HoverboardController.shared.send(.driveForward(distance: safeDistance))
-                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
-                let endPosition = ARSessionManager.shared.transform.position
-                let actualDistanceMoved = (endPosition - startPosition).magnitude
-                resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
+                let targetPosition = startPosition + startForward * move.distance
+                if NavigationController.shared.occupancy.isLineUnobstructed(startPosition, targetPosition) {
+                    resultsDescription.append("Unable to move \(move.distance) meters because there is an obstruction!")
+                } else {
+                    HoverboardController.shared.send(.driveForward(distance: move.distance))
+                    try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
+                    let endPosition = ARSessionManager.shared.transform.position
+                    let actualDistanceMoved = (endPosition - startPosition).magnitude
+                    resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
+                }
 
             case .moveTo(let moveTo):
                 guard let navigablePoint = history.findNavigablePoint(moveTo.positionNumber) else {
@@ -230,14 +238,48 @@ class Brain {
                     break
                 }
                 HoverboardController.shared.send(.driveTo(position: navigablePoint.worldPoint))
-                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
                 let endPosition = ARSessionManager.shared.transform.position
                 let actualDistanceMoved = (endPosition - startPosition).magnitude
                 resultsDescription.append("Moved \(actualDistanceMoved) meters toward position \(moveTo.positionNumber)")
 
+            case .faceTowardPhoto(let faceTowardPhoto):
+                guard let photo = history.findPhoto(named: faceTowardPhoto.photoName) else {
+                    resultsDescription.append("Unable to face photo \(faceTowardPhoto.photoName) because it was not found. Only recent observations' photos should be usd.")
+                    break
+                }
+
+                // In case we have moved to a different position, look to where we would have been
+                // looking when photo was taken (a point just ahead of the photo)
+                let photoForward = ARSessionManager.shared.direction(fromDegrees: photo.headingDegrees)
+                let targetPosition = photo.position + 2 * photoForward
+                let targetDirection = (targetPosition - startPosition).xzProjected
+                HoverboardController.shared.send(.face(forward: targetDirection))
+                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                let newHeading = ARSessionManager.shared.headingDegrees
+                resultsDescription.append("Turned and now facing heading \(newHeading) deg")
+
+            case .faceTowardPoint(let faceTowardPoint):
+                guard let navigablePoint = history.findNavigablePoint(faceTowardPoint.positionNumber) else {
+                    resultsDescription.append("Unable to face position \(faceTowardPoint.positionNumber) because it was not found in any photos")
+                    break
+                }
+                let targetDirection = (navigablePoint.worldPoint - startPosition).xzProjected
+                HoverboardController.shared.send(.face(forward: targetDirection))
+                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                let newHeading = ARSessionManager.shared.headingDegrees
+                resultsDescription.append("Turned toward position \(faceTowardPoint.positionNumber) now facing heading \(newHeading) deg")
+
+            case .faceTowardHeading(let faceTowardHeading):
+                let targetDirection = ARSessionManager.shared.direction(fromDegrees: faceTowardHeading.headingDegrees)
+                HoverboardController.shared.send(.face(forward: targetDirection))
+                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                let newHeading = ARSessionManager.shared.headingDegrees
+                resultsDescription.append("Turned and now facing heading \(newHeading) deg")
+
             case .turnInPlace(let turnInPlace):
                 HoverboardController.shared.send(.rotateInPlaceBy(degrees: turnInPlace.degrees))
-                try? await Task.sleep(timeout: .seconds(10), until: { !HoverboardController.shared.isMoving })
+                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
                 let endForward = ARSessionManager.shared.transform.forward.xzProjected
                 let actualDegreesTurned = Vector3.angle(startForward, endForward)
                 resultsDescription.append("Turned \(actualDegreesTurned) degrees")
@@ -251,6 +293,13 @@ class Brain {
                 }
             }
         }
+
+        let ourPosition = ARSessionManager.shared.transform.position
+        let ourHeading = ARSessionManager.shared.headingDegrees
+        let positionStr = String(format: "(%.2f,%.2f)", ourPosition.x, ourPosition.z)
+        let headingStr = String(format: "%.f", ourHeading)
+        resultsDescription.append("Current coordinate: \(positionStr)")
+        resultsDescription.append("Current heading: \(headingStr) deg")
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
     }

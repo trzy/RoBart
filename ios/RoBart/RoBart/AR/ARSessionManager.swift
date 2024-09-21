@@ -44,6 +44,16 @@ class ARSessionManager: ObservableObject {
 
     private(set) var transform: Matrix4x4 = .identity
 
+    var headingDegrees: Float {
+        let forward = -transform.forward.xzProjected    // -transform.forward is direction of rear cam
+        let angle = Vector3.signedAngle(from: .forward, to: forward, axis: .up)
+        return angle >= 0 ? angle : (360 + angle)
+    }
+
+    func direction(fromDegrees degrees: Float) -> Vector3 {
+        return Vector3.forward.rotated(by: degrees, about: .up)
+    }
+
     var floorY: Float {
         // Use actual value if we have it
         if let floorY = _floorY {
