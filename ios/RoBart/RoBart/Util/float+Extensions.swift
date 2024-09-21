@@ -17,4 +17,8 @@ extension Float {
         let remapped = self.map(oldMin: oldMin, oldMax: oldMax, newMin: newMin, newMax: newMax)
         return max(min(remapped, newMax), newMin)
     }
+
+    static func lerp(from a: Float, to b: Float, t: Float) -> Float {
+        return a + (b - a) * min(max(0, t), 1)
+    }
 }

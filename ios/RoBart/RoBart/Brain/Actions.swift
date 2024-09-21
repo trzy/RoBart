@@ -31,6 +31,9 @@ struct FaceTowardHeadingAction: Codable {
     let headingDegrees: Float
 }
 
+struct Scan360Action: Codable {
+}
+
 struct TakePhotoAction: Codable {
 }
 
@@ -41,6 +44,7 @@ enum Action: Decodable {
     case faceTowardPhoto(FaceTowardPhotoAction)
     case faceTowardPoint(FaceTowardPointAction)
     case faceTowardHeading(FaceTowardHeadingAction)
+    case scan360(Scan360Action)
     case takePhoto(TakePhotoAction)
 
     private enum CodingKeys: String, CodingKey {
@@ -54,6 +58,7 @@ enum Action: Decodable {
         case faceTowardPhoto = "faceTowardPhoto"
         case faceTowardPoint = "faceTowardPoint"
         case faceTowardHeading = "faceTowardHeading"
+        case scan360 = "scan360"
         case takePhoto = "takePhoto"
     }
 
@@ -81,6 +86,9 @@ enum Action: Decodable {
         case .faceTowardHeading:
             let action = try FaceTowardHeadingAction(from: decoder)
             self = .faceTowardHeading(action)
+        case .scan360:
+            let action = try Scan360Action(from: decoder)
+            self = .scan360(action)
         case .takePhoto:
             let action = try TakePhotoAction(from: decoder)
             self = .takePhoto(action)

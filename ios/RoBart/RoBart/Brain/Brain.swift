@@ -209,8 +209,8 @@ class Brain {
             return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
         }
 
-        let maxMoveTime = 6
         let maxTurnTime = 2
+        let maxMoveTime = 6
 
         var resultsDescription: [String] = []
         var photos: [AnnotatingCamera.Photo] = []
@@ -219,6 +219,8 @@ class Brain {
         let startForward = ARSessionManager.shared.transform.forward.xzProjected.normalized
 
         for action in actions {
+            _ = await NavigationController.shared.updateOccupancy()
+
             switch action {
             case .move(let move):
                 let targetPosition = startPosition + startForward * move.distance
@@ -237,8 +239,19 @@ class Brain {
                     resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because it was not found in any photos")
                     break
                 }
+                guard NavigationController.shared.occupancy.isLineUnobstructed(startPosition, navigablePoint.worldPoint) else {
+                    resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because it is obstructed. Approach carefully and from a different location.")
+                    break
+                }
+                
+                // Orient toward goal initially
+                HoverboardController.shared.send(.face(forward: navigablePoint.worldPoint - startPosition))
+                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+
+                // Move to goal
                 HoverboardController.shared.send(.driveTo(position: navigablePoint.worldPoint))
                 try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
+
                 let endPosition = ARSessionManager.shared.transform.position
                 let actualDistanceMoved = (endPosition - startPosition).magnitude
                 resultsDescription.append("Moved \(actualDistanceMoved) meters toward position \(moveTo.positionNumber)")
@@ -254,8 +267,12 @@ class Brain {
                 let photoForward = ARSessionManager.shared.direction(fromDegrees: photo.headingDegrees)
                 let targetPosition = photo.position + 2 * photoForward
                 let targetDirection = (targetPosition - startPosition).xzProjected
-                HoverboardController.shared.send(.face(forward: targetDirection))
-                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                
+                let succeeded = await face(forward: targetDirection)
+                guard succeeded else {
+                    resultsDescription.append("Unable to face photo \(faceTowardPhoto.photoName). Hit an obstruction!")
+                    break
+                }
                 let newHeading = ARSessionManager.shared.headingDegrees
                 resultsDescription.append("Turned and now facing heading \(newHeading) deg")
 
@@ -265,24 +282,35 @@ class Brain {
                     break
                 }
                 let targetDirection = (navigablePoint.worldPoint - startPosition).xzProjected
-                HoverboardController.shared.send(.face(forward: targetDirection))
-                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                let succeeded = await face(forward: targetDirection)
+                guard succeeded else {
+                    resultsDescription.append("Unable to face position \(faceTowardPoint.positionNumber). Hit an obstruction!")
+                    break
+                }
                 let newHeading = ARSessionManager.shared.headingDegrees
                 resultsDescription.append("Turned toward position \(faceTowardPoint.positionNumber) now facing heading \(newHeading) deg")
 
             case .faceTowardHeading(let faceTowardHeading):
                 let targetDirection = ARSessionManager.shared.direction(fromDegrees: faceTowardHeading.headingDegrees)
-                HoverboardController.shared.send(.face(forward: targetDirection))
-                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+                let succeeded = await face(forward: targetDirection)
+                guard succeeded else {
+                    resultsDescription.append("Unable to face heading \(faceTowardHeading.headingDegrees) deg. Hit an obstruction!")
+                    break
+                }
                 let newHeading = ARSessionManager.shared.headingDegrees
                 resultsDescription.append("Turned and now facing heading \(newHeading) deg")
 
             case .turnInPlace(let turnInPlace):
-                HoverboardController.shared.send(.rotateInPlaceBy(degrees: turnInPlace.degrees))
-                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
-                let endForward = ARSessionManager.shared.transform.forward.xzProjected
-                let actualDegreesTurned = Vector3.angle(startForward, endForward)
+                guard let actualDegreesTurned = await turn(degrees: turnInPlace.degrees) else {
+                    resultsDescription.append("Unable to turn \(turnInPlace.degrees) degrees. Hit an obstruction!")
+                    break
+                }
                 resultsDescription.append("Turned \(actualDegreesTurned) degrees")
+
+            case .scan360:
+                let scanPhotos = await scan360AndTakePhotos()
+                photos += scanPhotos
+                resultsDescription.append("Completed scan")
 
             case .takePhoto:
                 if let photo = await _camera.takePhoto() {
@@ -302,6 +330,83 @@ class Brain {
         resultsDescription.append("Current heading: \(headingStr) deg")
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
+    }
+
+    private func scan360AndTakePhotos() async -> [AnnotatingCamera.Photo] {
+        // Divide the circle into 45 degree arcs, ending on our start orientation
+        let startingForward = -ARSessionManager.shared.transform.forward
+        var steps: [Vector3] = []
+        for i in 1...7 {
+            steps.append(startingForward.rotated(by: Float(45 * i), about: .up))
+        }
+        steps.append(startingForward)   // return to initial position
+
+        // Move between them
+        var photos: [AnnotatingCamera.Photo] = []
+        var wasSuccessful = true
+        var numPointsSucceeded =  0
+        for targetForward in steps {
+            let succeeded = await face(forward: targetForward)
+            guard succeeded else {
+                wasSuccessful = false
+                break
+            }
+            if let photo = await _camera.takePhoto() {
+                photos.append(photo)
+            }
+            numPointsSucceeded += 1
+        }
+
+        // If not successful, return to start and try from the other side
+        if !wasSuccessful {
+            _ = await face(forward: startingForward)
+
+            // Reverse the array and drop the number of points we visited on the other side
+            let reversedSteps = steps.reversed().dropLast(numPointsSucceeded)
+            for targetForward in reversedSteps {
+                let succeeded = await face(forward: targetForward)
+                guard succeeded else {
+                    break
+                }
+                if let photo = await _camera.takePhoto() {
+                    photos.append(photo)
+                }
+            }
+        }
+
+        return photos
+    }
+
+    private func turn(degrees: Float) async -> Float? {
+        let prevForward = -ARSessionManager.shared.transform.forward.xzProjected
+        let targetForward = prevForward.rotated(by: degrees, about: .up)
+        let succeeded = await face(forward: targetForward)
+        guard succeeded else {
+            return nil
+        }
+        let currentForward = -ARSessionManager.shared.transform.forward.xzProjected
+        let degreesActuallyTurned = Vector3.signedAngle(from: prevForward, to: currentForward, axis: .up)
+        return degreesActuallyTurned
+    }
+
+    private func face(forward targetForward: Vector3) async -> Bool {
+        let prevForward = -ARSessionManager.shared.transform.forward.xzProjected
+        let desiredDegrees = Vector3.angle(prevForward, targetForward)
+        let waitDuration = Double(Float.lerp(from: 2, to: 4, t: desiredDegrees / 180))
+        HoverboardController.shared.send(.face(forward: targetForward))
+        try? await Task.sleep(timeout: .seconds(waitDuration), until: { !HoverboardController.shared.isMoving })
+        let finished = !HoverboardController.shared.isMoving   // reached target rather than timed out
+        let currentForward = -ARSessionManager.shared.transform.forward.xzProjected
+        let actualDegrees = Vector3.angle(prevForward, currentForward)
+        let pctError = abs((actualDegrees / desiredDegrees) - 1.0)  // tolerate some inaccuracy because when PID shuts off, we may have momentum that creates a bigger error
+        if !finished && pctError > 0.2 {
+            // Failed to turn, return to original position
+            log("Aborted turn. Desired degrees=\(desiredDegrees), actual=\(actualDegrees), pctError=\(pctError)")
+            HoverboardController.shared.send(.face(forward: prevForward))
+            try? await Task.sleep(timeout: .seconds(waitDuration), until: { !HoverboardController.shared.isMoving })
+            return false
+        }
+        return true
     }
 
     private func sendDebugLog(modelInput: [ThoughtRepresentable], modelOutput: [ThoughtRepresentable], timestamp: Date, stepNumber: Int) {
