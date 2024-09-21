@@ -64,6 +64,8 @@ RoBart responds to human input with the following tags:
             Parameters:
                 headingDegrees: Absolute compass heading to face in degrees.
 
+        scan360: Scan all the way around. Multiple photos will be taken and available in the next <OBSERVTIONS> block with position annotations.
+
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with position annotations.
 
     Examples:
