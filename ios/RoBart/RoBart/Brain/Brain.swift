@@ -245,11 +245,19 @@ class Brain {
                 }
                 
                 // Orient toward goal initially
-                HoverboardController.shared.send(.face(forward: navigablePoint.worldPoint - startPosition))
+                let direction = (navigablePoint.worldPoint - startPosition).xzProjected.normalized
+                HoverboardController.shared.send(.face(forward: direction))
                 try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
 
+                // We will approach to within a short distance, but not actually onto the point,
+                // because the robot likes to pick points that are very close to furniture it wants
+                // to inspect
+                let distanceToPoint = (navigablePoint.worldPoint - startPosition).magnitude
+                let distanceToMove = max(0.5, distanceToPoint - 0.5)
+                let goalPosition = startPosition + distanceToMove * direction
+
                 // Move to goal
-                HoverboardController.shared.send(.driveTo(position: navigablePoint.worldPoint))
+                HoverboardController.shared.send(.driveTo(position: goalPosition))
                 try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
 
                 let endPosition = ARSessionManager.shared.transform.position
