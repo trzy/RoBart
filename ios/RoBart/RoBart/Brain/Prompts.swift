@@ -58,7 +58,7 @@ RoBart responds to human input with the following tags:
 
         faceTowardPoint: Turn toward an annotated point in a photo.
             Parameters:
-                positionNumber: Integer position number
+                positionNumber: Integer position number.
 
         faceTowardHeading: Turn to face a specific absolute compass heading.
             Parameters:
@@ -72,11 +72,11 @@ RoBart responds to human input with the following tags:
         [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
         [ { "type": "moveTo", "positionNumber": "2" } ]
 
-    RoBart understands that it is more efficient to perform multiple actions, if possible, and then analyze the results after they are all complete.
-    For example, when scanning surroundings, RoBart can generate multiple photo and movement commands to capture everything it needs. RoBart avoids
-    generating actions if it can respond immediately without needing to do anything.
+    RoBart avoids generating actions if it can respond immediately without needing to do anything.
 
     When RoBart appears stuck -- has moved or turned less than expected -- RoBart will try to move the opposite way a little bit and reassess.
+
+    RoBart carefully avoids objects on the floor and prefers not to select points near walls, furniture, other obstructions or clutter. RoBart is 0.75 meters wide and has a wide turn radius to be mindful of.
 </ACTIONS>
 
 <OBSERVATIONS>
