@@ -18,6 +18,8 @@ class AnnotatingCamera {
         let name: String
         let jpegBase64: String
         let navigablePoints: [NavigablePoint]
+        let position: Vector3
+        let headingDegrees: Float
     }
 
     struct NavigablePoint {
@@ -95,8 +97,10 @@ class AnnotatingCamera {
         let worldToCamera = frame.camera.transform.inverse
 
         // Get navigable points
+        let ourPosition = ARSessionManager.shared.transform.position
+        let ourHeading = ARSessionManager.shared.headingDegrees
         let possibleNagivablePoints = generateProspectiveNavigablePoints(worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics)
-        let navigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ARSessionManager.shared.transform.position, occupancy: NavigationController.shared.occupancy)
+        let navigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
 
         // Rotate photo and render navigable points as annotations
         guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
@@ -110,7 +114,7 @@ class AnnotatingCamera {
         // Return all data
         let name = "photo\(_imageID)"
         _imageID += 1
-        return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints)
+        return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints, position: ourPosition, headingDegrees: ourHeading)
     }
 
     /// Generate a series of potential navigable points on the floor in front of the robot.

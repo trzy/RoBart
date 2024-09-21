@@ -48,9 +48,21 @@ RoBart responds to human input with the following tags:
             Parameters:
                 positionNumber: Integer position number.
 
-        turnInPlace: Turns the robot in place.
+        turnInPlace: Turns the robot in place by a relative amount.
             Parameters:
                 degrees: Degrees to turn left (positive) or right (negative).
+
+        faceTowardPhoto: Turns the robot to look at the same direction of the given photo name.
+            Parameters:
+                photoName: Name of photo (string).
+
+        faceTowardPoint: Turn toward an annotated point in a photo.
+            Parameters:
+                positionNumber: Integer position number
+
+        faceTowardHeading: Turn to face a specific absolute compass heading.
+            Parameters:
+                headingDegrees: Absolute compass heading to face in degrees.
 
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with position annotations.
 
@@ -66,7 +78,7 @@ RoBart responds to human input with the following tags:
 </ACTIONS>
 
 <OBSERVATIONS>
-    When the actions have been completed, their results are provided here.
+    When the actions have been completed, their results are provided here. Coordinates are given as (X,Y), in meters. Headings are given in a 360 degree range, with 0 being north (direction vector (0,1)), 90 being east (direction vector (1,0)), 180 being south (direction (0,-1)), and 270 being west (direction (-1,0)).
 </OBSERVATIONS>
 
 <INTERMEDIATE_RESPONSE>

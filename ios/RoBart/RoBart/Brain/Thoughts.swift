@@ -81,6 +81,17 @@ extension Array where Element == ThoughtRepresentable {
         }
         return nil
     }
+
+    func findPhoto(named name: String) -> AnnotatingCamera.Photo? {
+        for thought in self.reversed() {
+            for photo in thought.photos {
+                if photo.name == name {
+                    return photo
+                }
+            }
+        }
+        return nil
+    }
 }
 
 extension Array where Element == (tag: String, contents: String) {
@@ -187,7 +198,9 @@ struct ObservationsThought: ThoughtRepresentable {
             content += text
         }
         for photo in _photos {
-            content += "\n\(photo.name): <image>\n"
+            let positionStr = String(format: "(%.2f,%.2f)", photo.position.x, photo.position.z)
+            let headingStr = String(format: "%.f", photo.headingDegrees)
+            content += "\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg: <image>\n"
         }
         content += closingTag
         return content
@@ -199,7 +212,9 @@ struct ObservationsThought: ThoughtRepresentable {
             content.append(.text(text))
         }
         for photo in _photos {
-            content.append(.text("\n\(photo.name):"))
+            let positionStr = String(format: "(%.2f,%.2f)", photo.position.x, photo.position.z)
+            let headingStr = String(format: "%.f", photo.headingDegrees)
+            content.append(.text("\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg:"))
             content.append(.image(.init(type: .base64, mediaType: .jpeg, data: photo.jpegBase64)))
         }
         content.append(.text(closingTag))
@@ -212,8 +227,10 @@ struct ObservationsThought: ThoughtRepresentable {
             content.append(.string(text))
         }
         for photo in _photos {
+            let positionStr = String(format: "(%.2f,%.2f)", photo.position.x, photo.position.z)
+            let headingStr = String(format: "%.f", photo.headingDegrees)
             let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
-                .chatCompletionContentPartTextParam(.init(text: "\n\(photo.name)")),
+                .chatCompletionContentPartTextParam(.init(text: "\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg:")),
                 .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.jpegBase64)", detail: .auto)))
             ])
             content.append(visionContent)

@@ -19,6 +19,18 @@ struct TurnInPlaceAction: Codable {
     let degrees: Float
 }
 
+struct FaceTowardPhotoAction: Codable {
+    let photoName: String
+}
+
+struct FaceTowardPointAction: Codable {
+    let positionNumber: Int
+}
+
+struct FaceTowardHeadingAction: Codable {
+    let headingDegrees: Float
+}
+
 struct TakePhotoAction: Codable {
 }
 
@@ -26,6 +38,9 @@ enum Action: Decodable {
     case move(MoveAction)
     case moveTo(MoveToAction)
     case turnInPlace(TurnInPlaceAction)
+    case faceTowardPhoto(FaceTowardPhotoAction)
+    case faceTowardPoint(FaceTowardPointAction)
+    case faceTowardHeading(FaceTowardHeadingAction)
     case takePhoto(TakePhotoAction)
 
     private enum CodingKeys: String, CodingKey {
@@ -36,6 +51,9 @@ enum Action: Decodable {
         case move = "move"
         case moveTo = "moveTo"
         case turnInPlace = "turnInPlace"
+        case faceTowardPhoto = "faceTowardPhoto"
+        case faceTowardPoint = "faceTowardPoint"
+        case faceTowardHeading = "faceTowardHeading"
         case takePhoto = "takePhoto"
     }
 
@@ -54,6 +72,15 @@ enum Action: Decodable {
         case .turnInPlace:
             let action = try TurnInPlaceAction(from: decoder)
             self = .turnInPlace(action)
+        case .faceTowardPhoto:
+            let action = try FaceTowardPhotoAction(from: decoder)
+            self = .faceTowardPhoto(action)
+        case .faceTowardPoint:
+            let action = try FaceTowardPointAction(from: decoder)
+            self = .faceTowardPoint(action)
+        case .faceTowardHeading:
+            let action = try FaceTowardHeadingAction(from: decoder)
+            self = .faceTowardHeading(action)
         case .takePhoto:
             let action = try TakePhotoAction(from: decoder)
             self = .takePhoto(action)
