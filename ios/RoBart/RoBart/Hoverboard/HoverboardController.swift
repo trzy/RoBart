@@ -59,7 +59,13 @@ class HoverboardController {
         }
     }
 
+    /// Maximum error in meters for position goal. Goal is considered achieved when both this is
+    /// satisfied and the speed is below the threshold.
     var positionGoalTolerance: Float = 0.1
+
+    /// Maximum speed at which the position goal is considered to be achieved provided that the
+    /// distance is also within tolerance.
+    var positionGoalMaximumSpeed: Float = 0.05
 
     /// Maximum error in degrees for orientation. Orientation goal is considered achieved when this
     /// condition is satisfied and the angular speed is sufficiently low.
@@ -308,7 +314,7 @@ class HoverboardController {
         if let targetPosition = _targetPosition {
             // PID measures linear distance along direction of travel (while orientation PID
             // continuously orients toward goal). We stop when the actual position is close enough.
-            if (targetPosition - currentPosition).magnitude <= positionGoalTolerance {
+            if (targetPosition - currentPosition).magnitude <= positionGoalTolerance && speed <= positionGoalMaximumSpeed {
                 _targetPosition = nil
                 _targetForward = nil
                 leftMotorThrottle = 0
