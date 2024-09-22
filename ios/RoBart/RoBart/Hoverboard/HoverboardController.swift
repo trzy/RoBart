@@ -61,7 +61,13 @@ class HoverboardController {
 
     var positionGoalTolerance: Float = 0.1
 
+    /// Maximum error in degrees for orientation. Orientation goal is considered achieved when this
+    /// condition is satisfied and the angular speed is sufficiently low.
     var orientationGoalTolerance: Float = 2.8
+
+    /// Angular speed at which the orientation goal is considered to be achieved provided
+    /// orientation is also within tolerance.
+    var orientationGoalMaximumAngularSpeed: Float = 2.0
 
     var maxThrottle: Float = 0.01
 
@@ -258,6 +264,8 @@ class HoverboardController {
         let deltaTime = Float(frame.timestamp - lastTimestamp)
         let currentForward = -frame.camera.transform.forward.xzProjected.normalized
         let currentPosition = frame.camera.transform.position.xzProjected
+        let speed = ARSessionManager.shared.speed
+        let angularSpeed = ARSessionManager.shared.angularSpeed
 
         var leftMotorThrottle: Float = 0
         var rightMotorThrottle: Float = 0
@@ -271,7 +279,7 @@ class HoverboardController {
             // Orientation error: if heading to a position, we must keep the orientation PID active
             // but if only rotating, we stop when we hit our goal.
             let orientationErrorDegrees = Vector3.signedAngle(from: currentForward, to: targetForward, axis: Vector3.up)
-            if _targetPosition == nil && abs(orientationErrorDegrees) <= abs(orientationGoalTolerance) {
+            if _targetPosition == nil && abs(orientationErrorDegrees) <= abs(orientationGoalTolerance) && angularSpeed <= orientationGoalMaximumAngularSpeed {
                 _targetForward = nil
                 runOrientationPID = false
                 leftMotorThrottle = 0
@@ -288,7 +296,7 @@ class HoverboardController {
                 leftMotorThrottle += -steering
                 rightMotorThrottle += steering
 
-                log("Orientation: error=\(orientationErrorDegrees) targetVel=\(targetAngularVelocity) steer=\(steering)")
+                log("Orientation: error=\(orientationErrorDegrees) angularSpeed=\(angularSpeed) targetVel=\(targetAngularVelocity) steer=\(steering)")
             }
 
             // Send update this frame (we had a target but may not anymore; we need to at least
@@ -319,7 +327,7 @@ class HoverboardController {
                 leftMotorThrottle += direction * throttle
                 rightMotorThrottle += direction * throttle
                 
-                log("Position: error=\(positionError) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
+                log("Position: error=\(positionError) speed=\(speed) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
             }
 
             // Send update this frame

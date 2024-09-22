@@ -77,12 +77,20 @@ class ARSessionManager: ObservableObject {
         return _motionEstimator.velocity
     }
 
+    var speed: Float {
+        return _motionEstimator.speed
+    }
+
     var acceleration: Vector3 {
         return _motionEstimator.acceleration
     }
 
     var angularVelocity: Float {
         return _motionEstimator.angularVelocity
+    }
+
+    var angularSpeed: Float {
+        return abs(_motionEstimator.angularVelocity)
     }
 
     fileprivate weak var arView: ARView?
