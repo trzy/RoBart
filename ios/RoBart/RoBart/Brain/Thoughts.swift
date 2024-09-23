@@ -67,13 +67,26 @@ extension Array where Element == ThoughtRepresentable {
         return content.map { ChatQuery.ChatCompletionMessageParam.user(.init(content: $0)) }
     }
 
-    func findNavigablePoint(_ pointID: Int) -> AnnotatingCamera.NavigablePoint? {
+    func findNavigablePoint(pointID: Int) -> AnnotatingCamera.NavigablePoint? {
         // Search all photos in all thoughts (in reverse order because it is more likely that a
         // recent photo will contain the desired point)
         for thought in self.reversed() {
             for photo in thought.photos {
                 for navigablePoint in photo.navigablePoints {
                     if navigablePoint.id == pointID {
+                        return navigablePoint
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    func findNavigablePoint(cellX: Int, cellZ: Int) -> AnnotatingCamera.NavigablePoint? {
+        for thought in self.reversed() {
+            for photo in thought.photos {
+                for navigablePoint in photo.navigablePoints {
+                    if navigablePoint.cell.cellX == cellX && navigablePoint.cell.cellZ == cellZ {
                         return navigablePoint
                     }
                 }
@@ -103,6 +116,8 @@ extension Array where Element == (tag: String, contents: String) {
                 return HumanInputThought(spokenWords: block.contents, photo: nil)
             } else if block.tag == ObservationsThought.tag {
                 return ObservationsThought(text: block.contents)
+            } else if block.tag == MemoryThought.tag {
+                return MemoryThought(memory: block.contents)
             } else if block.tag == PlanThought.tag {
                 return PlanThought(plan: block.contents)
             } else if block.tag == ActionsThought.tag {
@@ -245,6 +260,28 @@ struct ObservationsThought: ThoughtRepresentable {
         } else {
             return ObservationsThought(photos: [])
         }
+    }
+}
+
+struct MemoryThought: ThoughtRepresentable {
+    private let _text: String
+
+    static var tag: String { "MEMORY" }
+
+    init(memory: String) {
+        _text = memory
+    }
+
+    func humanReadableContent() -> String {
+        return "\(openingTag)\(_text)\(closingTag)"
+    }
+
+    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+        return [ .text("\(openingTag)\(_text)\(closingTag)") ]
+    }
+
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+        return [ .string("\(openingTag)\(_text)\(closingTag)") ]
     }
 }
 

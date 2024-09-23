@@ -217,6 +217,7 @@ class Brain {
 
         let startPosition = ARSessionManager.shared.transform.position
         let startForward = ARSessionManager.shared.transform.forward.xzProjected.normalized
+        let startCell = NavigationController.shared.occupancy.positionToCell(startPosition)
 
         for action in actions {
             _ = await NavigationController.shared.updateOccupancy()
@@ -234,13 +235,13 @@ class Brain {
                     resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
                 }
 
-            case .moveTo(let moveTo):
-                guard let navigablePoint = history.findNavigablePoint(moveTo.positionNumber) else {
-                    resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because it was not found in any photos")
+            case .moveToCell(let moveToCell):
+                guard let navigablePoint = history.findNavigablePoint(cellX: moveToCell.cellX, cellZ: moveToCell.cellY) else {
+                    resultsDescription.append("Unable to move to cell (\(moveToCell.cellX),\(moveToCell.cellY)) because it was not found in any photos")
                     break
                 }
                 guard NavigationController.shared.occupancy.isLineUnobstructed(startPosition, navigablePoint.worldPoint) else {
-                    resultsDescription.append("Unable to move to position \(moveTo.positionNumber) because it is obstructed. Approach carefully and from a different location.")
+                    resultsDescription.append("Unable to move to cell (\(moveToCell.cellX),\(moveToCell.cellY)) because it is obstructed. Approach carefully and from a different location.")
                     break
                 }
                 
@@ -262,41 +263,21 @@ class Brain {
 
                 let endPosition = ARSessionManager.shared.transform.position
                 let actualDistanceMoved = (endPosition - startPosition).magnitude
-                resultsDescription.append("Moved \(actualDistanceMoved) meters toward position \(moveTo.positionNumber)")
+                resultsDescription.append("Moved \(actualDistanceMoved) meters toward cell (\(moveToCell.cellX),\(moveToCell.cellY))")
 
-            case .faceTowardPhoto(let faceTowardPhoto):
-                guard let photo = history.findPhoto(named: faceTowardPhoto.photoName) else {
-                    resultsDescription.append("Unable to face photo \(faceTowardPhoto.photoName) because it was not found. Only recent observations' photos should be usd.")
-                    break
-                }
-
-                // In case we have moved to a different position, look to where we would have been
-                // looking when photo was taken (a point just ahead of the photo)
-                let photoForward = ARSessionManager.shared.direction(fromDegrees: photo.headingDegrees)
-                let targetPosition = photo.position + 2 * photoForward
-                let targetDirection = (targetPosition - startPosition).xzProjected
-                
-                let succeeded = await face(forward: targetDirection)
-                guard succeeded else {
-                    resultsDescription.append("Unable to face photo \(faceTowardPhoto.photoName). Hit an obstruction!")
-                    break
-                }
-                let newHeading = ARSessionManager.shared.headingDegrees
-                resultsDescription.append("Turned and now facing heading \(newHeading) deg")
-
-            case .faceTowardPoint(let faceTowardPoint):
-                guard let navigablePoint = history.findNavigablePoint(faceTowardPoint.positionNumber) else {
-                    resultsDescription.append("Unable to face position \(faceTowardPoint.positionNumber) because it was not found in any photos")
+            case .faceTowardCell(let faceTowardCell):
+                guard let navigablePoint = history.findNavigablePoint(cellX: faceTowardCell.cellX, cellZ: faceTowardCell.cellY) else {
+                    resultsDescription.append("Unable to face cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)) because it was not found in any photos")
                     break
                 }
                 let targetDirection = (navigablePoint.worldPoint - startPosition).xzProjected
                 let succeeded = await face(forward: targetDirection)
                 guard succeeded else {
-                    resultsDescription.append("Unable to face position \(faceTowardPoint.positionNumber). Hit an obstruction!")
+                    resultsDescription.append("Unable to face cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)). Hit an obstruction!")
                     break
                 }
                 let newHeading = ARSessionManager.shared.headingDegrees
-                resultsDescription.append("Turned toward position \(faceTowardPoint.positionNumber) now facing heading \(newHeading) deg")
+                resultsDescription.append("Turned toward cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)) now facing heading \(newHeading) deg")
 
             case .faceTowardHeading(let faceTowardHeading):
                 let targetDirection = ARSessionManager.shared.direction(fromDegrees: faceTowardHeading.headingDegrees)
@@ -332,10 +313,13 @@ class Brain {
 
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
-        let positionStr = String(format: "(%.2f,%.2f)", ourPosition.x, ourPosition.z)
+        let positionStr = String(format: "(x=%.2f meters,y=%.2f meters)", ourPosition.x, ourPosition.z)
         let headingStr = String(format: "%.f", ourHeading)
-        resultsDescription.append("Current coordinate: \(positionStr)")
+        resultsDescription.append("Current position: \(positionStr)")
         resultsDescription.append("Current heading: \(headingStr) deg")
+
+        let currentCell = NavigationController.shared.occupancy.positionToCell(ourPosition)
+        resultsDescription.append("Started at cell (\(startCell.cellX),\(startCell.cellZ)) and now at (\(currentCell.cellX),\(currentCell.cellZ))")
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
     }
