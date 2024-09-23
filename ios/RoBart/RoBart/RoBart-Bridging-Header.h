@@ -5,3 +5,4 @@
 #include "FilterDepthMap.hpp"
 #include "OccupancyMap.hpp"
 #include "FindPath.hpp"
+#include "HumanInstancing.hpp"

@@ -25,6 +25,10 @@
 		CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6C2C9CA06B00ACC82E /* Actions.swift */; };
 		CC26CF6F2C9CE98500ACC82E /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */; };
 		CC26CF762C9D14D100ACC82E /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = CC26CF752C9D14D100ACC82E /* OpenAI */; };
+		CC26CF782CA1D51800ACC82E /* FollowPerson.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF772CA1D51800ACC82E /* FollowPerson.swift */; };
+		CC26CF7C2CA1F4D000ACC82E /* HumanInstancing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF7A2CA1F4D000ACC82E /* HumanInstancing.cpp */; };
+		CC26CF7F2CA2085200ACC82E /* BoxDepth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF7D2CA2085200ACC82E /* BoxDepth.cpp */; };
+		CC26CF812CA20F2E00ACC82E /* DetectHumans.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF802CA20F2E00ACC82E /* DetectHumans.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -182,6 +186,12 @@
 		CC26CF692C9BE89A00ACC82E /* Thoughts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thoughts.swift; sourceTree = "<group>"; };
 		CC26CF6C2C9CA06B00ACC82E /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
 		CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		CC26CF772CA1D51800ACC82E /* FollowPerson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPerson.swift; sourceTree = "<group>"; };
+		CC26CF7A2CA1F4D000ACC82E /* HumanInstancing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HumanInstancing.cpp; sourceTree = "<group>"; };
+		CC26CF7B2CA1F4D000ACC82E /* HumanInstancing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = HumanInstancing.hpp; sourceTree = "<group>"; };
+		CC26CF7D2CA2085200ACC82E /* BoxDepth.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BoxDepth.cpp; sourceTree = "<group>"; };
+		CC26CF7E2CA2085200ACC82E /* BoxDepth.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BoxDepth.hpp; sourceTree = "<group>"; };
+		CC26CF802CA20F2E00ACC82E /* DetectHumans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectHumans.swift; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -369,6 +379,18 @@
 			path = Audio;
 			sourceTree = "<group>";
 		};
+		CC26CF792CA1F4A300ACC82E /* Humans */ = {
+			isa = PBXGroup;
+			children = (
+				CC26CF7A2CA1F4D000ACC82E /* HumanInstancing.cpp */,
+				CC26CF7B2CA1F4D000ACC82E /* HumanInstancing.hpp */,
+				CC26CF7D2CA2085200ACC82E /* BoxDepth.cpp */,
+				CC26CF7E2CA2085200ACC82E /* BoxDepth.hpp */,
+				CC26CF802CA20F2E00ACC82E /* DetectHumans.swift */,
+			);
+			path = Humans;
+			sourceTree = "<group>";
+		};
 		CC2AA5DE2C7BF3B000A8DE67 /* Calibration */ = {
 			isa = PBXGroup;
 			children = (
@@ -411,6 +433,7 @@
 		CCA3B9292C8CE02100F15F9F /* Navigation */ = {
 			isa = PBXGroup;
 			children = (
+				CC26CF792CA1F4A300ACC82E /* Humans */,
 				CC11252F2C938371007AF247 /* Mapping */,
 				CC1125302C9383A3007AF247 /* Pathfinding */,
 				CCA3B92A2C8CE0D400F15F9F /* DepthTest.swift */,
@@ -418,6 +441,7 @@
 				CC1125362C93B8F2007AF247 /* NavigationController.swift */,
 				CC1125382C93BD3B007AF247 /* NavigateToGoal.swift */,
 				CCFF51242C960D60007F27D7 /* FollowPath.swift */,
+				CC26CF772CA1D51800ACC82E /* FollowPerson.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -979,6 +1003,7 @@
 				CC11253B2C93F213007AF247 /* RenderOccupancyMap.swift in Sources */,
 				CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */,
 				CC26CF602C9A913A00ACC82E /* Prompts.swift in Sources */,
+				CC26CF7C2CA1F4D000ACC82E /* HumanInstancing.cpp in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */,
 				CC38DE372C7CECC4003EEBDE /* Settings.swift in Sources */,
@@ -1005,12 +1030,15 @@
 				CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
 				CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */,
+				CC26CF812CA20F2E00ACC82E /* DetectHumans.swift in Sources */,
 				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,
 				CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */,
 				CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */,
 				CCA9A0FC2C62D35E00B0401C /* RoBartApp.swift in Sources */,
+				CC26CF782CA1D51800ACC82E /* FollowPerson.swift in Sources */,
 				CCA9A11F2C62D9A900B0401C /* ARViewContainer.swift in Sources */,
 				CCA3B93C2C8ECB2F00F15F9F /* OccupancyMap.cpp in Sources */,
+				CC26CF7F2CA2085200ACC82E /* BoxDepth.cpp in Sources */,
 				CC26CF592C9A150700ACC82E /* VoiceExtractor.swift in Sources */,
 				CCA9A1392C62E1FB00B0401C /* SimpleBinaryMessage.swift in Sources */,
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
