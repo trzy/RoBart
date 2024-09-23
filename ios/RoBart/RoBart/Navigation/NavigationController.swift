@@ -16,6 +16,8 @@ enum NavigationCommand {
 class NavigationController {
     static let shared = NavigationController()
 
+    static let cellSide: Float = 0.25
+
     private var _nextCommand: NavigationCommand?
     private var _currentTask: Task<Void, Never>?
 
@@ -23,7 +25,7 @@ class NavigationController {
         return GPUOccupancyMap(
             width: 20,
             depth: 20,
-            cellSide: 0.25,
+            cellSide: Self.cellSide,
             centerPoint: ARSessionManager.shared.transform.position
         )
     }()
