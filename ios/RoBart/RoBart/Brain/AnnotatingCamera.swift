@@ -24,6 +24,7 @@ class AnnotatingCamera {
 
     struct NavigablePoint {
         let id: Int
+        let cell: OccupancyMap.CellIndices
         let worldPoint: Vector3
         let worldToCamera: Matrix4x4
         let intrinsics: Matrix3x3
@@ -99,12 +100,12 @@ class AnnotatingCamera {
         // Get navigable points
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
-        let possibleNagivablePoints = generateProspectiveNavigablePoints(worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics)
+        let possibleNagivablePoints = generateProspectiveNavigablePoints(worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics, occupancy: NavigationController.shared.occupancy)
         let navigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
 
         // Rotate photo and render navigable points as annotations
         guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
-              let annotatedPhoto = annotate(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
+              let annotatedPhoto = annotateCells(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
             return nil
         }
 
@@ -121,8 +122,9 @@ class AnnotatingCamera {
     /// - Parameter worldToCamera: Inverse camera transform matrix (i.e., world to camera-local space).
     /// - Parameter intrinsics: Camera intrinsics. Used with `worldToCamera`to convert world-space
     /// points to image-space annotations.
+    /// - Parameter occupancy: Occupancy map, used to locate the cell indices of each point.
     /// - Returns: Array of prospective navigable points. None are guaranteed to be reachable.
-    private func generateProspectiveNavigablePoints(worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [NavigablePoint] {
+    private func generateProspectiveNavigablePoints(worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
         // Generate points on the floor in world space in front of the robot
         var worldPoints: [Vector3] = []
         let ourTransform = ARSessionManager.shared.transform
@@ -139,7 +141,8 @@ class AnnotatingCamera {
         // Convert to navigable points
         var navigablePoints: [NavigablePoint] = []
         for worldPoint in worldPoints {
-            navigablePoints.append(NavigablePoint(id: _pointID, worldPoint: worldPoint, worldToCamera: worldToCamera, intrinsics: intrinsics))
+            let cell = occupancy.positionToCell(worldPoint)
+            navigablePoints.append(NavigablePoint(id: _pointID, cell: cell, worldPoint: worldPoint, worldToCamera: worldToCamera, intrinsics: intrinsics))
             _pointID = (_pointID + 1) % 100 // wrap around so numbers don't get too long
         }
         return navigablePoints
@@ -181,14 +184,70 @@ class AnnotatingCamera {
         return scaled
     }
 
-    /// Renders navigable points as annotations on the image (squares with numbers inside of them).
-    /// Necessary adjustments are made if the image has been rotated into a portrait orientation.
+    /// Renders navigable points as cell indexc annotations on the image (rectangles with numbers
+    /// inside of them). Necessary adjustments are made if the image has been rotated into a
+    /// portrait orientation.
     /// - Parameter image: The image to annotate.
     /// - Parameter with: Points to annotate.
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
-    private func annotate(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
+    private func annotateCells(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
+        let sideLength = CGFloat(20)
+
+        // Get the image size
+        let imageSize = image.size
+        let scale = image.scale
+
+        // Draw original image
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        image.draw(in: CGRect(origin: .zero, size: imageSize))
+
+        // Draw annotations
+        for point in points {
+            // Compute the text size
+            let text = String(format: "%d,%d", point.cell.cellX, point.cell.cellZ)
+            let textAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: sideLength / 2, weight: .bold),
+                .foregroundColor: point.textColor
+            ]
+            let textSize = text.size(withAttributes: textAttributes)
+
+            // Draw the background square. Note that when rotating image clockwise and using an
+            // upper-left origin with +y as down, it is necessary to invert x (because +y in the
+            // original image moves down but rotated clockwise, that direction is -x instead of
+            // +x).
+            let imagePoint = point.imagePoint
+            let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
+            let y = rotated ? imagePoint.x : imagePoint.y
+            let squareRect = CGRect(x: x, y: y, width: sideLength, height: sideLength)
+            context.setFillColor(point.backgroundColor)
+            let backgroundRect = CGRect(x: x - textSize.width / 2, y: y - textSize.height / 2, width: textSize.width, height: textSize.height)
+            context.fill(backgroundRect)
+
+            // Print cell
+            let textX = x - textSize.width / 2
+            let textY = y - textSize.height / 2
+            let textRect = CGRect(x: textX, y: textY, width: textSize.width, height: textSize.height)
+            text.draw(in: textRect, withAttributes: textAttributes)
+        }
+
+        // Return new image
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+
+    /// Renders navigable points as annotations on the image (squares with numbers inside of them).
+    /// Necessary adjustments are made if the image has been rotated into a portrait orientation.
+    /// Point numbers are rendered.
+    /// - Parameter image: The image to annotate.
+    /// - Parameter with: Points to annotate.
+    /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
+    /// the points are specified. The points will be adjusted accordingly.
+    /// - Returns: New image with annotations or `nil` if anything went wrong.
+    private func annotatePointNumbers(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(20)
 
         // Get the image size
