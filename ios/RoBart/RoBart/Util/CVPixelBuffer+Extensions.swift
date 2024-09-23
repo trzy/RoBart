@@ -36,15 +36,31 @@ extension CVPixelBuffer {
             log("Error: toUInt8Array() currently only supports 8-bit single channel images")
             return nil
         }
+
         CVPixelBufferLockBaseAddress(self, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(self, .readOnly) }
         guard let baseAddress = CVPixelBufferGetBaseAddress(self) else {
-            CVPixelBufferUnlockBaseAddress(self, .readOnly)
             return nil
         }
-        let byteBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
-        let byteArray = Array(UnsafeBufferPointer(start: byteBuffer, count: width * height))
-        CVPixelBufferUnlockBaseAddress(self, .readOnly)
-        return byteArray
+
+        if bytesPerRow == width {
+            let byteBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
+            let byteArray = Array(UnsafeBufferPointer(start: byteBuffer, count: width * height))
+            return byteArray
+        } else {
+            var byteArray = Array(repeating: UInt8(0), count: width * height)
+            byteArray.withUnsafeMutableBytes { rawBufferPointer in
+                var srcPointer = baseAddress
+                var destPointer = rawBufferPointer.baseAddress!
+                for y in 0..<height {
+                    // Copy pixel row and advance by stride in source buffer
+                    memcpy(destPointer, srcPointer, width)
+                    srcPointer = srcPointer.advanced(by: bytesPerRow)
+                    destPointer = destPointer.advanced(by: width)
+                }
+            }
+            return byteArray
+        }
     }
 
     func toFloatArray() -> [Float]? {
@@ -64,41 +80,136 @@ extension CVPixelBuffer {
     }
 
     func resize(newWidth: Int, newHeight: Int) -> CVPixelBuffer? {
-        guard format == kCVPixelFormatType_DepthFloat32 else {
-            log("Error: resize() currently only supports 32-bit depth images")
+        let format = CVPixelBufferGetPixelFormatType(self)
+        switch format {
+        case kCVPixelFormatType_DepthFloat32:
+            return resizeDepthFloat32(newWidth: newWidth, newHeight: newHeight)
+        case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+            return resizeYUV(newWidth: newWidth, newHeight: newHeight)
+        case kCVPixelFormatType_OneComponent8:
+            return resizeOneComponent8(newWidth: newWidth, newHeight: newHeight)
+        default:
+            log("Error: Unsupported pixel format")
             return nil
         }
+    }
 
+    private func resizeDepthFloat32(newWidth: Int, newHeight: Int) -> CVPixelBuffer? {
         var srcBuffer = vImage_Buffer()
         var dstBuffer = vImage_Buffer()
 
-        // Create vImage buffers for input and output
         CVPixelBufferLockBaseAddress(self, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(self, .readOnly) }
+
         srcBuffer.data = CVPixelBufferGetBaseAddress(self)
         srcBuffer.width = vImagePixelCount(width)
         srcBuffer.height = vImagePixelCount(height)
         srcBuffer.rowBytes = CVPixelBufferGetBytesPerRow(self)
 
-        var outputPixelBuffer: CVPixelBuffer?
-        CVPixelBufferCreate(nil, newWidth, newHeight, format, nil, &outputPixelBuffer)
-
-        guard let outputBuffer = outputPixelBuffer else {
-            CVPixelBufferUnlockBaseAddress(self, .readOnly)
+        guard let outputBuffer = createOutputBuffer(width: newWidth, height: newHeight, format: kCVPixelFormatType_DepthFloat32) else {
             return nil
         }
 
         CVPixelBufferLockBaseAddress(outputBuffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(outputBuffer, []) }
+
         dstBuffer.data = CVPixelBufferGetBaseAddress(outputBuffer)
         dstBuffer.width = vImagePixelCount(newWidth)
         dstBuffer.height = vImagePixelCount(newHeight)
         dstBuffer.rowBytes = CVPixelBufferGetBytesPerRow(outputBuffer)
 
-        // Perform resizing
         let error = vImageScale_PlanarF(&srcBuffer, &dstBuffer, nil, vImage_Flags(0))
-        CVPixelBufferUnlockBaseAddress(self, .readOnly)
-        CVPixelBufferUnlockBaseAddress(outputBuffer, [])
-
         return error == kvImageNoError ? outputBuffer : nil
+    }
+
+    private func resizeYUV(newWidth: Int, newHeight: Int) -> CVPixelBuffer? {
+        CVPixelBufferLockBaseAddress(self, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(self, .readOnly) }
+
+        guard let outputBuffer = createOutputBuffer(width: newWidth, height: newHeight, format: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) else {
+            return nil
+        }
+
+        CVPixelBufferLockBaseAddress(outputBuffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(outputBuffer, []) }
+
+        guard let srcY = CVPixelBufferGetBaseAddressOfPlane(self, 0),
+              let srcUV = CVPixelBufferGetBaseAddressOfPlane(self, 1),
+              let dstY = CVPixelBufferGetBaseAddressOfPlane(outputBuffer, 0),
+              let dstUV = CVPixelBufferGetBaseAddressOfPlane(outputBuffer, 1) else {
+            return nil
+        }
+
+        var srcYBuffer = vImage_Buffer(
+            data: srcY,
+            height: vImagePixelCount(CVPixelBufferGetHeightOfPlane(self, 0)),
+            width: vImagePixelCount(CVPixelBufferGetWidthOfPlane(self, 0)),
+            rowBytes: CVPixelBufferGetBytesPerRowOfPlane(self, 0)
+        )
+
+        var srcUVBuffer = vImage_Buffer(
+            data: srcUV,
+            height: vImagePixelCount(CVPixelBufferGetHeightOfPlane(self, 1)),
+            width: vImagePixelCount(CVPixelBufferGetWidthOfPlane(self, 1)),
+            rowBytes: CVPixelBufferGetBytesPerRowOfPlane(self, 1)
+        )
+
+        var dstYBuffer = vImage_Buffer(
+            data: dstY,
+            height: vImagePixelCount(newHeight),
+            width: vImagePixelCount(newWidth),
+            rowBytes: CVPixelBufferGetBytesPerRowOfPlane(outputBuffer, 0)
+        )
+
+        var dstUVBuffer = vImage_Buffer(
+            data: dstUV,
+            height: vImagePixelCount(newHeight / 2),
+            width: vImagePixelCount(newWidth / 2),
+            rowBytes: CVPixelBufferGetBytesPerRowOfPlane(outputBuffer, 1)
+        )
+
+        let yError = vImageScale_Planar8(&srcYBuffer, &dstYBuffer, nil, vImage_Flags(kvImageHighQualityResampling))
+        let uvError = vImageScale_Planar8(&srcUVBuffer, &dstUVBuffer, nil, vImage_Flags(kvImageHighQualityResampling))
+
+        guard yError == kvImageNoError, uvError == kvImageNoError else {
+            return nil
+        }
+
+        return outputBuffer
+    }
+
+    private func resizeOneComponent8(newWidth: Int, newHeight: Int) -> CVPixelBuffer? {
+        var srcBuffer = vImage_Buffer()
+        var dstBuffer = vImage_Buffer()
+
+        CVPixelBufferLockBaseAddress(self, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(self, .readOnly) }
+
+        srcBuffer.data = CVPixelBufferGetBaseAddress(self)
+        srcBuffer.width = vImagePixelCount(width)
+        srcBuffer.height = vImagePixelCount(height)
+        srcBuffer.rowBytes = CVPixelBufferGetBytesPerRow(self)
+
+        guard let outputBuffer = createOutputBuffer(width: newWidth, height: newHeight, format: kCVPixelFormatType_OneComponent8) else {
+            return nil
+        }
+
+        CVPixelBufferLockBaseAddress(outputBuffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(outputBuffer, []) }
+
+        dstBuffer.data = CVPixelBufferGetBaseAddress(outputBuffer)
+        dstBuffer.width = vImagePixelCount(newWidth)
+        dstBuffer.height = vImagePixelCount(newHeight)
+        dstBuffer.rowBytes = CVPixelBufferGetBytesPerRow(outputBuffer)
+
+        let error = vImageScale_Planar8(&srcBuffer, &dstBuffer, nil, vImage_Flags(kvImageHighQualityResampling))
+        return error == kvImageNoError ? outputBuffer : nil
+    }
+
+    private func createOutputBuffer(width: Int, height: Int, format: OSType) -> CVPixelBuffer? {
+        var outputBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(nil, width, height, format, nil, &outputBuffer)
+        return status == kCVReturnSuccess ? outputBuffer : nil
     }
 
     /// Produces a `UIImage` visualizing the depth buffer. Requires that the `CVPixelBuffer` be a single-
