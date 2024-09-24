@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HoverboardControlView: View {
+    @State private var _brainEnabledState = false
+
     var body: some View {
         TabView {
             DPadHoverboardControlView()
@@ -18,6 +20,13 @@ struct HoverboardControlView: View {
                 .tabItem {
                     Label("Per-Motor", systemImage: "arrow.up.arrow.down")
                 }
+        }
+        .onAppear {
+            _brainEnabledState = Brain.shared.enabled
+            Brain.shared.enabled = false
+        }
+        .onDisappear {
+            Brain.shared.enabled = _brainEnabledState
         }
     }
 }
