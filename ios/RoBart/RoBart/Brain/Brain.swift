@@ -26,7 +26,7 @@ class Brain: ObservableObject {
 
     static let shared = Brain()
 
-    @Published var displayState: DisplayState? = .listening
+    @Published private(set) var displayState: DisplayState? = .listening
 
     private let _speechDetector = SpeechDetector()
     private var _subscriptions: Set<AnyCancellable> = []
@@ -43,11 +43,13 @@ class Brain: ObservableObject {
         didSet {
             if enabled {
                 _speechDetector.startListening()
-                displayState = .listening
+                setDisplayState(to: .listening)
+                log("Brain enabled")
             } else {
                 _task?.cancel()
                 _speechDetector.stopListening()
-                displayState = nil
+                setDisplayState(to: nil)
+                log("Brain disabled")
             }
         }
     }
@@ -68,6 +70,12 @@ class Brain: ObservableObject {
                 await self?.runTask(humanInput: spokenWords)
             }
         }.store(in: &_subscriptions)
+    }
+
+    private func setDisplayState(to state: DisplayState?) {
+        DispatchQueue.main.async { [weak self] in
+            self?.displayState = state
+        }
     }
 
     private func runTask(humanInput: String) async {
@@ -115,9 +123,9 @@ class Brain: ObservableObject {
         _task = nil
         if enabled {
             _speechDetector.startListening()
-            displayState = .listening
+            setDisplayState(to: .listening)
         } else {
-            displayState = nil
+            setDisplayState(to: nil)
         }
     }
 
@@ -126,7 +134,7 @@ class Brain: ObservableObject {
     }
 
     private func submitToAI(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
-        displayState = .thinking
+        setDisplayState(to: .thinking)
 
         switch Settings.shared.model {
         case .claude35Sonnet:
@@ -232,14 +240,14 @@ class Brain: ObservableObject {
     }
 
     private func speak(_ wordsToSpeak: String) async {
-        displayState = .speaking
+        setDisplayState(to: .speaking)
         log("RoBart says: \(wordsToSpeak)")
         guard let mp3Data = await vocalizeWithDeepgram(wordsToSpeak) else { return }
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
     private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable]) async -> ObservationsThought {
-        displayState = .acting
+        setDisplayState(to: .acting)
 
         guard let actions = decodeActions(from: actionsThought.json) else {
             return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
