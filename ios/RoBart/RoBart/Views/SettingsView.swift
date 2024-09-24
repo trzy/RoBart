@@ -64,13 +64,39 @@ struct SettingsView: View {
                         }
                         .disabled(_isRobot.wrappedValue)
 
-                        // Rate of people detection when running in person follower mode
-                        LabeledContent {
-                            TextField("Person Detection Frequency", value: $_settings.personDetectionHz, format: .number)
-                                .multilineTextAlignment(.trailing)
-                        } label: {
-                            Text("Person Detection Frequency")
+                        // How far behind a person RoBart should follow in follower mode
+                        VStack {
+                            Slider(
+                                value: $_settings.followDistance,
+                                in: 1...4
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Follow Distance (meters)")
+                                Spacer()
+                                Text("\(_settings.followDistance, specifier: "%.2f")")
+                                Spacer()
+                            }
                         }
+                        .padding()
+                        .frame(maxWidth: 600)
+
+                        // Rate of people detection when running in person follower mode
+                        VStack {
+                            Slider(
+                                value: $_settings.personDetectionHz,
+                                in: 0.5...8
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Person Detection Frequency (Hz)")
+                                Spacer()
+                                Text("\(_settings.personDetectionHz, specifier: "%.1f")")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
                     }
                     Spacer()
                 }

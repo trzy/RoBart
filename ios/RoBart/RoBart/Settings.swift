@@ -51,6 +51,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var followDistance: Float = 1.3 {
+        didSet {
+            UserDefaults.standard.set(followDistance, forKey: Self.k_followDistanceKey)
+            log("Set: \(Self.k_followDistanceKey) = \(followDistance)")
+        }
+    }
+
     @Published var personDetectionHz: Double = 2 {
         didSet {
             UserDefaults.standard.set(personDetectionHz, forKey: Self.k_personDetectionHz)
@@ -65,7 +72,8 @@ class Settings: ObservableObject {
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
-    private static let k_personDetectionHz = "person_detection_hz_key"
+    private static let k_followDistanceKey = "follow_distance"
+    private static let k_personDetectionHz = "person_detection_hz"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),
@@ -88,6 +96,14 @@ class Settings: ObservableObject {
 
         if let value = UserDefaults.standard.string(forKey: Self.k_deepgramAPIKey) {
             self.deepgramAPIKey = value
+        }
+
+        if let followDistance = UserDefaults.standard.object(forKey: Self.k_followDistanceKey) as? Float {
+            self.followDistance = followDistance
+        }
+
+        if let personDetectionHz = UserDefaults.standard.object(forKey: Self.k_personDetectionHz) as? Double {
+            self.personDetectionHz = personDetectionHz
         }
     }
 }
