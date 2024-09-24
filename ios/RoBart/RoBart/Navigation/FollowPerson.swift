@@ -65,7 +65,7 @@ func followPerson(duration followDuration: TimeInterval?, distance followDistanc
             
             if let nearestPerson = people.sorted(by: { $0.magnitude > $1.magnitude }).first {
                 // Compute goal position safe distance from person
-                let targetDistanceToPerson: Float = 1.3
+                let targetDistanceToPerson = Settings.shared.followDistance
                 let distanceToPerson = (nearestPerson - currentPosition).magnitude
                 let direction = (nearestPerson - currentPosition).xzProjected.normalized
                 let goalPosition = currentPosition + direction * max(0, distanceToPerson - targetDistanceToPerson)  // keep safe distance
