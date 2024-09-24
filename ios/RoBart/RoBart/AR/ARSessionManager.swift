@@ -42,6 +42,13 @@ class ARSessionManager: ObservableObject {
         }
     }
 
+    var sceneUnderstanding: Bool = true {
+        didSet {
+            // Restart session in case anything changed
+            startSession(preserveAnchors: true)
+        }
+    }
+
     private(set) var transform: Matrix4x4 = .identity
 
     var headingDegrees: Float {
@@ -114,35 +121,33 @@ class ARSessionManager: ObservableObject {
         }.store(in: &_subscriptions)
     }
 
-    func startSession() {
-        startSession(collaborative: PeerManager.shared.peers.count > 0)
+    func startSession(preserveAnchors: Bool = false) {
+        startSession(collaborative: PeerManager.shared.peers.count > 0, preserveAnchors: preserveAnchors)
     }
 
-    private func startSession(collaborative: Bool) {
+    private func startSession(collaborative: Bool, preserveAnchors: Bool = false) {
         guard let arView = arView else { return }
-
-        // Session needs to be collaborative if peers are connected. Only start/restart the session
-        // if this has changed or no session exists in the first place.
-        if let existingConfig = arView.session.configuration as? ARWorldTrackingConfiguration {
-            if existingConfig.isCollaborationEnabled == collaborative {
-                // Session already running in proper configuration
-                return
-            }
-        }
 
         // New session configuration
         let config = ARWorldTrackingConfiguration()
-        config.planeDetection = [ .horizontal, .vertical ]
+        config.planeDetection = sceneUnderstanding ? [ .horizontal ] : []
         config.environmentTexturing = .none
         config.isCollaborationEnabled = collaborative
         if Settings.shared.role == .robot && ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) {
             config.frameSemantics.insert(.sceneDepth)
         }
         if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-            config.sceneReconstruction = .mesh
+            config.sceneReconstruction = sceneUnderstanding ? .mesh : []
         }
-        arView.session.run(config, options: .removeExistingAnchors)
 
+        // Start session only if configuration changed
+        if let existingConfig = arView.session.configuration as? ARWorldTrackingConfiguration {
+            if existingConfig == config {
+                log("Session already running with proper configuration")
+                return
+            }
+        }
+        arView.session.run(config, options: preserveAnchors ? [] : .removeExistingAnchors)
         log("Started session with collaboration \(collaborative ? "enabled" : "disabled") and scene depth \(config.frameSemantics.contains(.sceneDepth) ? "enabled" : "disabled")")
     }
 

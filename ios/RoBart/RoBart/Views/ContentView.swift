@@ -95,6 +95,10 @@ struct ContentView: View {
                     handleRemoteAnchor(anchor)
                 }
             }
+
+            Task {
+                //await followPerson(duration: 10, distance: nil)
+            }
         }
     }
 

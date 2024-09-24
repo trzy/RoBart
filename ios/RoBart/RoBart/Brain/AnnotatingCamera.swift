@@ -221,7 +221,6 @@ class AnnotatingCamera {
             let imagePoint = point.imagePoint
             let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
             let y = rotated ? imagePoint.x : imagePoint.y
-            let squareRect = CGRect(x: x, y: y, width: sideLength, height: sideLength)
             context.setFillColor(point.backgroundColor)
             let backgroundRect = CGRect(x: x - textSize.width / 2, y: y - textSize.height / 2, width: textSize.width, height: textSize.height)
             context.fill(backgroundRect)

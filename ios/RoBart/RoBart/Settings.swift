@@ -51,6 +51,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var personDetectionHz: Double = 2 {
+        didSet {
+            UserDefaults.standard.set(personDetectionHz, forKey: Self.k_personDetectionHz)
+            log("Set: \(Self.k_personDetectionHz) = \(personDetectionHz)")
+        }
+    }
+
     @Published var driveToButtonUsesNavigation = true
 
     private static let k_roleKey = "role"
@@ -58,6 +65,7 @@ class Settings: ObservableObject {
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
+    private static let k_personDetectionHz = "person_detection_hz_key"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),

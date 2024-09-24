@@ -63,6 +63,14 @@ struct SettingsView: View {
                             Text("Drive Straight").tag(false)
                         }
                         .disabled(_isRobot.wrappedValue)
+
+                        // Rate of people detection when running in person follower mode
+                        LabeledContent {
+                            TextField("Person Detection Frequency", value: $_settings.personDetectionHz, format: .number)
+                                .multilineTextAlignment(.trailing)
+                        } label: {
+                            Text("Person Detection Frequency")
+                        }
                     }
                     Spacer()
                 }
