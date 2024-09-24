@@ -61,7 +61,7 @@ func followPerson(duration followDuration: TimeInterval?, distance followDistanc
         // Perform person detection and update goal position
         if now >= nextPersonDetectionTime,
            let frame = try? await ARSessionManager.shared.nextFrame() {
-            let people = detectHumans(in: frame)
+            let people = detectHumans(in: frame, maximumDistance: Settings.shared.maxPersonDistance)
             
             if let nearestPerson = people.sorted(by: { $0.magnitude > $1.magnitude }).first {
                 // Compute goal position safe distance from person

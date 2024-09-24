@@ -81,6 +81,23 @@ struct SettingsView: View {
                         .padding()
                         .frame(maxWidth: 600)
 
+                        // Maximum distance to detect people at
+                        VStack {
+                            Slider(
+                                value: $_settings.maxPersonDistance,
+                                in: 2...8
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Maximum Person Distance (meters)")
+                                Spacer()
+                                Text("\(_settings.maxPersonDistance, specifier: "%.2f")")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
+
                         // Rate of people detection when running in person follower mode
                         VStack {
                             Slider(

@@ -58,6 +58,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var maxPersonDistance: Float = 3 {
+        didSet {
+            UserDefaults.standard.set(maxPersonDistance, forKey: Self.k_maxPersonDistanceKey)
+            log("Set: \(Self.k_maxPersonDistanceKey) = \(maxPersonDistance)")
+        }
+    }
+
     @Published var personDetectionHz: Double = 2 {
         didSet {
             UserDefaults.standard.set(personDetectionHz, forKey: Self.k_personDetectionHz)
@@ -73,6 +80,7 @@ class Settings: ObservableObject {
     private static let k_openAIAPIKey = "openai_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
     private static let k_followDistanceKey = "follow_distance"
+    private static let k_maxPersonDistanceKey = "max_person_distance"
     private static let k_personDetectionHz = "person_detection_hz"
 
     fileprivate init() {
@@ -100,6 +108,10 @@ class Settings: ObservableObject {
 
         if let followDistance = UserDefaults.standard.object(forKey: Self.k_followDistanceKey) as? Float {
             self.followDistance = followDistance
+        }
+
+        if let maxPersonDistance = UserDefaults.standard.object(forKey: Self.k_maxPersonDistanceKey) as? Float {
+            self.maxPersonDistance = maxPersonDistance
         }
 
         if let personDetectionHz = UserDefaults.standard.object(forKey: Self.k_personDetectionHz) as? Double {
