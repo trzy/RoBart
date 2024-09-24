@@ -14,7 +14,7 @@ import UIKit
 
 func followPerson(duration followDuration: TimeInterval?, distance followDistance: Float?) async {
     DispatchQueue.main.async {
-        //ARSessionManager.shared.sceneUnderstanding = false
+        ARSessionManager.shared.sceneUnderstanding = false
     }
 
     var lastPosition: Vector3?
@@ -102,11 +102,17 @@ func followPerson(duration followDuration: TimeInterval?, distance followDistanc
 
         // Small delay
         try? await Task.sleep(for: .milliseconds(16))
+        if Task.isCancelled {
+            log("Task cancelled")
+            break
+        }
     }
 
     DispatchQueue.main.async {
         ARSessionManager.shared.sceneUnderstanding = true
     }
+
+    log("Finished")
 }
 
 fileprivate func circularBufferFirstIndex<T>(buffer: Array<T>, currentIdx: Int) -> Int {

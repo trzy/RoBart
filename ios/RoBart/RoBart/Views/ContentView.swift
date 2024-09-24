@@ -12,8 +12,10 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject private var _settings = Settings.shared
+    @ObservedObject private var _brain = Brain.shared
     @State private var _cursor: Entity?
     @State private var _subscription: Cancellable?
+    @State private var _followingPersonTask: Task<Void, Never>?
     @ObservedObject private var _client = Client.shared
     @StateObject private var _depthTest = DepthTest()
 
@@ -34,6 +36,14 @@ struct ContentView: View {
                                 .disabled(_cursor == nil || _settings.role != .handheld)
                                 .padding()
 
+                            // Toggle follow mode
+                            let followModeLabel = Image(systemName: _followingPersonTask != nil ? "person.circle" : "person.slash")
+                            Button {
+                                toggleFollowMode()
+                            } label: {
+                                followModeLabel
+                            }
+
                             // Emergency stop
                             Button("STOP", action: stopHoverboard)
                                 .padding()
@@ -48,6 +58,19 @@ struct ContentView: View {
                         CollaborativeMappingStateView()
                     }
                 }
+
+                if let brainState = _brain.displayState {
+                    VStack {
+                        Spacer()
+                        Text(brainState.rawValue)
+                            .font(.system(size: 120))
+                        Spacer()
+                        Spacer()
+                        Spacer()
+                        Spacer()
+                    }
+                }
+
                 if let image = _depthTest.image {
                     VStack {
                         Spacer()
@@ -57,6 +80,7 @@ struct ContentView: View {
                         Spacer()
                     }
                 }
+
                 if _settings.role == .handheld,
                    let image = _client.robotOccupancyMapImage {
                     let _ = print("Showing image")
@@ -94,10 +118,6 @@ struct ContentView: View {
                 if let anchor = anchor.object {
                     handleRemoteAnchor(anchor)
                 }
-            }
-
-            Task {
-                //await followPerson(duration: 10, distance: nil)
             }
         }
     }
@@ -145,6 +165,21 @@ struct ContentView: View {
             _cursor = entity
         }
         return _cursor!
+    }
+
+    private func toggleFollowMode() {
+        if _followingPersonTask == nil {
+            _followingPersonTask = Task {
+                // Disable brain and just follow
+                _brain.enabled = false
+                await followPerson(duration: nil, distance: nil)
+            }
+        } else {
+            // Re-enable brain and stop following
+            _brain.enabled = true
+            _followingPersonTask?.cancel()
+            _followingPersonTask = nil
+        }
     }
 
     private func stopHoverboard() {
