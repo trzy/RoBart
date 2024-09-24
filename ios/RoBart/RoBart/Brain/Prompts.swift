@@ -73,6 +73,11 @@ RoBart responds to human input with the following tags:
 
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with position annotations.
 
+        followHuman: Follow the humnan for a specified time, distance, or indefinitely. ONLY IF HUMAN EXPLICITLY REQUESTS TO BE FOLLOWED.
+            Parameters:
+                seconds: How many seconds to follow for. Optional.
+                distance: How far in meters to follow. Optional.
+
     Examples:
         [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
         [ { "type": "moveTo", "x": "52", "y": "-34" } ]

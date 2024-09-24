@@ -10,14 +10,23 @@ import Foundation
 import OpenAI
 import SwiftAnthropic
 
-class Brain {
+class Brain: ObservableObject {
     enum Model: String {
         case claude35Sonnet
         case gpt4o
         case gpt4Turbo
     }
 
+    enum DisplayState: String {
+        case listening = "👂🏻"
+        case thinking = "🧠"
+        case acting = "🛞"
+        case speaking = "🗣️"
+    }
+
     static let shared = Brain()
+
+    @Published var displayState: DisplayState? = .listening
 
     private let _speechDetector = SpeechDetector()
     private var _subscriptions: Set<AnyCancellable> = []
@@ -30,25 +39,35 @@ class Brain {
 
     private var _task: Task<Void, Never>?
 
+    var enabled: Bool = true {
+        didSet {
+            if enabled {
+                _speechDetector.startListening()
+                displayState = .listening
+            } else {
+                _task?.cancel()
+                _speechDetector.stopListening()
+                displayState = nil
+            }
+        }
+    }
+
     var isWorking: Bool {
         return _task != nil
     }
 
     fileprivate init() {
         // Tasks are kicked off by human speech input
-//        _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
-//            guard let self = self,
-//                  !spokenWords.isEmpty,
-//                  !isWorking else {
-//                return
-//            }
-//            _task = Task { [weak self] in
-//                await self?.runTask(humanInput: spokenWords)
-//            }
-//        }.store(in: &_subscriptions)
-        Task {
-            //await followPerson()
-        }
+        _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
+            guard let self = self,
+                  !spokenWords.isEmpty,
+                  !isWorking else {
+                return
+            }
+            _task = Task { [weak self] in
+                await self?.runTask(humanInput: spokenWords)
+            }
+        }.store(in: &_subscriptions)
     }
 
     private func runTask(humanInput: String) async {
@@ -94,7 +113,12 @@ class Brain {
         log("Completed task!")
         HoverboardController.shared.send(.drive(leftThrottle: 0, rightThrottle: 0))
         _task = nil
-        _speechDetector.startListening()
+        if enabled {
+            _speechDetector.startListening()
+            displayState = .listening
+        } else {
+            displayState = nil
+        }
     }
 
     private func actionableThoughts(in thoughts: [ThoughtRepresentable]) -> [ThoughtRepresentable] {
@@ -102,6 +126,8 @@ class Brain {
     }
 
     private func submitToAI(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+        displayState = .thinking
+
         switch Settings.shared.model {
         case .claude35Sonnet:
             return await submitToClaude(model: .claude35Sonnet, thoughts: thoughts, stopAt: stopAt)
@@ -206,12 +232,15 @@ class Brain {
     }
 
     private func speak(_ wordsToSpeak: String) async {
+        displayState = .speaking
         log("RoBart says: \(wordsToSpeak)")
         guard let mp3Data = await vocalizeWithDeepgram(wordsToSpeak) else { return }
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
     private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable]) async -> ObservationsThought {
+        displayState = .acting
+
         guard let actions = decodeActions(from: actionsThought.json) else {
             return ObservationsThought(text: "The actions generated were not formatted correctly as a JSON array. Try again and use only valid action object types.")
         }
@@ -315,6 +344,11 @@ class Brain {
                 } else {
                     resultsDescription.append("Camera malfunctioned. No photo.")
                 }
+
+            case .followHuman(let followHuman):
+                log("Following...")
+                await followPerson(duration: followHuman.seconds, distance: followHuman.distance)
+                resultsDescription.append("Finished following human")
             }
         }
 

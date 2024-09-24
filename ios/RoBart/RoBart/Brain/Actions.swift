@@ -35,6 +35,11 @@ struct Scan360Action: Codable {
 struct TakePhotoAction: Codable {
 }
 
+struct FollowHumanAction: Codable {
+    var seconds: Double?
+    var distance: Float?
+}
+
 enum Action: Decodable {
     case move(MoveAction)
     case moveToCell(MoveToCellAction)
@@ -43,6 +48,7 @@ enum Action: Decodable {
     case faceTowardHeading(FaceTowardHeadingAction)
     case scan360(Scan360Action)
     case takePhoto(TakePhotoAction)
+    case followHuman(FollowHumanAction)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -56,6 +62,7 @@ enum Action: Decodable {
         case faceTowardHeading = "faceTowardHeading"
         case scan360 = "scan360"
         case takePhoto = "takePhoto"
+        case followHuman = "followHuman"
     }
 
     init(from decoder: Decoder) throws {
@@ -85,6 +92,9 @@ enum Action: Decodable {
         case .takePhoto:
             let action = try TakePhotoAction(from: decoder)
             self = .takePhoto(action)
+        case .followHuman:
+            let action = try FollowHumanAction(from: decoder)
+            self = .followHuman(action)
         }
     }
 }
