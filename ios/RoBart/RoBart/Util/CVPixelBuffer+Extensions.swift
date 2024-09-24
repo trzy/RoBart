@@ -52,7 +52,7 @@ extension CVPixelBuffer {
             byteArray.withUnsafeMutableBytes { rawBufferPointer in
                 var srcPointer = baseAddress
                 var destPointer = rawBufferPointer.baseAddress!
-                for y in 0..<height {
+                for _ in 0..<height {
                     // Copy pixel row and advance by stride in source buffer
                     memcpy(destPointer, srcPointer, width)
                     srcPointer = srcPointer.advanced(by: bytesPerRow)

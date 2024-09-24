@@ -42,6 +42,8 @@ class SpeechDetector: ObservableObject {
     }
 
     func startListening() {
+        return
+
         guard !_isListening else { return }
         log("Starting speech detector")
         _isListening = true

@@ -36,16 +36,19 @@ class Brain {
 
     fileprivate init() {
         // Tasks are kicked off by human speech input
-        _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
-            guard let self = self,
-                  !spokenWords.isEmpty,
-                  !isWorking else {
-                return
-            }
-            _task = Task { [weak self] in
-                await self?.runTask(humanInput: spokenWords)
-            }
-        }.store(in: &_subscriptions)
+//        _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
+//            guard let self = self,
+//                  !spokenWords.isEmpty,
+//                  !isWorking else {
+//                return
+//            }
+//            _task = Task { [weak self] in
+//                await self?.runTask(humanInput: spokenWords)
+//            }
+//        }.store(in: &_subscriptions)
+        Task {
+            //await followPerson()
+        }
     }
 
     private func runTask(humanInput: String) async {
@@ -67,6 +70,10 @@ class Brain {
             guard let response = await submitToAI(thoughts: history, stopAt: [ObservationsThought.openingTag]) else { break }
             sendDebugLog(modelInput: history, modelOutput: response, timestamp: timeStarted, stepNumber: stepNumber)
             history += response
+
+            if Task.isCancelled {
+                break
+            }
 
             for thought in actionableThoughts(in: response) {
                 if let intermediateResponse = thought as? IntermediateResponseThought {

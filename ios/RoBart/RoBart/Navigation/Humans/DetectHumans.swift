@@ -12,7 +12,7 @@ import CoreImage
 import Vision
 import UIKit
 
-func detectHumans(in frame: ARFrame) -> [Vector3] {
+func detectHumans(in frame: ARFrame, maximumDistance: Float = 2) -> [Vector3] {
     var timer = Util.Stopwatch()
     timer.start()
 
@@ -64,7 +64,6 @@ func detectHumans(in frame: ARFrame) -> [Vector3] {
     // Get average depth for each person
     timer.start()
     var boxesWithDepth: [(box: CGRect, distance: Float)] = []
-    let maximumDistance: Float = 3
     for box in boxes {
         let depth = computeAverageDepthOfBoundingBox(box, depthMap, maximumDistance)
         if depth > 0 {
@@ -83,7 +82,7 @@ func detectHumans(in frame: ARFrame) -> [Vector3] {
             distance: boxWithDepth.distance,
             cameraToWorld: cameraToWorld,
             fx: fx,
-            fy: fx,
+            fy: fy,
             cx: cx,
             cy: cy
         )

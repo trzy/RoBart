@@ -26,6 +26,7 @@ enum HoverboardCommand {
     case face(forward: Vector3)
     case driveForward(distance: Float)
     case driveTo(position: Vector3)
+    case driveToFacing(position: Vector3, forward: Vector3)
 }
 
 class HoverboardController {
@@ -224,6 +225,10 @@ class HoverboardController {
 
         case .driveTo(let position):
             _targetForward = nil
+            _targetPosition = position.xzProjected
+
+        case .driveToFacing(let position, let forward):
+            _targetForward = forward.xzProjected
             _targetPosition = position.xzProjected
         }
     }

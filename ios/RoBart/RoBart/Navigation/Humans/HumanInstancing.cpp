@@ -81,17 +81,17 @@ std::vector<Box2D> findHumans(CVPixelBufferRef segmentationMap, uint8_t minimumC
     do
     {
         mergedSomething = false;
-        for (int ii = 0; ii < humans.size(); ii++)
+        for (int i = 0; i < humans.size(); i++)
         {
             // Merge current with all subsequent
-            for (int jj = ii + 1; jj < humans.size(); jj++)
+            for (int j = i + 1; j < humans.size(); j++)
             {
-                if (humans[ii].overlaps(humans[jj]))
+                if (humans[i].overlaps(humans[j]))
                 {
                     // Merge and replace the first box. Remove the second.
-                    humans[ii].mergeWith(humans[jj]);
-                    humans.erase(humans.begin() + jj);
-                    jj -= 1;
+                    humans[i].mergeWith(humans[j]);
+                    humans.erase(humans.begin() + j);
+                    j -= 1;
                     mergedSomething = true;
                 }
             }
