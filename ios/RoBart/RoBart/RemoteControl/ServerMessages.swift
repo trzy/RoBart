@@ -93,10 +93,12 @@ struct OccupancyMapMessage: JSONMessage {
     let cellsDeep: Int
     let occupancy: [Float]
     let robotCell: [Int]    // 2 elements: x, z
+    let pathCells: [[Int]]  // path waypoints, each element [x, z]
 }
 
 struct DrivePathMessage: JSONMessage {
     let pathCells: [[Int]]  // array of [cellX, cellZ]
+    let pathFinding: Bool
 }
 
 struct RequestAnnotatedViewMessage: JSONMessage {
