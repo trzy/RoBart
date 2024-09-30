@@ -29,6 +29,8 @@
 		CC26CF7C2CA1F4D000ACC82E /* HumanInstancing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF7A2CA1F4D000ACC82E /* HumanInstancing.cpp */; };
 		CC26CF7F2CA2085200ACC82E /* BoxDepth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF7D2CA2085200ACC82E /* BoxDepth.cpp */; };
 		CC26CF812CA20F2E00ACC82E /* DetectHumans.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF802CA20F2E00ACC82E /* DetectHumans.swift */; };
+		CC26CF832CAA5D5100ACC82E /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF822CAA5D5100ACC82E /* Map.swift */; };
+		CC26CF852CAA611D00ACC82E /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF842CAA611D00ACC82E /* Memory.swift */; };
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE332C7CE714003EEBDE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE322C7CE714003EEBDE /* SettingsView.swift */; };
@@ -192,6 +194,8 @@
 		CC26CF7D2CA2085200ACC82E /* BoxDepth.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BoxDepth.cpp; sourceTree = "<group>"; };
 		CC26CF7E2CA2085200ACC82E /* BoxDepth.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = BoxDepth.hpp; sourceTree = "<group>"; };
 		CC26CF802CA20F2E00ACC82E /* DetectHumans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectHumans.swift; sourceTree = "<group>"; };
+		CC26CF822CAA5D5100ACC82E /* Map.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map.swift; sourceTree = "<group>"; };
+		CC26CF842CAA611D00ACC82E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE322C7CE714003EEBDE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -612,6 +616,8 @@
 				CC26CF672C9BE68E00ACC82E /* BlockParser.swift */,
 				CC26CF692C9BE89A00ACC82E /* Thoughts.swift */,
 				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
+				CC26CF822CAA5D5100ACC82E /* Map.swift */,
+				CC26CF842CAA611D00ACC82E /* Memory.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -1024,6 +1030,7 @@
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,
+				CC26CF852CAA611D00ACC82E /* Memory.swift in Sources */,
 				CC1125372C93B8F2007AF247 /* NavigationController.swift in Sources */,
 				CC8C395F2C912AA50040559F /* ComputeShaders.metal in Sources */,
 				CC8C395D2C911EBA0040559F /* GPUOccupancyMap.swift in Sources */,
@@ -1062,6 +1069,7 @@
 				CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */,
 				CCA3B9392C8EC40E00F15F9F /* FilterDepthMap.cpp in Sources */,
 				CC26CF6F2C9CE98500ACC82E /* AudioManager.swift in Sources */,
+				CC26CF832CAA5D5100ACC82E /* Map.swift in Sources */,
 				CC1125392C93BD3B007AF247 /* NavigateToGoal.swift in Sources */,
 				CCA9A1182C62D8D700B0401C /* simd_quatf+Extensions.swift in Sources */,
 				CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */,

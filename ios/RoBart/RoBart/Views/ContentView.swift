@@ -119,6 +119,11 @@ struct ContentView: View {
                     handleRemoteAnchor(anchor)
                 }
             }
+
+            // Enable brain initially
+            if _followingPersonTask == nil {
+                _brain.enabled = true
+            }
         }
     }
 

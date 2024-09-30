@@ -18,8 +18,8 @@ class AnnotatingCamera {
         let name: String
         let jpegBase64: String
         let navigablePoints: [NavigablePoint]
-        let position: Vector3
-        let headingDegrees: Float
+        let position: Vector3?
+        let headingDegrees: Float?
     }
 
     struct NavigablePoint {
@@ -105,7 +105,7 @@ class AnnotatingCamera {
 
         // Rotate photo and render navigable points as annotations
         guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
-              let annotatedPhoto = annotateCells(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
+              let annotatedPhoto = annotatePointNumbers(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
             return nil
         }
 

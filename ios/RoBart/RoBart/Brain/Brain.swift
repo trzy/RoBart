@@ -39,9 +39,9 @@ class Brain: ObservableObject {
 
     private var _task: Task<Void, Never>?
 
-    var enabled: Bool = true {
+    var enabled: Bool = false {
         didSet {
-            if enabled {
+            if enabled && Settings.shared.role == .robot {
                 _speechDetector.startListening()
                 setDisplayState(to: .listening)
                 log("Brain enabled")
@@ -58,7 +58,7 @@ class Brain: ObservableObject {
         return _task != nil
     }
 
-    fileprivate init() {
+    private init() {
         // Tasks are kicked off by human speech input
         _speechDetector.$speech.sink { [weak self] (spokenWords: String) in
             guard let self = self,
@@ -84,6 +84,7 @@ class Brain: ObservableObject {
         var stepNumber = 0
 
         var history: [ThoughtRepresentable] = []
+        var navigablePointsByID: [Int: AnnotatingCamera.NavigablePoint] = [:]
 
         // Human speaking to RoBart kicks off the process
         let photo = await _camera.takePhoto()
@@ -110,7 +111,7 @@ class Brain: ObservableObject {
                     stop = true
                     break
                 } else if let actions = thought as? ActionsThought {
-                    let observations = await perform(actions, history: history)
+                    let observations = await perform(actions, history: history, navigablePointsByID: &navigablePointsByID)
                     history.append(observations)
                 }
             }
@@ -200,6 +201,7 @@ class Brain: ObservableObject {
         let numActionsToKeep = 2                // how many of the last actions objects to keep
         let numObservationsToKeep = 5           // ... observations
         let numPlansToKeep = 2                  // ... plans
+        let numMemoriesToKeep = 1               // ... memories
         let numIntermediateResponsesToKeep = 0  // ... intermediate responses
         let numThoughtsWithPhotosToKeep = 1     // how many thoughts with photos to keep (only photos are dropped, not thoughts)
 
@@ -220,6 +222,7 @@ class Brain: ObservableObject {
         prunedHistory = keepLastN(of: ActionsThought.self, in: prunedHistory, n: numActionsToKeep)
         prunedHistory = keepLastN(of: ObservationsThought.self, in: prunedHistory, n: numObservationsToKeep)
         prunedHistory = keepLastN(of: PlanThought.self, in: prunedHistory, n: numPlansToKeep)
+        prunedHistory = keepLastN(of: MemoryThought.self, in: prunedHistory, n: numMemoriesToKeep)
         prunedHistory = keepLastN(of: IntermediateResponseThought.self, in: prunedHistory, n: numIntermediateResponsesToKeep)
 
         return prunedHistory
@@ -246,7 +249,7 @@ class Brain: ObservableObject {
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
-    private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable]) async -> ObservationsThought {
+    private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable], navigablePointsByID: inout [Int: AnnotatingCamera.NavigablePoint]) async -> ObservationsThought {
         setDisplayState(to: .acting)
 
         guard let actions = decodeActions(from: actionsThought.json) else {
@@ -260,8 +263,7 @@ class Brain: ObservableObject {
         var photos: [AnnotatingCamera.Photo] = []
 
         let startPosition = ARSessionManager.shared.transform.position
-        let startForward = ARSessionManager.shared.transform.forward.xzProjected.normalized
-        let startCell = NavigationController.shared.occupancy.positionToCell(startPosition)
+        let startForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
 
         for action in actions {
             _ = await NavigationController.shared.updateOccupancy()
@@ -279,49 +281,60 @@ class Brain: ObservableObject {
                     resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
                 }
 
-            case .moveToCell(let moveToCell):
-                guard let navigablePoint = history.findNavigablePoint(cellX: moveToCell.cellX, cellZ: moveToCell.cellY) else {
-                    resultsDescription.append("Unable to move to cell (\(moveToCell.cellX),\(moveToCell.cellY)) because it was not found in any photos")
+            case .moveTo(let moveTo):
+                guard let navigablePoint = history.findNavigablePoint(pointID: moveTo.pointNumber) else {
+                    resultsDescription.append("Unable to move to point \(moveTo.pointNumber) because it was not found in any photos")
                     break
                 }
                 guard NavigationController.shared.occupancy.isLineUnobstructed(startPosition, navigablePoint.worldPoint) else {
-                    resultsDescription.append("Unable to move to cell (\(moveToCell.cellX),\(moveToCell.cellY)) because it is obstructed. Approach carefully and from a different location.")
+                    resultsDescription.append("Unable to move to point \(moveTo.pointNumber) because it is obstructed. Approach carefully and from a different location.")
                     break
                 }
-                
-                // Orient toward goal initially
-                let direction = (navigablePoint.worldPoint - startPosition).xzProjected.normalized
-                HoverboardController.shared.send(.face(forward: direction))
-                try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
 
-                // We will approach to within a short distance, but not actually onto the point,
-                // because the robot likes to pick points that are very close to furniture it wants
-                // to inspect
-                let distanceToPoint = (navigablePoint.worldPoint - startPosition).magnitude
-                let distanceToMove = max(0.5, distanceToPoint - 0.5)
-                let goalPosition = startPosition + distanceToMove * direction
+                // Attempt to path find
+                let robotRadius = 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
+                let pathCells = findPath(NavigationController.shared.occupancy, startPosition, navigablePoint.worldPoint, robotRadius)
+                let path = pathCells.map { NavigationController.shared.occupancy.cellToPosition($0) }
 
-                // Move to goal
-                HoverboardController.shared.send(.driveTo(position: goalPosition))
-                try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
+                // Move to position along path or directly if no path
+                if path.count > 0 {
+                    NavigationController.shared.run(.follow(path: path))
+                    try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving})
+                } else {
+                    // Orient toward goal initially
+                    let direction = (navigablePoint.worldPoint - startPosition).xzProjected.normalized
+                    HoverboardController.shared.send(.face(forward: direction))
+                    try? await Task.sleep(timeout: .seconds(maxTurnTime), until: { !HoverboardController.shared.isMoving })
+
+                    // We will approach to within a short distance, but not actually onto the point,
+                    // because the robot likes to pick points that are very close to furniture it wants
+                    // to inspect
+                    let distanceToPoint = (navigablePoint.worldPoint - startPosition).magnitude
+                    let distanceToMove = max(0.5, distanceToPoint - 0.5)
+                    let goalPosition = startPosition + distanceToMove * direction
+
+                    // Move to goal
+                    HoverboardController.shared.send(.driveTo(position: goalPosition))
+                    try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
+                }
 
                 let endPosition = ARSessionManager.shared.transform.position
                 let actualDistanceMoved = (endPosition - startPosition).magnitude
-                resultsDescription.append("Moved \(actualDistanceMoved) meters toward cell (\(moveToCell.cellX),\(moveToCell.cellY))")
+                resultsDescription.append("Moved \(actualDistanceMoved) meters toward point \(moveTo.pointNumber)")
 
-            case .faceTowardCell(let faceTowardCell):
-                guard let navigablePoint = history.findNavigablePoint(cellX: faceTowardCell.cellX, cellZ: faceTowardCell.cellY) else {
-                    resultsDescription.append("Unable to face cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)) because it was not found in any photos")
+            case .faceToward(let faceToward):
+                guard let navigablePoint = history.findNavigablePoint(pointID: faceToward.pointNumber) else {
+                    resultsDescription.append("Unable to face point \(faceToward.pointNumber) because it was not found in any photos")
                     break
                 }
                 let targetDirection = (navigablePoint.worldPoint - startPosition).xzProjected
                 let succeeded = await face(forward: targetDirection)
                 guard succeeded else {
-                    resultsDescription.append("Unable to face cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)). Hit an obstruction!")
+                    resultsDescription.append("Unable to face point \(faceToward.pointNumber). Hit an obstruction!")
                     break
                 }
                 let newHeading = ARSessionManager.shared.headingDegrees
-                resultsDescription.append("Turned toward cell (\(faceTowardCell.cellX),\(faceTowardCell.cellY)) now facing heading \(newHeading) deg")
+                resultsDescription.append("Turned toward point \(faceToward.pointNumber) now facing heading \(newHeading) deg")
 
             case .faceTowardHeading(let faceTowardHeading):
                 let targetDirection = ARSessionManager.shared.direction(fromDegrees: faceTowardHeading.headingDegrees)
@@ -360,6 +373,7 @@ class Brain: ObservableObject {
             }
         }
 
+        // Log current position and heading to observations
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
         let positionStr = String(format: "(x=%.2f meters,y=%.2f meters)", ourPosition.x, ourPosition.z)
@@ -367,8 +381,49 @@ class Brain: ObservableObject {
         resultsDescription.append("Current position: \(positionStr)")
         resultsDescription.append("Current heading: \(headingStr) deg")
 
-        let currentCell = NavigationController.shared.occupancy.positionToCell(ourPosition)
-        resultsDescription.append("Started at cell (\(startCell.cellX),\(startCell.cellZ)) and now at (\(currentCell.cellX),\(currentCell.cellZ))")
+        // Find photo that corresponds most closely to our current view, if any
+        var haveCurrentView = false
+        let ourForward = -ARSessionManager.shared.transform.forward
+
+        for photo in photos {
+            if let headingDegrees = photo.headingDegrees {
+                let photoForward = ARSessionManager.shared.direction(fromDegrees: headingDegrees)
+                let delta = Vector3.angle(ourForward, photoForward)
+                if delta < 20 {
+                    resultsDescription.append("CURRENT VIEW IS: \(photo.name)")
+                    haveCurrentView = true
+                }
+            }
+        }
+
+        if !haveCurrentView {
+            resultsDescription.append("NONE OF THE FOLLOWING PHOTOS ARE THE CURRENT VIEW.")
+        }
+
+        // Update database of navigable points
+        for photo in photos {
+            for point in photo.navigablePoints {
+                navigablePointsByID[point.id] = point
+            }
+        }
+
+        // Obtain navigable points referenced in memory
+        let memorizedPoints = getNavigablePointsFromLastMemory(history: history, navigablePointsByID: navigablePointsByID)
+
+        // Render image with memorized points as landmarks and add it to observations
+        if let imageBase64 = renderMap(occupancy: NavigationController.shared.occupancy, ourTransform: ARSessionManager.shared.transform, navigablePoints: memorizedPoints)?.jpegData(compressionQuality: 0.9)?.base64EncodedString() {
+            let image = AnnotatingCamera.Photo(name: "Current map", jpegBase64: imageBase64, navigablePoints: [], position: Vector3.zero, headingDegrees: 0)
+            photos.append(image)
+        }
+
+        // Describe which points are currenrtly accessible so RoBart doesn't hallucinate or refer
+        // to an old point no longer within view
+        var allowablePointIDs = photos.flatMap({ $0.navigablePoints }).map({ "\($0.id)" })
+        if allowablePointIDs.isEmpty {
+            resultsDescription.append("NO NAVIGABLE POINTS ARE REACHABLE. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
+        } else {
+            resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
+        }
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
     }
@@ -448,6 +503,12 @@ class Brain: ObservableObject {
             return false
         }
         return true
+    }
+
+    private func getNavigablePointsFromLastMemory(history: [ThoughtRepresentable], navigablePointsByID: [Int: AnnotatingCamera.NavigablePoint]) -> [AnnotatingCamera.NavigablePoint] {
+        guard let memoryThought = history.reversed().first(where: { $0 is MemoryThought }) as? MemoryThought,
+              let memories = decodeMemories(from: memoryThought.json) else { return [] }
+        return memories.compactMap { navigablePointsByID[$0.pointNumber] }
     }
 
     private func sendDebugLog(modelInput: [ThoughtRepresentable], modelOutput: [ThoughtRepresentable], timestamp: Date, stepNumber: Int) {
