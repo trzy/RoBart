@@ -18,26 +18,12 @@ class SpeechDetector: ObservableObject {
     private let _voiceExtractor = VoiceExtractor()
 
     private var _isListening = false
-    private var _subscription: Cancellable?
 
     init() {
         // Create output buffer to hold detected speech
         _speechBuffer = createSpeechBuffer(format: _outputFormat)
         guard _speechBuffer != nil else {
             fatalError("Unable to allocate speech buffer")
-        }
-
-        // Start listening and subscribe to role changes
-        if Settings.shared.role == .robot {
-            startListening()
-        }
-        _subscription = Settings.shared.$role.sink { [weak self] (role: Role) in
-            guard let self = self else { return }
-            if role == .robot && !_isListening {
-                startListening()
-            } else if role != .robot && _isListening {
-                stopListening()
-            }
         }
     }
 
