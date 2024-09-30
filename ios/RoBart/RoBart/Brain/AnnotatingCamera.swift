@@ -13,6 +13,7 @@ import UIKit
 class AnnotatingCamera {
     private var _imageID = 0
     private var _pointID = 0
+    private var _occupancyMapIndexToID: [Int: Int] = [:]
 
     struct Photo {
         let name: String
@@ -100,8 +101,10 @@ class AnnotatingCamera {
         // Get navigable points
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
-        let possibleNagivablePoints = generateProspectiveNavigablePoints(worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics, occupancy: NavigationController.shared.occupancy)
-        let navigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
+        let ourForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
+        let possibleNagivablePoints = generateProspectiveNavigablePoints(ourPosition: ourPosition, ourForward: ourForward, worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics, occupancy: NavigationController.shared.occupancy)
+        let reachableNavigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
+        let navigablePoints = assignFinalIDs(reachableNavigablePoints)
 
         // Rotate photo and render navigable points as annotations
         guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
@@ -119,32 +122,61 @@ class AnnotatingCamera {
     }
 
     /// Generate a series of potential navigable points on the floor in front of the robot.
+    /// - Parameter ourPosition: Robot current position in world space.
+    /// - Parameter ourForward: Direction robot is facing.
     /// - Parameter worldToCamera: Inverse camera transform matrix (i.e., world to camera-local space).
     /// - Parameter intrinsics: Camera intrinsics. Used with `worldToCamera`to convert world-space
     /// points to image-space annotations.
     /// - Parameter occupancy: Occupancy map, used to locate the cell indices of each point.
-    /// - Returns: Array of prospective navigable points. None are guaranteed to be reachable.
-    private func generateProspectiveNavigablePoints(worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
-        // Generate points on the floor in world space in front of the robot
-        var worldPoints: [Vector3] = []
-        let ourTransform = ARSessionManager.shared.transform
-        let ourPosition = Vector3(x: ourTransform.position.x, y: ARSessionManager.shared.floorY, z: ourTransform.position.z)
-        let forward = -ourTransform.forward.xzProjected.normalized
-        for angle in [ 20.0, 0.0, -20.0 ] {
-            let forward = forward.rotated(by: Float(angle), about: .up)
-            for i in 2...5 {
-                let position = ourPosition + forward * Float(i) * 0.75
-                worldPoints.append(position)
+    /// - Returns: Array of prospective navigable points. None are guaranteed to be reachable. The
+    /// point IDs are based on their corresponding occupancy map cell's linear index. Take care to
+    /// assign final indices before returning them.
+    private func generateProspectiveNavigablePoints(ourPosition: Vector3, ourForward: Vector3, worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
+        // Generate a series of points on the floor, corresponding to occupancy map cells but
+        // can be spaced more coarsely (every Nth cell). Those points that are within a given
+        // angle and distance range of the current forward are used.
+
+        let ourPosition = Vector3(x: ourPosition.x, y: ARSessionManager.shared.floorY, z: ourPosition.z)
+        let ourForward = ourForward.xzProjected.normalized
+
+        var navigablePoints: [NavigablePoint] = []
+
+        let spacing: Float = 0.75
+        let cellSpacing = max(1, Int(spacing / occupancy.cellSide()))
+        let searchRadiusCells = Int(4.0 / occupancy.cellSide())
+        let ourCell = occupancy.positionToCell(ourPosition)
+        let minCellX = ourCell.cellX - searchRadiusCells
+        let maxCellX = ourCell.cellX + searchRadiusCells
+        let minCellZ = ourCell.cellZ - searchRadiusCells
+        let maxCellZ = ourCell.cellZ + searchRadiusCells
+
+        var cellX = minCellX
+        while cellX <= maxCellX {
+            var cellZ = minCellZ
+            while cellZ <= maxCellZ {
+                let cell = OccupancyMap.CellIndices(cellX, cellZ)
+                var worldPoint = occupancy.cellToPosition(cell)
+                worldPoint.y = ARSessionManager.shared.floorY   // need to be on floor to be rendered properly!
+                let toPoint = (worldPoint - ourPosition).normalized
+
+                // Is point in front of robot?
+                if Vector3.dot(toPoint, ourForward) >= 0 {
+                    // Is point within desired angle range on either side?
+                    if Vector3.angle(toPoint, ourForward) <= 25 {
+                        // Is point within desired distance range?
+                        let distance = (worldPoint - ourPosition).xzProjected.magnitude
+                        if /*distance >= (2 * spacing) && */distance <= (5 * spacing) {
+                            // Create navigable point
+                            let id = occupancy.linearIndex(cell)
+                            navigablePoints.append(NavigablePoint(id: id, cell: cell, worldPoint: worldPoint, worldToCamera: worldToCamera, intrinsics: intrinsics))
+                        }
+                    }
+                }
+                cellZ += cellSpacing
             }
+            cellX += cellSpacing
         }
 
-        // Convert to navigable points
-        var navigablePoints: [NavigablePoint] = []
-        for worldPoint in worldPoints {
-            let cell = occupancy.positionToCell(worldPoint)
-            navigablePoints.append(NavigablePoint(id: _pointID, cell: cell, worldPoint: worldPoint, worldToCamera: worldToCamera, intrinsics: intrinsics))
-            _pointID = (_pointID + 1) % 100 // wrap around so numbers don't get too long
-        }
         return navigablePoints
     }
 
@@ -157,6 +189,32 @@ class AnnotatingCamera {
     /// - Returns: Points that are reachable.
     private func excludeUnreachable(_ points: [NavigablePoint], ourPosition: Vector3, occupancy: OccupancyMap) -> [NavigablePoint] {
         return points.filter { occupancy.isLineUnobstructed(ourPosition, $0.worldPoint) }
+    }
+
+    /// Given a set of navigable points with IDs set based on their occupancy map index, remaps
+    /// the IDs to be contiguous and packed. This compresses the range of numbers when performed
+    /// after any sort of filtering. IDs cannot be reused.
+    private func assignFinalIDs(_ points: [NavigablePoint]) -> [NavigablePoint] {
+        var relabeledPoints: [NavigablePoint] = []
+
+        for point in points {
+            var id = 0
+
+            let index = point.id
+            if let existingID = _occupancyMapIndexToID[index] {
+                // This point has already been mapped
+                id = existingID
+            } else {
+                // Haven't seen this one before, assign the next ID to it
+                id = _pointID
+                _pointID += 1
+                _occupancyMapIndexToID[index] = id
+            }
+
+            relabeledPoints.append(NavigablePoint(id: id, cell: point.cell, worldPoint: point.worldPoint, worldToCamera: point.worldToCamera, intrinsics: point.intrinsics))
+        }
+
+        return relabeledPoints
     }
 
     /// Obtains the camera image from the frame and scales it down to be more manageable to
