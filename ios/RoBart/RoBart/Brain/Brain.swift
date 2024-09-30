@@ -85,6 +85,7 @@ class Brain: ObservableObject {
 
         var history: [ThoughtRepresentable] = []
         var navigablePointsByID: [Int: AnnotatingCamera.NavigablePoint] = [:]
+        var pointsTraversed: [Vector3] = [ ARSessionManager.shared.transform.position ]
 
         // Human speaking to RoBart kicks off the process
         let photo = await _camera.takePhoto()
@@ -111,7 +112,7 @@ class Brain: ObservableObject {
                     stop = true
                     break
                 } else if let actions = thought as? ActionsThought {
-                    let observations = await perform(actions, history: history, navigablePointsByID: &navigablePointsByID)
+                    let observations = await perform(actions, history: history, navigablePointsByID: &navigablePointsByID, pointsTraversed: &pointsTraversed)
                     history.append(observations)
                 }
             }
@@ -249,7 +250,7 @@ class Brain: ObservableObject {
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
-    private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable], navigablePointsByID: inout [Int: AnnotatingCamera.NavigablePoint]) async -> ObservationsThought {
+    private func perform(_ actionsThought: ActionsThought, history: [ThoughtRepresentable], navigablePointsByID: inout [Int: AnnotatingCamera.NavigablePoint], pointsTraversed: inout [Vector3]) async -> ObservationsThought {
         setDisplayState(to: .acting)
 
         guard let actions = decodeActions(from: actionsThought.json) else {
@@ -371,6 +372,12 @@ class Brain: ObservableObject {
                 await followPerson(duration: followHuman.seconds, distance: followHuman.distance)
                 resultsDescription.append("Finished following human")
             }
+
+            // Stop moving
+            HoverboardController.shared.send(.drive(leftThrottle: 0, rightThrottle: 0))
+
+            // Record point reached
+            pointsTraversed.append(ARSessionManager.shared.transform.position)
         }
 
         // Log current position and heading to observations
@@ -411,14 +418,19 @@ class Brain: ObservableObject {
         let memorizedPoints = getNavigablePointsFromLastMemory(history: history, navigablePointsByID: navigablePointsByID)
 
         // Render image with memorized points as landmarks and add it to observations
-        if let imageBase64 = renderMap(occupancy: NavigationController.shared.occupancy, ourTransform: ARSessionManager.shared.transform, navigablePoints: memorizedPoints)?.jpegData(compressionQuality: 0.9)?.base64EncodedString() {
+        if let imageBase64 = renderMap(
+            occupancy: NavigationController.shared.occupancy,
+            ourTransform: ARSessionManager.shared.transform,
+            navigablePoints: memorizedPoints,
+            pointsTraversed: pointsTraversed
+        )?.jpegData(compressionQuality: 0.9)?.base64EncodedString() {
             let image = AnnotatingCamera.Photo(name: "Current map", jpegBase64: imageBase64, navigablePoints: [], position: Vector3.zero, headingDegrees: 0)
             photos.append(image)
         }
 
         // Describe which points are currenrtly accessible so RoBart doesn't hallucinate or refer
         // to an old point no longer within view
-        var allowablePointIDs = photos.flatMap({ $0.navigablePoints }).map({ "\($0.id)" })
+        let allowablePointIDs = photos.flatMap({ $0.navigablePoints }).map({ "\($0.id)" })
         if allowablePointIDs.isEmpty {
             resultsDescription.append("NO NAVIGABLE POINTS ARE REACHABLE. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
         } else {

@@ -7,7 +7,7 @@
 
 import UIKit
 
-func renderMap(occupancy map: OccupancyMap, ourTransform: Matrix4x4, navigablePoints: [AnnotatingCamera.NavigablePoint] = []) -> UIImage? {
+func renderMap(occupancy map: OccupancyMap, ourTransform: Matrix4x4, navigablePoints: [AnnotatingCamera.NavigablePoint], pointsTraversed: [Vector3]) -> UIImage? {
     let pixLength = 10
     let navigablePointSideLength = 2 * pixLength
     let imageSize = CGSize(width: map.cellsWide() * pixLength, height: map.cellsDeep() * pixLength)
@@ -31,6 +31,21 @@ func renderMap(occupancy map: OccupancyMap, ourTransform: Matrix4x4, navigablePo
             // Draw the rectangle
             context.fill(rect)
         }
+    }
+
+    // Render the current path we've taken as a series of green lines
+    if pointsTraversed.count >= 2 {
+        let cells = pointsTraversed.map { map.positionToCell($0) }
+        let points = cells.map { CGPoint(x: (CGFloat($0.cellX) + 0.5) * CGFloat(pixLength), y: (CGFloat($0.cellZ) + 0.5) * CGFloat(pixLength)) }    // center of cells
+        context.setStrokeColor(UIColor.green.cgColor)
+        context.setLineWidth(2.0)
+        context.setLineJoin(.round)
+        context.setLineCap(.round)
+        context.move(to: points[0])
+        for i in 1..<points.count {
+            context.addLine(to: points[i])
+        }
+        context.strokePath()
     }
 
     // Render navigable points as numeric annotations
