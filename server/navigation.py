@@ -30,20 +30,20 @@ class MapWindow:
         self._canvas = tk.Canvas(self._root, width=self._map.cellsWide * CELL_SIZE, height=self._map.cellsDeep * CELL_SIZE)
         self._canvas.pack()
 
-        style = ttk.Style()
-        style.configure('TButton', foreground='black', background='lightgray')
-
-        self._refresh_button = ttk.Button(self._root, text="Refresh", command=self._refresh_map, style="TButton")
+        self._refresh_button = tk.Button(self._root, text="Refresh", command=self._refresh_map, fg="black", bg="lightgray")
         self._refresh_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self._clear_button = ttk.Button(self._root, text="Reset Path", command=self._clear_path, style="TButton")
+        self._clear_button = tk.Button(self._root, text="Reset Path", command=self._clear_path, fg="black", bg="lightgray")
         self._clear_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self._360_button = ttk.Button(self._root, text=f"360{DEGREE_SIGN}", command=self._scan_360, style="TButton")
+        self._360_button = tk.Button(self._root, text=f"360{DEGREE_SIGN}", command=self._scan_360, fg="black", bg="lightgray")
         self._360_button.pack(side=tk.LEFT, padx=5, pady=5)
         
-        self._go_button = ttk.Button(self._root, text="Go", command=self._go, style="TButton")
-        self._go_button.pack(side=tk.LEFT, padx=5, pady=5)
+        self._traverse_waypoints_button = tk.Button(self._root, text="Traverse Waypoints", command=self._traverse_waypoints, fg="black", bg="lightgray")
+        self._traverse_waypoints_button.pack(side=tk.LEFT, padx=5, pady=5)
+        
+        self._path_button = tk.Button(self._root, text="Pathfind Waypoints", command=self._traverse_path, fg="black", bg="lightgray")
+        self._path_button.pack(side=tk.LEFT, padx=5, pady=5)
         
         self._canvas.bind("<Button-1>", self._on_click)
 
@@ -76,7 +76,10 @@ class MapWindow:
         if self._root is None:
             return
 
+        # Clear canvas
         self._canvas.delete("all")
+
+        # Render occupied cells
         for z in range(self._map.cellsDeep):
             for x in range(self._map.cellsWide):
                 if self._map.occupancy[z * self._map.cellsWide + x] != 0:
@@ -85,7 +88,26 @@ class MapWindow:
                         (x + 1) * CELL_SIZE, (z + 1) * CELL_SIZE,
                         fill="blue", outline=""
                     )
+
+        # Render path received from iOS
+        for i in range(len(self._map.pathCells) - 1):
+            x1, z1 = self._map.pathCells[i]
+            x2, z2 = self._map.pathCells[i + 1]
+            self._canvas.create_line(
+                x1 * CELL_SIZE + CELL_SIZE // 2,
+                z1 * CELL_SIZE + CELL_SIZE // 2,
+                x2 * CELL_SIZE + CELL_SIZE // 2,
+                z2 * CELL_SIZE + CELL_SIZE // 2,
+                fill="green", width=2
+            )
+        for x, z in self._map.pathCells:
+            self._canvas.create_rectangle(
+                x * CELL_SIZE, z * CELL_SIZE,
+                (x + 1) * CELL_SIZE, (z + 1) * CELL_SIZE,
+                fill="green", outline=""
+            )
         
+        # Render path that we have drawn
         for i in range(len(self._path) - 1):
             x1, z1 = self._path[i]
             x2, z2 = self._path[i + 1]
@@ -96,7 +118,6 @@ class MapWindow:
                 z2 * CELL_SIZE + CELL_SIZE // 2,
                 fill="red", width=2
             )
-        
         for x, z in self._path:
             self._canvas.create_rectangle(
                 x * CELL_SIZE, z * CELL_SIZE,
@@ -133,13 +154,18 @@ class MapWindow:
         self._path = []
         self._draw_map()
     
-    def _go(self):
-        msg = DrivePathMessage(pathCells=[[x, z] for x, z in self._path])
+    def _traverse_waypoints(self):
+        msg = DrivePathMessage(pathCells=[[x, z] for x, z in self._path], pathFinding=False)
         asyncio.ensure_future(self._send_message(msg))
-        print("Sent path")
+        print("Sent waypoints")
+
+    def _traverse_path(self):
+        msg = DrivePathMessage(pathCells=[[x, z] for x, z in self._path], pathFinding=True)
+        asyncio.ensure_future(self._send_message(msg))
+        print("Sent path waypoints")
 
     def _scan_360(self):
-        msg = DrivePathMessage(pathCells=[])
+        msg = DrivePathMessage(pathCells=[], pathFinding=False)
         asyncio.ensure_future(self._send_message(msg))
         print("Sent 360 scan command")
 
