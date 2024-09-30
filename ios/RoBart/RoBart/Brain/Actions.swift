@@ -11,18 +11,16 @@ struct MoveAction: Codable {
     let distance: Float
 }
 
-struct MoveToCellAction: Codable {
-    let cellX: Int
-    let cellY: Int
+struct MoveToAction: Codable {
+    let pointNumber: Int
 }
 
 struct TurnInPlaceAction: Codable {
     let degrees: Float
 }
 
-struct FaceTowardCellAction: Codable {
-    let cellX: Int
-    let cellY: Int
+struct FaceTowardAction: Codable {
+    let pointNumber: Int
 }
 
 struct FaceTowardHeadingAction: Codable {
@@ -42,9 +40,9 @@ struct FollowHumanAction: Codable {
 
 enum Action: Decodable {
     case move(MoveAction)
-    case moveToCell(MoveToCellAction)
+    case moveTo(MoveToAction)
     case turnInPlace(TurnInPlaceAction)
-    case faceTowardCell(FaceTowardCellAction)
+    case faceToward(FaceTowardAction)
     case faceTowardHeading(FaceTowardHeadingAction)
     case scan360(Scan360Action)
     case takePhoto(TakePhotoAction)
@@ -56,9 +54,9 @@ enum Action: Decodable {
 
     private enum ObjectType: String, Codable {
         case move = "move"
-        case moveToCell = "moveToCell"
+        case moveTo = "moveTo"
         case turnInPlace = "turnInPlace"
-        case faceTowardCell = "faceTowardCell"
+        case faceToward = "faceToward"
         case faceTowardHeading = "faceTowardHeading"
         case scan360 = "scan360"
         case takePhoto = "takePhoto"
@@ -74,15 +72,15 @@ enum Action: Decodable {
         case .move:
             let action = try MoveAction(from: decoder)
             self = .move(action)
-        case .moveToCell:
-            let action = try MoveToCellAction(from: decoder)
-            self = .moveToCell(action)
+        case .moveTo:
+            let action = try MoveToAction(from: decoder)
+            self = .moveTo(action)
         case .turnInPlace:
             let action = try TurnInPlaceAction(from: decoder)
             self = .turnInPlace(action)
-        case .faceTowardCell:
-            let action = try FaceTowardCellAction(from: decoder)
-            self = .faceTowardCell(action)
+        case .faceToward:
+            let action = try FaceTowardAction(from: decoder)
+            self = .faceToward(action)
         case .faceTowardHeading:
             let action = try FaceTowardHeadingAction(from: decoder)
             self = .faceTowardHeading(action)
