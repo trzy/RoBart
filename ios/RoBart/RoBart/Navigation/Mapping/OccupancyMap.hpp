@@ -144,6 +144,18 @@ public:
         return _centerPoint;
     }
 
+    inline size_t linearIndex(CellIndices cell) const
+    {
+        return linearIndex(cell.cellX, cell.cellZ);
+    }
+
+    inline size_t linearIndex(size_t cellX, size_t cellZ) const
+    {
+        cellX = std::min(cellX, _cellsWide - 1);
+        cellZ = std::min(cellZ, _cellsDeep - 1);
+        return cellZ * _cellsDeep + cellX;
+    }
+
     struct CellHash
     {
         std::size_t operator()(const CellIndices &key) const
@@ -164,18 +176,6 @@ public:
     };
 
 private:
-    inline size_t linearIndex(CellIndices cell) const
-    {
-        return linearIndex(cell.cellX, cell.cellZ);
-    }
-
-    inline size_t linearIndex(size_t cellX, size_t cellZ) const
-    {
-        cellX = std::min(cellX, _cellsWide - 1);
-        cellZ = std::min(cellZ, _cellsDeep - 1);
-        return cellZ * _cellsDeep + cellX;
-    }
-
     CellIndices centerCell() const;
     size_t centerIndex() const;
 
