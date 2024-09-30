@@ -210,7 +210,8 @@ class Client: ObservableObject {
                 cellsWide: NavigationController.shared.occupancy.cellsWide(),
                 cellsDeep: NavigationController.shared.occupancy.cellsDeep(),
                 occupancy: NavigationController.shared.getOccupancyArray(),
-                robotCell: [ ourCell.cellX, ourCell.cellZ ]
+                robotCell: [ ourCell.cellX, ourCell.cellZ ],
+                pathCells: []
             )
             connection.send(responseMsg)
 
@@ -225,7 +226,38 @@ class Client: ObservableObject {
                 // No path, just look around in place
                 NavigationController.shared.run(.scan360)
             } else {
-                NavigationController.shared.run(.follow(path: path))
+                if !msg.pathFinding {
+                    NavigationController.shared.run(.follow(path: path))
+                } else {
+                    // Perform pathfinding between waypoints
+                    var computedPath: [Vector3] = []
+                    let robotRadius = 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
+                    var from = ARSessionManager.shared.transform.position
+                    for to in path {
+                        let pathCells = findPath(NavigationController.shared.occupancy, from, to, robotRadius)
+                        let positions = pathCells.map { NavigationController.shared.occupancy.cellToPosition($0) }
+                        computedPath += positions
+                        from = to
+                    }
+
+                    // Send back occupancy map 
+                    let ourPosition = ARSessionManager.shared.transform.position
+                    let ourCell = NavigationController.shared.occupancy.positionToCell(ourPosition)
+                    let responseMsg = OccupancyMapMessage(
+                        cellsWide: NavigationController.shared.occupancy.cellsWide(),
+                        cellsDeep: NavigationController.shared.occupancy.cellsDeep(),
+                        occupancy: NavigationController.shared.getOccupancyArray(),
+                        robotCell: [ ourCell.cellX, ourCell.cellZ ],
+                        pathCells: computedPath.map { (position: Vector3) in
+                            let cell = NavigationController.shared.occupancy.positionToCell(position)
+                            return [ cell.cellX, cell.cellZ ]
+                        }
+                    )
+                    send(responseMsg)
+
+                    // Traverse
+                    NavigationController.shared.run(.follow(path: computedPath))
+                }
             }
 
         case RequestAnnotatedViewMessage.id:

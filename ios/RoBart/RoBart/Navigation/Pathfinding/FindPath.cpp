@@ -165,7 +165,10 @@ foundCompletePath:
             if (!dirWillChange)
             {
                 // This current step will not change the direction, so remove last one
-                path.pop_back();
+                if (path.size() > 1)
+                {
+                    path.pop_back();
+                }
             }
             else
             {
