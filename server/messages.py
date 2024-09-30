@@ -73,10 +73,12 @@ class OccupancyMapMessage(BaseModel):
     cellsWide: int
     cellsDeep: int
     occupancy: List[float]
-    robotCell: List[int]    # 2 elements: cellX, cellZ
+    robotCell: List[int]        # 2 elements: cellX, cellZ
+    pathCells: List[List[int]]  # list of [cellX, cellZ]
 
 class DrivePathMessage(BaseModel):
     pathCells: List[List[int]]  # list of [cellX, cellZ]
+    pathFinding: bool
 
 class RequestAnnotatedViewMessage(BaseModel):
     unused: bool = False
