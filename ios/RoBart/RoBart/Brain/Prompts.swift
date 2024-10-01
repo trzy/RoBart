@@ -84,6 +84,8 @@ RoBart responds to human input with the following tags:
 
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with navigable point annotations.
 
+        backOut: When stuck, this will try to back out to a known good position. It is important to check whether this worked and attempt other strategies if it fails.
+
         followHuman: Follow the humnan for a specified time, distance, or indefinitely. ONLY IF HUMAN EXPLICITLY REQUESTS TO BE FOLLOWED.
             Parameters:
                 seconds: How many seconds to follow for. Optional.
