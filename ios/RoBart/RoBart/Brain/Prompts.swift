@@ -4,6 +4,15 @@
 //
 //  Created by Bart Trzynadlowski on 9/17/24.
 //
+//  Notes
+//  -----
+//  - RoBart often misses things because upon arrival at a destination (moveTo), is pointing in
+//    the wrong direction.
+//  - We should probably store all photos for points that are navigable at any given point! This
+//    could help RoBart in situations where he is stuck for prolonged periods and the history of
+//    photos ends up getting wiped out.
+//  - During turn correction, we should probably take photos and just stop turning, don't try to reverse turn.
+//
 
 enum Prompts {
     static let system = """
@@ -64,7 +73,7 @@ RoBart responds to human input with the following tags:
             Parameters:
                 distance: Distance in meters to move forward (positive) or backwards (negative).
 
-        moveTo: Moves in a straight line to a specific navigable point from the photos in the most recent <OBSERVATIONS> block. Use with caution, ensure point is recently visible and no floor obstructions or nearby furniture exist.
+        moveTo: Moves in a straight line to a specific navigable point from the photos in the most recent <OBSERVATIONS> block. Use with caution, ensure point is recently visible and no floor obstructions or nearby furniture exist. RoBart's orientation may be unpredictable so if a photo is needed at the destination, it is a good idea to scan around after arrival.
             Parameters:
                 pointNumber: Integer number of the navigable point to move to.
 
