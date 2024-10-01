@@ -102,6 +102,7 @@ class Brain: ObservableObject {
             history += response
 
             if Task.isCancelled {
+                log("Task cancelled!")
                 break
             }
 
@@ -205,7 +206,7 @@ class Brain: ObservableObject {
         let numPlansToKeep = 2                  // ... plans
         let numMemoriesToKeep = 1               // ... memories
         let numIntermediateResponsesToKeep = 0  // ... intermediate responses
-        let numThoughtsWithPhotosToKeep = 1     // how many thoughts with photos to keep (only photos are dropped, not thoughts)
+        let numThoughtsWithPhotosToKeep = 3     // how many thoughts with photos to keep (only photos are dropped, not thoughts)
 
         var prunedHistory = history
 
