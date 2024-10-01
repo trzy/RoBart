@@ -80,7 +80,7 @@ RoBart responds to human input with the following tags:
             Parameters:
                 headingDegrees: Absolute compass heading to face in degrees.
 
-        scan360: Scan all the way around. Multiple photos will be taken and available in the next <OBSERVATIONS> block with navigable point annotations.
+        scan360: Turns 360 degreesd and takes photos from all angles, available in the next <OBSERVATIONS> block with navigable point annotations. Useful for analyzing surroundings.
 
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with navigable point annotations.
 
