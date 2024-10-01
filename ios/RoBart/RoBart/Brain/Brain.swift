@@ -367,6 +367,14 @@ class Brain: ObservableObject {
                     resultsDescription.append("Camera malfunctioned. No photo.")
                 }
 
+            case .backOut:
+                let successful = await backOutManeuver(pointsTraversed: &pointsTraversed)
+                if successful {
+                    resultsDescription.append("Back out manuever succeeded")
+                } else {
+                    resultsDescription.append("Back out maneuver failed")
+                }
+
             case .followHuman(let followHuman):
                 log("Following...")
                 await followPerson(duration: followHuman.seconds, distance: followHuman.distance)
@@ -515,6 +523,45 @@ class Brain: ObservableObject {
             return false
         }
         return true
+    }
+
+    private func backOutManeuver(pointsTraversed: inout [Vector3]) async -> Bool {
+        // Moving backwards, find some point at least one cell away
+        let startPosition = ARSessionManager.shared.transform.position
+        var endIdx = -1
+        for i in stride(from: pointsTraversed.count - 1, to: -1, by: -1) {
+            if (startPosition - pointsTraversed[i]).magnitude >= NavigationController.cellSide {
+                endIdx = i
+                break
+            }
+        }
+
+        if endIdx <= 0 {
+            // Nowhere to move, failed
+            return false
+        }
+
+        // Attempt to follow path facing *backwards* to minimize turning
+        for i in stride(from: pointsTraversed.count - 1, to: endIdx - 1, by: -1) {
+            // Face away from waypoint
+            let awayFromWaypoint = (ARSessionManager.shared.transform.position - pointsTraversed[i]).xzProjected
+            HoverboardController.shared.send(.face(forward: awayFromWaypoint))
+            try? await Task.sleep(timeout: .seconds(2), while: { HoverboardController.shared.isMoving })
+
+            // Move backwards to waypoint
+            HoverboardController.shared.send(.driveToFacing(position: pointsTraversed[i], forward: awayFromWaypoint))
+            try? await Task.sleep(timeout: .seconds(10), while: { HoverboardController.shared.isMoving })
+        }
+
+        // Consider it a success if we moved at least half the net distance to the goal
+        let desiredDistance = (startPosition - pointsTraversed[endIdx]).xzProjected.magnitude
+        let actualDistance = (startPosition - ARSessionManager.shared.transform.position).xzProjected.magnitude
+        if actualDistance >= (0.5 * desiredDistance) {
+            // May be unstuck, remove the indices we traversed back along
+            pointsTraversed.removeLast(pointsTraversed.count - endIdx)
+            return true
+        }
+        return false
     }
 
     private func getNavigablePointsFromLastMemory(history: [ThoughtRepresentable], navigablePointsByID: [Int: AnnotatingCamera.NavigablePoint]) -> [AnnotatingCamera.NavigablePoint] {
