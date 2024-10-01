@@ -36,7 +36,7 @@ class Brain: ObservableObject {
 
     private let _anthropic = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
-    private let _maxTokens = 1024
+    private let _maxTokens = 2048
 
     private var _task: Task<Void, Never>?
 
