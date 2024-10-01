@@ -11,9 +11,10 @@ import ARKit
 import UIKit
 
 class AnnotatingCamera {
-    private var _imageID = 0
-    private var _pointID = 0
-    private var _occupancyMapIndexToID: [Int: Int] = [:]
+    enum Annotation {
+        case navigablePoints
+        case headingAndDistanceGuides
+    }
 
     struct Photo {
         let name: String
@@ -85,8 +86,12 @@ class AnnotatingCamera {
         }
     }
 
+    private var _imageID = 0
+    private var _pointID = 0
+    private var _occupancyMapIndexToID: [Int: Int] = [:]
+
     @MainActor
-    func takePhoto() async -> Photo? {
+    func takePhoto(with annotation: Annotation = .navigablePoints) async -> Photo? {
         // Update occupancy
         _ = await NavigationController.shared.updateOccupancy()
 
@@ -98,32 +103,71 @@ class AnnotatingCamera {
         }
         let worldToCamera = frame.camera.transform.inverse
 
-        // Get navigable points
+        // Return annotated photo
+        return annotate(cameraImage: cameraImage, with: annotation, worldToCamera: worldToCamera)
+    }
+
+    private func annotate(cameraImage: (image: UIImage, intrinsics: Matrix3x3), with annotation: Annotation, worldToCamera: Matrix4x4) -> Photo? {
+        // Photo needs to be rotated 90 degrees from landscale to portrait
+        guard let rotatedPhoto = cameraImage.image.rotatedClockwise90() else { return nil }
+
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
         let ourForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
-        let possibleNagivablePoints = generateProspectiveNavigablePoints(ourPosition: ourPosition, ourForward: ourForward, worldToCamera: worldToCamera, intrinsics: cameraImage.intrinsics, occupancy: NavigationController.shared.occupancy)
-        let reachableNavigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
-        let navigablePoints = assignFinalIDs(reachableNavigablePoints)
 
-        // Rotate photo and render navigable points as annotations
-        guard let rotatedPhoto = cameraImage.image.rotatedClockwise90(),
-              let annotatedPhoto = annotatePointNumbers(image: rotatedPhoto, with: navigablePoints, rotated: true) else {
-            return nil
+        switch annotation {
+        case .navigablePoints:
+            // Get navigable points
+            let possibleNagivablePoints = generateProspectiveNavigablePoints(
+                ourPosition: ourPosition,
+                ourForward: ourForward,
+                floorY: ARSessionManager.shared.floorY,
+                worldToCamera: worldToCamera,
+                intrinsics: cameraImage.intrinsics,
+                occupancy: NavigationController.shared.occupancy
+            )
+            let reachableNavigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
+            let navigablePoints = assignFinalIDs(reachableNavigablePoints)
+
+            // Annotate image
+            guard let annotatedPhoto = annotatePointNumbers(image: rotatedPhoto, with: navigablePoints, rotated: true) else { return nil }
+
+            // Get JPEG
+            guard let jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
+
+            // Produce uniquely named photo object
+            let name = "photo\(_imageID)"
+            _imageID += 1
+            return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints, position: ourPosition, headingDegrees: ourHeading)
+
+        case .headingAndDistanceGuides:
+            let equidistantCurveByDistance = generateEquidistantCurves(
+                ourPosition: ourPosition,
+                ourForward: ourForward,
+                floorY: ARSessionManager.shared.floorY,
+                worldToCamera: worldToCamera,
+                intrinsics: cameraImage.intrinsics
+            )
+            let lineByDistance = generateRadialHeadingLines(
+                ourPosition: ourPosition,
+                ourHeading: ourHeading,
+                floorY: ARSessionManager.shared.floorY,
+                worldToCamera: worldToCamera,
+                intrinsics: cameraImage.intrinsics
+            )
+            guard let distanceAnnotatedPhoto = annotateEquidistantCurves(image: rotatedPhoto, with: equidistantCurveByDistance, rotated: true) else { return nil }
+            guard let headingAnnotatedPhoto = annotateRadialHeadingLines(image: distanceAnnotatedPhoto, with: lineByDistance, rotated: true) else { return nil }
+            guard let jpegBase64 = headingAnnotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
+            let name = "photo\(_imageID)"
+            _imageID += 1
+            return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: [], position: ourPosition, headingDegrees: ourHeading)
         }
-
-        // Get JPEG
-        guard let jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
-
-        // Return all data
-        let name = "photo\(_imageID)"
-        _imageID += 1
-        return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints, position: ourPosition, headingDegrees: ourHeading)
     }
 
     /// Generate a series of potential navigable points on the floor in front of the robot.
     /// - Parameter ourPosition: Robot current position in world space.
     /// - Parameter ourForward: Direction robot is facing.
+    /// - Parameter floorY: Floor Y coordinate in world space. Navigable points placed on floor.
     /// - Parameter worldToCamera: Inverse camera transform matrix (i.e., world to camera-local space).
     /// - Parameter intrinsics: Camera intrinsics. Used with `worldToCamera`to convert world-space
     /// points to image-space annotations.
@@ -131,12 +175,12 @@ class AnnotatingCamera {
     /// - Returns: Array of prospective navigable points. None are guaranteed to be reachable. The
     /// point IDs are based on their corresponding occupancy map cell's linear index. Take care to
     /// assign final indices before returning them.
-    private func generateProspectiveNavigablePoints(ourPosition: Vector3, ourForward: Vector3, worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
+    private func generateProspectiveNavigablePoints(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
         // Generate a series of points on the floor, corresponding to occupancy map cells but
         // can be spaced more coarsely (every Nth cell). Those points that are within a given
         // angle and distance range of the current forward are used.
 
-        let ourPosition = Vector3(x: ourPosition.x, y: ARSessionManager.shared.floorY, z: ourPosition.z)
+        let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
         let ourForward = ourForward.xzProjected.normalized
 
         var navigablePoints: [NavigablePoint] = []
@@ -156,7 +200,7 @@ class AnnotatingCamera {
             while cellZ <= maxCellZ {
                 let cell = OccupancyMap.CellIndices(cellX, cellZ)
                 var worldPoint = occupancy.cellToPosition(cell)
-                worldPoint.y = ARSessionManager.shared.floorY   // need to be on floor to be rendered properly!
+                worldPoint.y = floorY   // need to be on floor to be rendered properly!
                 let toPoint = (worldPoint - ourPosition).normalized
 
                 // Is point in front of robot?
@@ -215,6 +259,82 @@ class AnnotatingCamera {
         }
 
         return relabeledPoints
+    }
+
+    private func generateEquidistantCurves(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
+        // Generate the world points to form an equidistant curve in front of the camera
+        let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
+        var worldPointsByDistance: [Float: [Vector3]] = [:]
+        for distance in Array<Float>([ 0.75, 1.00, 1.50, 2.25, 3.25 ]) {
+            let halfAngle: Float = 40
+            let numSteps: Float = 300
+            worldPointsByDistance[distance] = []
+            for degrees in stride(from: -halfAngle, to: halfAngle, by: 2 * halfAngle / numSteps) {
+                let forward = ourForward.rotated(by: degrees, about: .up)
+                let worldPoint = ourPosition + forward * distance
+                var worldPoints = worldPointsByDistance[distance]!
+                worldPoints.append(worldPoint)
+                worldPointsByDistance[distance] = worldPoints
+            }
+        }
+
+        // Convert to CGPoints in image space
+        var curveByDistance: [Float: [CGPoint]] = [:]
+        for (distance, worldPoints) in worldPointsByDistance {
+            let imagePoints = worldPoints.map { (worldPoint: Vector3) in
+                // To view space
+                var cameraPoint = worldToCamera.transformPoint(worldPoint)
+                cameraPoint.y *= -1
+                cameraPoint.z *= -1
+
+                // Project onto the 2D frame where the origin is in the upper-left and +y is down
+                let homogeneous = Vector3(x: cameraPoint.x / cameraPoint.z, y: cameraPoint.y / cameraPoint.z, z: 1)
+                let projected = intrinsics * homogeneous
+                return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
+            }
+            curveByDistance[distance] = imagePoints
+        }
+
+        return curveByDistance
+    }
+
+    private func generateRadialHeadingLines(ourPosition: Vector3, ourHeading: Float, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
+        // Generate world points radiating outwards along different headings
+        let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
+        var worldPointsByHeading: [Float: [Vector3]] = [:]
+        for deltaDegrees in Array<Float>([ -20, -10, 0, 10, 20 ]) {
+            // Compute absolute heading and constrain it to [0,360)
+            let headingDegrees = (ourHeading + deltaDegrees) >= 0 ? ((ourHeading + deltaDegrees).truncatingRemainder(dividingBy: 360)) : ((ourHeading + deltaDegrees) + 360)
+            let forward = ARSessionManager.shared.direction(fromDegrees: headingDegrees)
+
+            // Generate points in world space along the heading
+            let maxDistance: Float = 3.25
+            let numSteps: Float = 50
+            var worldPoints: [Vector3] = []
+            for distance in stride(from: 0, to: maxDistance, by: maxDistance / numSteps) {
+                worldPoints.append(ourPosition + forward * distance)
+            }
+            worldPointsByHeading[headingDegrees] = worldPoints
+        }
+
+        // Convert to CGPoints in image space
+        var lineByHeading: [Float: [CGPoint]] = [:]
+        for (headingDegrees, worldPoints) in worldPointsByHeading {
+            let imagePoints = worldPoints.map { (worldPoint: Vector3) in
+                // To view space
+                var cameraPoint = worldToCamera.transformPoint(worldPoint)
+                cameraPoint.y *= -1
+                cameraPoint.z *= -1
+
+                // Project onto the 2D frame where the origin is in the upper-left and +y is down
+                let homogeneous = Vector3(x: cameraPoint.x / cameraPoint.z, y: cameraPoint.y / cameraPoint.z, z: 1)
+                let projected = intrinsics * homogeneous
+                return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
+            }
+            lineByHeading[headingDegrees] = imagePoints
+        }
+
+        return lineByHeading
     }
 
     /// Obtains the camera image from the frame and scales it down to be more manageable to
@@ -338,6 +458,160 @@ class AnnotatingCamera {
             let textX = squareRect.midX - textSize.width / 2
             let textY = squareRect.midY - textSize.height / 2
             let textRect = CGRect(x: textX, y: textY, width: textSize.width, height: textSize.height)
+            text.draw(in: textRect, withAttributes: textAttributes)
+        }
+
+        // Return new image
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+
+    private func annotateEquidistantCurves(image: UIImage, with equidistantCurveByDistance: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
+        let sideLength = CGFloat(32)
+
+        // Get the image size
+        let imageSize = image.size
+        let scale = image.scale
+
+        // Draw original image
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        image.draw(in: CGRect(origin: .zero, size: imageSize))
+
+        // Draw curves and label them with distance
+        for (distance, curve) in equidistantCurveByDistance {
+            // Draw the curve
+            context.setStrokeColor(UIColor.white.cgColor)
+            context.setLineWidth(2.0)
+            context.setLineJoin(.round)
+            context.setLineCap(.round)
+            var moved = false
+            var points: [CGPoint] = []
+            for imagePoint in curve {
+                // Get (x,y) and adjust for rotation if need be
+                let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
+                let y = rotated ? imagePoint.x : imagePoint.y
+                let point = CGPoint(x: x, y: y)
+
+                // Line
+                if !moved {
+                    context.move(to: point)
+                    moved = true
+                } else {
+                    context.addLine(to: point)
+                }
+
+                // Retain points that are visible
+                if point.x >= 0 && point.x < imageSize.width && point.y >= 0 && point.y < imageSize.height {
+                    points.append(point)
+                }
+            }
+            context.strokePath()
+
+            // If no points (e.g., camera pointed too far up off the floor to capture the curve),
+            // skip
+            if points.isEmpty {
+                continue
+            }
+
+            // Sort points left to right in image space
+            points = points.sorted(by: { $0.x < $1.x })
+
+            // Compute the text size
+            let text = String(format: "%1.2f m", distance)
+            let textAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: sideLength / 2, weight: .bold),
+                .foregroundColor: UIColor.white
+            ]
+            let textSize = text.size(withAttributes: textAttributes)
+
+            // Draw the background square
+            let x = points[0].x
+            let y = points[0].y
+            context.setFillColor(UIColor.black.cgColor)
+            let backgroundRect = CGRect(x: x, y: y, width: textSize.width, height: textSize.height)
+            context.fill(backgroundRect)
+
+            // Print distance
+            let textRect = CGRect(x: x, y: y, width: textSize.width, height: textSize.height)
+            text.draw(in: textRect, withAttributes: textAttributes)
+        }
+
+        // Return new image
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+
+    private func annotateRadialHeadingLines(image: UIImage, with lineByHeading: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
+        let sideLength = CGFloat(26)
+
+        // Get the image size
+        let imageSize = image.size
+        let scale = image.scale
+
+        // Draw original image
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        image.draw(in: CGRect(origin: .zero, size: imageSize))
+
+        // Draw curves and label them with distance
+        for (headingDegrees, linePoints) in lineByHeading {
+            // Draw the line
+            context.setStrokeColor(UIColor.magenta.cgColor)
+            context.setLineWidth(2.0)
+            context.setLineJoin(.round)
+            context.setLineCap(.round)
+            var moved = false
+            var points: [CGPoint] = []
+            for imagePoint in linePoints {
+                // Get (x,y) and adjust for rotation if need be
+                let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
+                let y = rotated ? imagePoint.x : imagePoint.y
+                let point = CGPoint(x: x, y: y)
+
+                // Line
+                if !moved {
+                    context.move(to: point)
+                    moved = true
+                } else {
+                    context.addLine(to: point)
+                }
+
+                // Retain points that are visible
+                if point.x >= 0 && point.x < imageSize.width && point.y >= 0 && point.y < imageSize.height {
+                    points.append(point)
+                }
+            }
+            context.strokePath()
+
+            // If no points (e.g., camera pointed too far up off the floor to capture the curve),
+            // skip
+            if points.isEmpty {
+                continue
+            }
+
+            // Sort points bottom to top in image space
+            points = points.sorted(by: { $0.y > $1.y })
+
+            // Compute the text size
+            let text = String(format: "%1.0f deg", headingDegrees)
+            let textAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: sideLength / 2, weight: .bold),
+                .foregroundColor: UIColor.magenta
+            ]
+            let textSize = text.size(withAttributes: textAttributes)
+
+            // Draw the background square centered on the bottom of the line
+            let x = points[0].x
+            let y = points[0].y
+            context.setFillColor(UIColor.black.cgColor)
+            let backgroundRect = CGRect(x: x - textSize.width / 2, y: y - textSize.height, width: textSize.width, height: textSize.height)
+            context.fill(backgroundRect)
+
+            // Print degree marker
+            let textRect = CGRect(x: x - textSize.width / 2, y: y - textSize.height, width: textSize.width, height: textSize.height)
             text.draw(in: textRect, withAttributes: textAttributes)
         }
 
