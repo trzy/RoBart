@@ -76,10 +76,6 @@ RoBart responds to human input with the following tags:
             Parameters:
                 pointNumber: Integer number of the navigable point to face.
 
-        faceTowardHeading: Turn to face a specific absolute compass heading.
-            Parameters:
-                headingDegrees: Absolute compass heading to face in degrees.
-
         scan360: Turns 360 degreesd and takes photos from all angles, available in the next <OBSERVATIONS> block with navigable point annotations. Useful for analyzing surroundings.
 
         takePhoto: Takes a photo and deposits it into memory. Multiple takePhoto objects may appear in a single <ACTIONS> block and all photos will be available in the next <OBSERVATIONS> block with navigable point annotations.
