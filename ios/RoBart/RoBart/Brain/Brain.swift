@@ -32,6 +32,7 @@ class Brain: ObservableObject {
     private var _subscriptions: Set<AnyCancellable> = []
 
     private let _camera = AnnotatingCamera()
+    private let _annotationStyle: AnnotatingCamera.Annotation = .navigablePoints
 
     private let _anthropic = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
@@ -88,7 +89,7 @@ class Brain: ObservableObject {
         var pointsTraversed: [Vector3] = [ ARSessionManager.shared.transform.position ]
 
         // Human speaking to RoBart kicks off the process
-        let photo = await _camera.takePhoto()
+        let photo = await _camera.takePhoto(with: _annotationStyle)
         let input = HumanInputThought(spokenWords: humanInput, photo: photo)    //TODO: should we move photo into initial observation? "Human spoke. Photo captured."
         history.append(input)
 
@@ -360,7 +361,7 @@ class Brain: ObservableObject {
                 resultsDescription.append("Completed scan")
 
             case .takePhoto:
-                if let photo = await _camera.takePhoto() {
+                if let photo = await _camera.takePhoto(with: _annotationStyle) {
                     resultsDescription.append("Took photo \(photo.name)")
                     photos.append(photo)
                 } else {
@@ -398,7 +399,7 @@ class Brain: ObservableObject {
 
         // Find photo that corresponds most closely to our current view, if any
         var haveCurrentView = false
-        let ourForward = -ARSessionManager.shared.transform.forward
+        let ourForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
 
         for photo in photos {
             if let headingDegrees = photo.headingDegrees {
@@ -407,6 +408,7 @@ class Brain: ObservableObject {
                 if delta < 20 {
                     resultsDescription.append("CURRENT VIEW IS: \(photo.name)")
                     haveCurrentView = true
+                    break
                 }
             }
         }
@@ -432,17 +434,19 @@ class Brain: ObservableObject {
             navigablePoints: memorizedPoints,
             pointsTraversed: pointsTraversed
         )?.jpegData(compressionQuality: 0.9)?.base64EncodedString() {
-            let image = AnnotatingCamera.Photo(name: "Current map", jpegBase64: imageBase64, navigablePoints: [], position: Vector3.zero, headingDegrees: 0)
+            let image = AnnotatingCamera.Photo(name: "Current map", jpegBase64: imageBase64, navigablePoints: [], position: nil, headingDegrees: nil)
             photos.append(image)
         }
 
         // Describe which points are currenrtly accessible so RoBart doesn't hallucinate or refer
         // to an old point no longer within view
-        let allowablePointIDs = photos.flatMap({ $0.navigablePoints }).map({ "\($0.id)" })
-        if allowablePointIDs.isEmpty {
-            resultsDescription.append("NO NAVIGABLE POINTS ARE REACHABLE. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
-        } else {
-            resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
+        if _annotationStyle == .navigablePoints {
+            let allowablePointIDs = photos.flatMap({ $0.navigablePoints }).map({ "\($0.id)" })
+            if allowablePointIDs.isEmpty {
+                resultsDescription.append("NO NAVIGABLE POINTS ARE REACHABLE. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
+            } else {
+                resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
+            }
         }
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), photos: photos)
@@ -467,7 +471,7 @@ class Brain: ObservableObject {
                 wasSuccessful = false
                 break
             }
-            if let photo = await _camera.takePhoto() {
+            if let photo = await _camera.takePhoto(with: _annotationStyle) {
                 photos.append(photo)
             }
             numPointsSucceeded += 1
@@ -484,7 +488,7 @@ class Brain: ObservableObject {
                 guard succeeded else {
                     break
                 }
-                if let photo = await _camera.takePhoto() {
+                if let photo = await _camera.takePhoto(with: _annotationStyle) {
                     photos.append(photo)
                 }
             }
