@@ -261,6 +261,16 @@ class AnnotatingCamera {
         return relabeledPoints
     }
 
+    /// Generates a series of curves for different distances. Each image-space point along a curve
+    /// is the same distance from the current position.
+    /// - Parameter ourPosition: Robot current position in world space.
+    /// - Parameter ourForward: Direction robot is facing.
+    /// - Parameter floorY: Floor Y value of robot. All curves are rendered at floor level.
+    /// - Parameter worldToCamera:Inverse camera transform matrix (i.e., world to camera-local space).
+    /// - Parameter intrinsics:Camera intrinsics. Used with `worldToCamera`to convert world-space
+    /// points to image-space annotations.
+    /// - Returns: Dictionary where the keys are distance (meters) and the values are image-space
+    /// points at that distance.
     private func generateEquidistantCurves(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
         // Generate the world points to form an equidistant curve in front of the camera
         let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
@@ -298,6 +308,16 @@ class AnnotatingCamera {
         return curveByDistance
     }
 
+    /// Generates a series of lines at different absolute headings, represented as points in image
+    /// space.
+    /// - Parameter ourPosition: Robot current position in world space.
+    /// - Parameter ourHeading: Absolute heading (degrees) that the robot is facing.
+    /// - Parameter floorY: Floor Y value of robot. All curves are rendered at floor level.
+    /// - Parameter worldToCamera:Inverse camera transform matrix (i.e., world to camera-local space).
+    /// - Parameter intrinsics:Camera intrinsics. Used with `worldToCamera`to convert world-space
+    /// points to image-space annotations.
+    /// - Returns: Dictionary where the keys are heading (degrees) and the values are image-space
+    /// points creating a line along that direction.
     private func generateRadialHeadingLines(ourPosition: Vector3, ourHeading: Float, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
         // Generate world points radiating outwards along different headings
         let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
@@ -467,6 +487,15 @@ class AnnotatingCamera {
         return newImage
     }
 
+    /// Renders equidistant curve annotations on the image (curves whose points are all the same
+    /// distance from the position the photo was taken at). Necessary adjustments are made if the
+    /// image has been rotated into a portrait orientation. Distance labels are rendered.
+    /// - Parameter image: The image to annotate.
+    /// - Parameter with: Curves to draw. A dictionary with the key being distance and the value
+    /// being an array of points in image space.
+    /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
+    /// the points are specified. The points will be adjusted accordingly.
+    /// - Returns: New image with annotations or `nil` if anything went wrong.
     private func annotateEquidistantCurves(image: UIImage, with equidistantCurveByDistance: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(32)
 
@@ -544,6 +573,14 @@ class AnnotatingCamera {
         return newImage
     }
 
+    /// Renders radial heading lines on the image. Necessary adjustments are made if the image has
+    /// been rotated into a portrait orientation. Each line is labeled by the degrees.
+    /// - Parameter image: The image to annotate.
+    /// - Parameter with: Lines to draw. A dictionary with the key being heading (degrees) and the
+    /// value being an array of points in image space.
+    /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
+    /// the points are specified. The points will be adjusted accordingly.
+    /// - Returns: New image with annotations or `nil` if anything went wrong.
     private func annotateRadialHeadingLines(image: UIImage, with lineByHeading: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(26)
 
