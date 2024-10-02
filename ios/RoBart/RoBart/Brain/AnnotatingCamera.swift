@@ -17,22 +17,146 @@ class AnnotatingCamera {
     }
 
     struct Photo {
+        /// A unique photo identifier.
         let name: String
+
+        /// Original image, without any annotations.
+        let originalImage: UIImage
+
+        /// JPEG data, with annotations if applicable. This is the image that should be sent to AI.
         let jpegBase64: String
+
         let navigablePoints: [NavigablePoint]
+        let worldToCamera: Matrix4x4?
+        let intrinsics: Matrix3x3?
         let position: Vector3?
+        let forward: Vector3?
         let headingDegrees: Float?
+
+        func findNavigablePoint(id: Int) -> NavigablePoint? {
+            return navigablePoints.first(where: { $0.id == id })
+        }
+
+        /// Creates a `Photo` object without any annotations that does not correspond to a camera
+        /// image.
+        /// - Parameter name: A name for the photo.
+        /// - Parameter originalImage; The image.
+        /// - Returns: `Photo` object if successful else `nil`.
+        static func createWithoutAnnotations(name: String, originalImage: UIImage) -> Photo? {
+            guard let jpegBase64 = originalImage.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
+            return Photo(
+                name: name,
+                originalImage: originalImage,
+                jpegBase64: jpegBase64,
+                navigablePoints: [],
+                worldToCamera: nil,
+                intrinsics: nil,
+                position: nil,
+                forward: nil,
+                headingDegrees: nil
+            )
+        }
+
+        /// Creates a `Photo` object annotated with navigable points.
+        /// - Parameter name: A name for the photo (e.g. "photo001").
+        /// - Parameter originalImage: The original image before annotation. For camera photos,
+        /// this should be in portrait mode (rotated clockwise 90 degrees from the original camera
+        /// image).
+        /// - Parameter navigablePoints: Navigable points present in this image.
+        /// - Parameter worldToCamera: Matrix transforming world-space points to camera-space
+        /// for this image.
+        /// - Parameter intrinsics: Camera intrinsic parameters, appropriately scaled for image
+        /// resolution.
+        /// - Parameter position: Position in world space the image was taken at (if this is a
+        /// camera photo) or `nil` otherwise.
+        /// - Parameter forward:Direction camera is pointing (photo direction), if applicable.
+        /// - Parameter headingDegrees: Absolute heading in degrees that photo is oriented towards.
+        /// - Returns: `Photo` object if successful else `nil`.
+        static func createWithNavigablePointAnnotations(name: String, originalImage: UIImage, navigablePoints: [NavigablePoint], worldToCamera: Matrix4x4?, intrinsics: Matrix3x3?, position: Vector3?, forward: Vector3?, headingDegrees: Float?) -> Photo? {
+            var jpegBase64: String?
+            
+            if !navigablePoints.isEmpty,
+               let worldToCamera = worldToCamera,
+               let intrinsics = intrinsics {
+                guard let annotatedPhoto = annotatePointNumbers(image: originalImage, with: navigablePoints, worldToCamera: worldToCamera, intrinsics: intrinsics, rotated: true) else { return nil }
+                jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+            } else {
+                jpegBase64 = originalImage.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+            }
+
+            guard let jpegBase64 = jpegBase64 else { return nil }
+
+            return Photo(
+                name: name,
+                originalImage: originalImage,
+                jpegBase64: jpegBase64,
+                navigablePoints: navigablePoints,
+                worldToCamera: worldToCamera,
+                intrinsics: intrinsics,
+                position: position,
+                forward: forward,
+                headingDegrees: headingDegrees
+            )
+        }
+
+        static func createWithHeadingAndDistanceAnnotations(name: String, originalImage: UIImage, worldToCamera: Matrix4x4?, intrinsics: Matrix3x3?, position: Vector3?, forward: Vector3?, headingDegrees: Float?) -> Photo? {
+            var jpegBase64: String?
+
+            if let worldToCamera = worldToCamera,
+               let intrinsics = intrinsics,
+               let position = position,
+               let forward = forward?.xzProjected.normalized,
+               let headingDegrees = headingDegrees {
+                let equidistantCurveByDistance = generateEquidistantCurves(
+                    ourPosition: position,
+                    ourForward: forward,
+                    floorY: ARSessionManager.shared.floorY,
+                    worldToCamera: worldToCamera,
+                    intrinsics: intrinsics
+                )
+                let lineByDistance = generateRadialHeadingLines(
+                    ourPosition: position,
+                    ourHeading: headingDegrees,
+                    floorY: ARSessionManager.shared.floorY,
+                    worldToCamera: worldToCamera,
+                    intrinsics: intrinsics
+                )
+                guard let distanceAnnotatedPhoto = annotateEquidistantCurves(image: originalImage, with: equidistantCurveByDistance, rotated: true) else { return nil }
+                guard let headingAnnotatedPhoto = annotateRadialHeadingLines(image: distanceAnnotatedPhoto, with: lineByDistance, rotated: true) else { return nil }
+                jpegBase64 = headingAnnotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+            }
+
+            guard let jpegBase64 = jpegBase64 else { return nil }
+
+            return Photo(
+                name: name,
+                originalImage: originalImage,
+                jpegBase64: jpegBase64,
+                navigablePoints: [],
+                worldToCamera: worldToCamera,
+                intrinsics: intrinsics,
+                position: position,
+                forward: forward,
+                headingDegrees: headingDegrees
+            )
+        }
     }
 
     struct NavigablePoint {
         let id: Int
         let cell: OccupancyMap.CellIndices
         let worldPoint: Vector3
-        let worldToCamera: Matrix4x4
-        let intrinsics: Matrix3x3
+
+        var textColor: UIColor {
+            return UIColor.white
+        }
+
+        var backgroundColor: CGColor {
+            return UIColor.black.cgColor
+        }
 
         /// Image point with origin in lower-left (+y is up).
-        var imagePoint: CGPoint {
+        func imagePoint(worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> CGPoint {
             /*
              * Transform world point to view space. Note that the *camera* space in ARKit is:
              *      ---> +y
@@ -67,6 +191,7 @@ class AnnotatingCamera {
              * space by -1, as we do here. Note that this coordinate system maps onto the typical
              * upper-left origin 2D bitmap (x,y) space.
              */
+
             var cameraPoint = worldToCamera.transformPoint(worldPoint)
             cameraPoint.y *= -1
             cameraPoint.z *= -1
@@ -75,14 +200,6 @@ class AnnotatingCamera {
             let homogeneous = Vector3(x: cameraPoint.x / cameraPoint.z, y: cameraPoint.y / cameraPoint.z, z: 1)
             let projected = intrinsics * homogeneous
             return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
-        }
-
-        var textColor: UIColor {
-            return UIColor.white
-        }
-
-        var backgroundColor: CGColor {
-            return UIColor.black.cgColor
         }
     }
 
@@ -113,7 +230,7 @@ class AnnotatingCamera {
 
         let ourPosition = ARSessionManager.shared.transform.position
         let ourHeading = ARSessionManager.shared.headingDegrees
-        let ourForward = -ARSessionManager.shared.transform.forward.xzProjected.normalized
+        let ourForward = -ARSessionManager.shared.transform.forward
 
         switch annotation {
         case .navigablePoints:
@@ -122,45 +239,40 @@ class AnnotatingCamera {
                 ourPosition: ourPosition,
                 ourForward: ourForward,
                 floorY: ARSessionManager.shared.floorY,
+                occupancy: NavigationController.shared.occupancy,
                 worldToCamera: worldToCamera,
                 intrinsics: cameraImage.intrinsics,
-                occupancy: NavigationController.shared.occupancy
+                imageSize: cameraImage.image.size
             )
             let reachableNavigablePoints = excludeUnreachable(possibleNagivablePoints, ourPosition: ourPosition, occupancy: NavigationController.shared.occupancy)
             let navigablePoints = assignFinalIDs(reachableNavigablePoints)
 
-            // Annotate image
-            guard let annotatedPhoto = annotatePointNumbers(image: rotatedPhoto, with: navigablePoints, rotated: true) else { return nil }
-
-            // Get JPEG
-            guard let jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
-
-            // Produce uniquely named photo object
+            // Produce uniquely named photo object with annotations
             let name = "photo\(_imageID)"
             _imageID += 1
-            return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: navigablePoints, position: ourPosition, headingDegrees: ourHeading)
+            return Photo.createWithNavigablePointAnnotations(
+                name: name,
+                originalImage: rotatedPhoto,
+                navigablePoints: navigablePoints,
+                worldToCamera: worldToCamera,
+                intrinsics: cameraImage.intrinsics,
+                position: ourPosition,
+                forward: ourForward, 
+                headingDegrees: ourHeading
+            )
 
         case .headingAndDistanceGuides:
-            let equidistantCurveByDistance = generateEquidistantCurves(
-                ourPosition: ourPosition,
-                ourForward: ourForward,
-                floorY: ARSessionManager.shared.floorY,
-                worldToCamera: worldToCamera,
-                intrinsics: cameraImage.intrinsics
-            )
-            let lineByDistance = generateRadialHeadingLines(
-                ourPosition: ourPosition,
-                ourHeading: ourHeading,
-                floorY: ARSessionManager.shared.floorY,
-                worldToCamera: worldToCamera,
-                intrinsics: cameraImage.intrinsics
-            )
-            guard let distanceAnnotatedPhoto = annotateEquidistantCurves(image: rotatedPhoto, with: equidistantCurveByDistance, rotated: true) else { return nil }
-            guard let headingAnnotatedPhoto = annotateRadialHeadingLines(image: distanceAnnotatedPhoto, with: lineByDistance, rotated: true) else { return nil }
-            guard let jpegBase64 = headingAnnotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString() else { return nil }
             let name = "photo\(_imageID)"
             _imageID += 1
-            return Photo(name: name, jpegBase64: jpegBase64, navigablePoints: [], position: ourPosition, headingDegrees: ourHeading)
+            return Photo.createWithHeadingAndDistanceAnnotations(
+                name: name,
+                originalImage: rotatedPhoto,
+                worldToCamera: worldToCamera,
+                intrinsics: cameraImage.intrinsics,
+                position: ourPosition,
+                forward: ourForward,
+                headingDegrees: ourHeading
+            )
         }
     }
 
@@ -168,14 +280,17 @@ class AnnotatingCamera {
     /// - Parameter ourPosition: Robot current position in world space.
     /// - Parameter ourForward: Direction robot is facing.
     /// - Parameter floorY: Floor Y coordinate in world space. Navigable points placed on floor.
-    /// - Parameter worldToCamera: Inverse camera transform matrix (i.e., world to camera-local space).
-    /// - Parameter intrinsics: Camera intrinsics. Used with `worldToCamera`to convert world-space
-    /// points to image-space annotations.
     /// - Parameter occupancy: Occupancy map, used to locate the cell indices of each point.
+    /// - Parameter worldToCamera: Matrix transforming world-space points to camera-space
+    /// for this image.
+    /// - Parameter intrinsics: Camera intrinsic parameters, appropriately scaled for image
+    /// resolution.
+    /// - Parameter imageSize: Image size, for determining whether annotated points are actually
+    /// inside the image.
     /// - Returns: Array of prospective navigable points. None are guaranteed to be reachable. The
     /// point IDs are based on their corresponding occupancy map cell's linear index. Take care to
     /// assign final indices before returning them.
-    private func generateProspectiveNavigablePoints(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3, occupancy: OccupancyMap) -> [NavigablePoint] {
+    private func generateProspectiveNavigablePoints(ourPosition: Vector3, ourForward: Vector3, floorY: Float, occupancy: OccupancyMap, worldToCamera: Matrix4x4, intrinsics: Matrix3x3, imageSize: CGSize) -> [NavigablePoint] {
         // Generate a series of points on the floor, corresponding to occupancy map cells but
         // can be spaced more coarsely (every Nth cell). Those points that are within a given
         // angle and distance range of the current forward are used.
@@ -187,7 +302,7 @@ class AnnotatingCamera {
 
         let spacing: Float = 0.75
         let cellSpacing = max(1, Int(spacing / occupancy.cellSide()))
-        let searchRadiusCells = Int(4.0 / occupancy.cellSide())
+        let searchRadiusCells = Int(4.0 / occupancy.cellSide()) // reasonable number of meters to search along each axis
         let ourCell = occupancy.positionToCell(ourPosition)
         let minCellX = ourCell.cellX - searchRadiusCells
         let maxCellX = ourCell.cellX + searchRadiusCells
@@ -210,9 +325,15 @@ class AnnotatingCamera {
                         // Is point within desired distance range?
                         let distance = (worldPoint - ourPosition).xzProjected.magnitude
                         if /*distance >= (2 * spacing) && */distance <= (5 * spacing) {
-                            // Create navigable point
+                            // Create prospective navigable point
                             let id = occupancy.linearIndex(cell)
-                            navigablePoints.append(NavigablePoint(id: id, cell: cell, worldPoint: worldPoint, worldToCamera: worldToCamera, intrinsics: intrinsics))
+                            let point = NavigablePoint(id: id, cell: cell, worldPoint: worldPoint)
+
+                            // Final check: ensure projected point is on-screen
+                            let imagePoint = point.imagePoint(worldToCamera: worldToCamera, intrinsics: intrinsics)
+                            if imagePoint.x >= 0 && imagePoint.x < imageSize.width && imagePoint.y >= 0 && imagePoint.y < imageSize.height {
+                                navigablePoints.append(point)
+                            }
                         }
                     }
                 }
@@ -255,7 +376,7 @@ class AnnotatingCamera {
                 _occupancyMapIndexToID[index] = id
             }
 
-            relabeledPoints.append(NavigablePoint(id: id, cell: point.cell, worldPoint: point.worldPoint, worldToCamera: point.worldToCamera, intrinsics: point.intrinsics))
+            relabeledPoints.append(NavigablePoint(id: id, cell: point.cell, worldPoint: point.worldPoint))
         }
 
         return relabeledPoints
@@ -271,7 +392,7 @@ class AnnotatingCamera {
     /// points to image-space annotations.
     /// - Returns: Dictionary where the keys are distance (meters) and the values are image-space
     /// points at that distance.
-    private func generateEquidistantCurves(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
+    private static func generateEquidistantCurves(ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
         // Generate the world points to form an equidistant curve in front of the camera
         let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
         var worldPointsByDistance: [Float: [Vector3]] = [:]
@@ -318,7 +439,7 @@ class AnnotatingCamera {
     /// points to image-space annotations.
     /// - Returns: Dictionary where the keys are heading (degrees) and the values are image-space
     /// points creating a line along that direction.
-    private func generateRadialHeadingLines(ourPosition: Vector3, ourHeading: Float, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
+    private static func generateRadialHeadingLines(ourPosition: Vector3, ourHeading: Float, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [Float: [CGPoint]] {
         // Generate world points radiating outwards along different headings
         let ourPosition = Vector3(x: ourPosition.x, y: floorY, z: ourPosition.z)
         var worldPointsByHeading: [Float: [Vector3]] = [:]
@@ -382,69 +503,18 @@ class AnnotatingCamera {
         return scaled
     }
 
-    /// Renders navigable points as cell indexc annotations on the image (rectangles with numbers
-    /// inside of them). Necessary adjustments are made if the image has been rotated into a
-    /// portrait orientation.
-    /// - Parameter image: The image to annotate.
-    /// - Parameter with: Points to annotate.
-    /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
-    /// the points are specified. The points will be adjusted accordingly.
-    /// - Returns: New image with annotations or `nil` if anything went wrong.
-    private func annotateCells(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
-        let sideLength = CGFloat(20)
-
-        // Get the image size
-        let imageSize = image.size
-        let scale = image.scale
-
-        // Draw original image
-        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-        image.draw(in: CGRect(origin: .zero, size: imageSize))
-
-        // Draw annotations
-        for point in points {
-            // Compute the text size
-            let text = String(format: "%d,%d", point.cell.cellX, point.cell.cellZ)
-            let textAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: sideLength / 2, weight: .bold),
-                .foregroundColor: point.textColor
-            ]
-            let textSize = text.size(withAttributes: textAttributes)
-
-            // Draw the background square. Note that when rotating image clockwise and using an
-            // upper-left origin with +y as down, it is necessary to invert x (because +y in the
-            // original image moves down but rotated clockwise, that direction is -x instead of
-            // +x).
-            let imagePoint = point.imagePoint
-            let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
-            let y = rotated ? imagePoint.x : imagePoint.y
-            context.setFillColor(point.backgroundColor)
-            let backgroundRect = CGRect(x: x - textSize.width / 2, y: y - textSize.height / 2, width: textSize.width, height: textSize.height)
-            context.fill(backgroundRect)
-
-            // Print cell
-            let textX = x - textSize.width / 2
-            let textY = y - textSize.height / 2
-            let textRect = CGRect(x: textX, y: textY, width: textSize.width, height: textSize.height)
-            text.draw(in: textRect, withAttributes: textAttributes)
-        }
-
-        // Return new image
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return newImage
-    }
-
     /// Renders navigable points as annotations on the image (squares with numbers inside of them).
     /// Necessary adjustments are made if the image has been rotated into a portrait orientation.
     /// Point numbers are rendered.
     /// - Parameter image: The image to annotate.
     /// - Parameter with: Points to annotate.
+    /// - Parameter worldToCamera:Inverse camera transform matrix (i.e., world to camera-local space).
+    /// - Parameter intrinsics:Camera intrinsics. Used with `worldToCamera`to convert world-space
+    /// points to image-space annotations.
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
-    private func annotatePointNumbers(image: UIImage, with points: [NavigablePoint], rotated: Bool) -> UIImage? {
+    private static func annotatePointNumbers(image: UIImage, with points: [NavigablePoint], worldToCamera: Matrix4x4, intrinsics: Matrix3x3, rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(20)
 
         // Get the image size
@@ -461,7 +531,7 @@ class AnnotatingCamera {
             // Draw square. Note that when rotating image clockwise and using an upper-left
             // origin with +y as down, it is necessary to invert x (because +y in the original
             // image moves down, but rotated clockwise, that direction is -x instead of +x).
-            let imagePoint = point.imagePoint
+            let imagePoint = point.imagePoint(worldToCamera: worldToCamera, intrinsics: intrinsics)
             let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
             let y = rotated ? imagePoint.x : imagePoint.y
             let squareRect = CGRect(x: x, y: y, width: sideLength, height: sideLength)
@@ -496,7 +566,7 @@ class AnnotatingCamera {
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
-    private func annotateEquidistantCurves(image: UIImage, with equidistantCurveByDistance: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
+    private static func annotateEquidistantCurves(image: UIImage, with equidistantCurveByDistance: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(32)
 
         // Get the image size
@@ -581,7 +651,7 @@ class AnnotatingCamera {
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
-    private func annotateRadialHeadingLines(image: UIImage, with lineByHeading: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
+    private static func annotateRadialHeadingLines(image: UIImage, with lineByHeading: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
         let sideLength = CGFloat(26)
 
         // Get the image size

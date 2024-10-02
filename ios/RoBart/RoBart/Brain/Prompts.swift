@@ -4,13 +4,10 @@
 //
 //  Created by Bart Trzynadlowski on 9/17/24.
 //
-//  Notes
-//  -----
+//  TODO
+//  ----
 //  - RoBart often misses things because upon arrival at a destination (moveTo), is pointing in
 //    the wrong direction.
-//  - We should probably store all photos for points that are navigable at any given point! This
-//    could help RoBart in situations where he is stuck for prolonged periods and the history of
-//    photos ends up getting wiped out.
 //  - During turn correction, we should probably take photos and just stop turning, don't try to reverse turn.
 //
 
