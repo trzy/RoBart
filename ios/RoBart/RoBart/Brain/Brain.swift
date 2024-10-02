@@ -384,8 +384,26 @@ class Brain: ObservableObject {
         // Attach older photos that have navigable points
         if _annotationStyle == .navigablePoints {
             let photos = producePhotosWithReachablePoints(from: photosByNavigablePoint)
-            for i in 0..<photos.count {
-                captionedPhotos.append((photo: photos[i], caption: "\(photos[i].name) taken during a previous step but with reachable navigable points"))
+// Commenting out because Claude seems to complain more about copyright when we use more images.
+// Instead, we regurgitate descriptions of the waypoints from memory.
+//            for i in 0..<photos.count {
+//                captionedPhotos.append((photo: photos[i], caption: "\(photos[i].name) taken during a previous step but with reachable navigable points"))
+//            }
+            if let memoryThought = history.reversed().first(where: { $0 is MemoryThought }) as? MemoryThought,
+               let memories = decodeMemories(from: memoryThought.json) {
+
+                let occupancy = NavigationController.shared.occupancy
+                let reachableLandmarks = memories.filter { (memory: Memory) in
+                    // Reachable by direct line or path
+                    guard let point = findNavigablePoint(pointID: memory.pointNumber, in: photosByNavigablePoint) else { return false }
+                    return occupancy.isLineUnobstructed(ourPosition, point.worldPoint) || findPath(occupancy, ourPosition, point.worldPoint, _robotRadius).size() > 0
+                }
+                if !reachableLandmarks.isEmpty {
+                    resultsDescription.append("The following previously-observed navigable points can still be reached:")
+                    for landmark in reachableLandmarks {
+                        resultsDescription.append("  \(landmark.pointNumber): \(landmark.description)")
+                    }
+                }
             }
         }
 
@@ -393,7 +411,7 @@ class Brain: ObservableObject {
         updateNavigablePointDatabase(database: &photosByNavigablePoint, with: photosThisStep)
 
         // Obtain navigable points referenced in memory
-        let memorizedPoints = getNavigablePointsFromLastMemory(history: history, photosByNavigablePoint: photosByNavigablePoint)
+        let memorizedPoints = getLandmarkPointsFromLastMemory(history: history, photosByNavigablePoint: photosByNavigablePoint)
 
         // Render image with memorized points as landmarks and add it to observations
         if let mapImage = renderMap(
@@ -413,9 +431,11 @@ class Brain: ObservableObject {
             let allowablePointIDs = Set(captionedPhotos.flatMap({ $0.photo.navigablePoints }).map({ "\($0.id)" }))
             if allowablePointIDs.isEmpty {
                 resultsDescription.append("No navigable points are reachable. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
-            } else {
-                resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
-            }
+            } 
+            // Redundant? LLM should be able to understand from images what points are accessible.
+//            else {
+//                resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
+//            }
         }
 
         return ObservationsThought(text: resultsDescription.joined(separator: "\n"), captionedPhotos: captionedPhotos)
@@ -608,8 +628,7 @@ class Brain: ObservableObject {
         for photo in photos {
             let reachableNavigablePoints = photo.navigablePoints.filter {
                 // Reachable by direct line or path
-                return occupancy.isLineUnobstructed(ourPosition, $0.worldPoint) ||
-                findPath(occupancy, ourPosition, $0.worldPoint, _robotRadius).size() > 0
+                return occupancy.isLineUnobstructed(ourPosition, $0.worldPoint) || findPath(occupancy, ourPosition, $0.worldPoint, _robotRadius).size() > 0
             }
             if reachableNavigablePoints.isEmpty {
                 continue
@@ -644,7 +663,8 @@ class Brain: ObservableObject {
         return photosByNavigablePoint[pointID]?.first?.findNavigablePoint(id: pointID)
     }
 
-    private func getNavigablePointsFromLastMemory(history: [ThoughtRepresentable], photosByNavigablePoint: [Int: [AnnotatingCamera.Photo]]) -> [AnnotatingCamera.NavigablePoint] {
+    // These points are not necessarily reachable but were memorized as landmarks
+    private func getLandmarkPointsFromLastMemory(history: [ThoughtRepresentable], photosByNavigablePoint: [Int: [AnnotatingCamera.Photo]]) -> [AnnotatingCamera.NavigablePoint] {
         guard let memoryThought = history.reversed().first(where: { $0 is MemoryThought }) as? MemoryThought,
               let memories = decodeMemories(from: memoryThought.json) else { return [] }
 

@@ -105,8 +105,8 @@ RoBart responds to human input with the following tags:
 </ACTIONS>
 
 <OBSERVATIONS>
-    When the actions have been completed, their results are provided here. Coordinates are given as (X,Y), in meters. Headings are given in a 360 degree range, with 0 being north (direction vector (0,1)), 90 being east (direction vector (1,0)), 180 being south (direction (0,-1)), and 270 being west (direction (-1,0)).
-
+    When the actions have been completed, their results are provided here. Photos generated from the actions are provided and navigable points that can be reached are annotated as black squares with numbers, for use with moveTo action.
+    Coordinates are given as (X,Y), in meters. Headings are absolute and given in a 360 degree range.
     A top-down schematic map is also included. It consists of:
     - Blue cells indicate obstructions.
     - Select navigable points corresponding to those in <MEMORY> are annotated as numbers.
