@@ -77,9 +77,9 @@ extension Array where Element == ThoughtRepresentable {
         return navigablePoints
     }
 
-    var photos: [AnnotatingCamera.Photo] {
-        return self.flatMap { $0.photos }
-    }
+//    var photos: [AnnotatingCamera.Photo] {
+//        return self.flatMap { $0.photos }
+//    }
 
     func findNavigablePoint(pointID: Int) -> AnnotatingCamera.NavigablePoint? {
         // Search all photos in all thoughts (in reverse order because it is more likely that a
@@ -204,25 +204,25 @@ struct HumanInputThought: ThoughtRepresentable {
 
 struct ObservationsThought: ThoughtRepresentable {
     private let _text: String?
-    private let _photos: [AnnotatingCamera.Photo]
+    private let _captionedPhotos: [(photo: AnnotatingCamera.Photo, caption: String)]
 
     static var tag: String { "OBSERVATIONS" }
 
-    var photos: [AnnotatingCamera.Photo] { _photos }
-
-    init(photos: [AnnotatingCamera.Photo]) {
-        _text = nil
-        _photos = photos
-    }
+    var photos: [AnnotatingCamera.Photo] { _captionedPhotos.map { $0.photo } }
 
     init(text: String) {
         _text = text
-        _photos = []
+        _captionedPhotos = []
     }
 
-    init(text: String, photos: [AnnotatingCamera.Photo]) {
+    init(captionedPhotos: [(photo: AnnotatingCamera.Photo, caption: String)]) {
+        _text = nil
+        _captionedPhotos = captionedPhotos
+    }
+
+    init(text: String, captionedPhotos: [(photo: AnnotatingCamera.Photo, caption: String)]) {
         _text = text
-        _photos = photos
+        _captionedPhotos = captionedPhotos
     }
 
     func humanReadableContent() -> String {
@@ -230,17 +230,8 @@ struct ObservationsThought: ThoughtRepresentable {
         if let text = _text {
             content += text
         }
-        for photo in _photos {
-            if let position = photo.position,
-               let headingDegrees = photo.headingDegrees {
-                // Photo from the camera with a position and heading
-                let positionStr = String(format: "(%.2f,%.2f)", position.x, position.z)
-                let headingStr = String(format: "%.f", headingDegrees)
-                content += "\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg: <image>\n"
-            } else {
-                // A photo not associated with a physical position (e.g., a schematic or rendering)
-                content += "\n\(photo.name): <image>\n"
-            }
+        for captionedPhoto in _captionedPhotos {
+            content += "\n\(captionedPhoto.caption): <image>\n"
         }
         content += closingTag
         return content
@@ -251,16 +242,9 @@ struct ObservationsThought: ThoughtRepresentable {
         if let text = _text {
             content.append(.text(text))
         }
-        for photo in _photos {
-            if let position = photo.position,
-               let headingDegrees = photo.headingDegrees {
-                let positionStr = String(format: "(%.2f,%.2f)", position.x, position.z)
-                let headingStr = String(format: "%.f", headingDegrees)
-                content.append(.text("\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg:"))
-            } else {
-                content.append(.text("\n\(photo.name):"))
-            }
-            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: photo.jpegBase64)))
+        for captionedPhoto in _captionedPhotos {
+            content.append(.text("\n\(captionedPhoto.caption):"))
+            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: captionedPhoto.photo.jpegBase64)))
         }
         content.append(.text(closingTag))
         return content
@@ -271,23 +255,12 @@ struct ObservationsThought: ThoughtRepresentable {
         if let text = _text {
             content.append(.string(text))
         }
-        for photo in _photos {
-            if let position = photo.position,
-               let headingDegrees = photo.headingDegrees {
-                let positionStr = String(format: "(%.2f,%.2f)", position.x, position.z)
-                let headingStr = String(format: "%.f", headingDegrees)
-                let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
-                    .chatCompletionContentPartTextParam(.init(text: "\n\(photo.name) at position \(positionStr) and heading \(headingStr) deg:")),
-                    .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.jpegBase64)", detail: .auto)))
-                ])
-                content.append(visionContent)
-            } else {
-                let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
-                    .chatCompletionContentPartTextParam(.init(text: "\n\(photo.name):")),
-                    .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.jpegBase64)", detail: .auto)))
-                ])
-                content.append(visionContent)
-            }
+        for captionedPhoto in _captionedPhotos {
+            let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
+                .chatCompletionContentPartTextParam(.init(text: "\n\(captionedPhoto.caption):")),
+                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(captionedPhoto.photo.jpegBase64)", detail: .auto)))
+            ])
+            content.append(visionContent)
         }
         content.append(.string(closingTag))
         return content
@@ -297,7 +270,7 @@ struct ObservationsThought: ThoughtRepresentable {
         if let text = _text {
             return ObservationsThought(text: text)
         } else {
-            return ObservationsThought(photos: [])
+            return ObservationsThought(captionedPhotos: [])
         }
     }
 }
