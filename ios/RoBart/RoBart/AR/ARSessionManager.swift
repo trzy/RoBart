@@ -25,10 +25,8 @@ class ARSessionManager: ObservableObject {
         return arView?.scene
     }
 
-    fileprivate let frameSubject = PassthroughSubject<ARFrame, Never>()
-    var frames: AnyPublisher<ARFrame, Never> {
-        return frameSubject.eraseToAnyPublisher()
-    }
+    fileprivate let frameSubject = CurrentValueSubject<ARFrame?, Never>(nil)
+    let frames: AnyPublisher<ARFrame, Never>
 
     var renderPlanes: Bool = false {
         didSet {
@@ -108,6 +106,9 @@ class ARSessionManager: ObservableObject {
     private var _floorY: Float? = nil
 
     fileprivate init() {
+        // Allows multiple callers to nextFrame() to share a frame
+        self.frames = frameSubject.compactMap { $0 }.share().eraseToAnyPublisher()
+
         PeerManager.shared.$peers.sink { [weak self] (peers: [MCPeerID]) in
             // Update session based on whether there are peers or not.
             // Note: PeerManager.shared.peers is not updated until after this call, so must use
