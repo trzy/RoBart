@@ -67,8 +67,15 @@ class Settings: ObservableObject {
 
     @Published var personDetectionHz: Double = 2 {
         didSet {
-            UserDefaults.standard.set(personDetectionHz, forKey: Self.k_personDetectionHz)
-            log("Set: \(Self.k_personDetectionHz) = \(personDetectionHz)")
+            UserDefaults.standard.set(personDetectionHz, forKey: Self.k_personDetectionHzKey)
+            log("Set: \(Self.k_personDetectionHzKey) = \(personDetectionHz)")
+        }
+    }
+
+    @Published var recordVideos = true {
+        didSet {
+            UserDefaults.standard.set(recordVideos, forKey: Self.k_recordVideosKey)
+            log("Set: \(Self.k_recordVideosKey) = \(recordVideos)")
         }
     }
 
@@ -81,7 +88,8 @@ class Settings: ObservableObject {
     private static let k_deepgramAPIKey = "deepgram_api_key"
     private static let k_followDistanceKey = "follow_distance"
     private static let k_maxPersonDistanceKey = "max_person_distance"
-    private static let k_personDetectionHz = "person_detection_hz"
+    private static let k_personDetectionHzKey = "person_detection_hz"
+    private static let k_recordVideosKey = "record_videos"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),
@@ -114,8 +122,12 @@ class Settings: ObservableObject {
             self.maxPersonDistance = maxPersonDistance
         }
 
-        if let personDetectionHz = UserDefaults.standard.object(forKey: Self.k_personDetectionHz) as? Double {
+        if let personDetectionHz = UserDefaults.standard.object(forKey: Self.k_personDetectionHzKey) as? Double {
             self.personDetectionHz = personDetectionHz
+        }
+
+        if let recordVideos = UserDefaults.standard.object(forKey: Self.k_recordVideosKey) as? Bool {
+            self.recordVideos = UserDefaults.standard.bool(forKey: Self.k_recordVideosKey)
         }
     }
 }

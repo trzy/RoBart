@@ -114,6 +114,9 @@ struct SettingsView: View {
                         }
                         .padding()
                         .frame(maxWidth: 600)
+
+                        // Whether to record videos for each task
+                        Toggle("Record Videos", isOn: $_settings.recordVideos)
                     }
                     Spacer()
                 }
