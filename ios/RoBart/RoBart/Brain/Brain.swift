@@ -190,7 +190,7 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToClaude(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+    private func submitToClaude(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
         do {
             let response = try await _anthropic.createMessage(
                 MessageParameter(
@@ -205,15 +205,20 @@ class Brain: ObservableObject {
             if case let .text(responseText) = response.content[0] {
                 log("Response: \(responseText)")
                 let responseThoughts = parseBlocks(from: responseText).toThoughts()
-                return responseThoughts.isEmpty ? nil : responseThoughts
+                if responseThoughts.isEmpty {
+                    // This occasionally happens when there is an error or Claude thinks the
+                    // content is prohibited. We deliver its response verbatim.
+                    return [ FinalResponseThought(spokenWords: responseText) ]
+                }
+                return responseThoughts
             }
 
             log("Error: No content!")
+            return [ FinalResponseThought(spokenWords: "An error occurred and Claude delivered no content in its response.") ]
         } catch {
             log("Error: \(error.localizedDescription)")
+            return [ FinalResponseThought(spokenWords: "The following error occurred: \(error.localizedDescription)")]
         }
-
-        return nil
     }
 
     private func submitToGPT4(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
