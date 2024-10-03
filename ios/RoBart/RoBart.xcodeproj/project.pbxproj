@@ -41,6 +41,7 @@
 		CC38DE3D2C7D23B5003EEBDE /* ParticipantRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */; };
 		CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
+		CC55DB9C2CADFAB200E3AF65 /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
 		CC7C1CB62C76F516003BFA0B /* ServerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */; };
@@ -206,6 +207,7 @@
 		CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantRenderer.swift; sourceTree = "<group>"; };
 		CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollaborativeMappingStateView.swift; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
+		CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
 		CC7C1CB52C76F516003BFA0B /* ServerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMessages.swift; sourceTree = "<group>"; };
@@ -532,6 +534,7 @@
 				CCA3B93D2C8FB7C400F15F9F /* Stopwatch.swift */,
 				CC1125342C93A9A5007AF247 /* Task+Extensions.swift */,
 				CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */,
+				CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -1052,6 +1055,7 @@
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
 				CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
+				CC55DB9C2CADFAB200E3AF65 /* VideoRecorder.swift in Sources */,
 				CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */,
 				CC26CF5E2C9A5FD600ACC82E /* Deepgram.swift in Sources */,
 				CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */,
@@ -1251,6 +1255,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Robot voice commands.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Saving image and video captures.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1290,6 +1295,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "ARKit-based tracking.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Connect to nearby phones using this app.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Robot voice commands.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Saving image and video captures.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

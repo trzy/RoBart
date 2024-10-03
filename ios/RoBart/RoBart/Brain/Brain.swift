@@ -39,6 +39,8 @@ class Brain: ObservableObject {
     private let _maxTokens = 2048
 
     private var _task: Task<Void, Never>?
+    private var _videoRecorder: VideoRecorder?
+    private var _videoTask: Task<Void, Never>?
 
     private var _robotRadius: Float {
         return 0.5 * max(Calibration.robotBounds.x, Calibration.robotBounds.z)
@@ -84,6 +86,13 @@ class Brain: ObservableObject {
     }
 
     private func runTask(humanInput: String) async {
+        if Settings.shared.recordVideos {
+            log("Recording video")
+            _videoTask = Task {
+                await recordVideoTask()
+            }
+        }
+
         _speechDetector.stopListening()
         let timeStarted = Date.now
         var stepNumber = 0
@@ -135,6 +144,31 @@ class Brain: ObservableObject {
         } else {
             setDisplayState(to: nil)
         }
+
+        _videoTask?.cancel()
+        _videoTask = nil
+    }
+
+    private func recordVideoTask() async {
+        guard let firstFrame = try? await ARSessionManager.shared.nextFrame() else { return }
+        if _videoRecorder == nil {
+            let resolution = CGSize(width: firstFrame.capturedImage.width, height: firstFrame.capturedImage.height)
+            _videoRecorder = VideoRecorder(outputSize: resolution, frameRate: 20)
+        }
+        let videoRecorder = _videoRecorder!
+        try? await videoRecorder.startRecording()
+
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(50))
+            if displayState != .thinking {
+                guard let frame = try? await ARSessionManager.shared.nextFrame() else { continue }
+                if let capturedImage = frame.capturedImage.copy() {
+                    await videoRecorder.addFrame(frame.capturedImage)
+                }
+            }
+        }
+
+        try? await videoRecorder.finishRecording()
     }
 
     private func actionableThoughts(in thoughts: [ThoughtRepresentable]) -> [ThoughtRepresentable] {
@@ -253,6 +287,13 @@ class Brain: ObservableObject {
         setDisplayState(to: .speaking)
         log("RoBart says: \(wordsToSpeak)")
         guard let mp3Data = await vocalizeWithDeepgram(wordsToSpeak) else { return }
+        //DispatchQueue.main.async {
+        do {
+            try await _videoRecorder?.addMP3AudioClip(mp3Data)
+        } catch {
+            log("Error: Unable to add audio to video: \(error.localizedDescription)")
+        }
+        //}
         await AudioManager.shared.playSound(fileData: mp3Data)
     }
 
