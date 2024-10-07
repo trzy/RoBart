@@ -26,7 +26,7 @@ actor VideoRecorder {
         self._frameRate = frameRate
     }
 
-    func startRecording() throws {
+    func startRecording(rotateToPortrait: Bool = false) throws {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("output.mp4")
         try? FileManager.default.removeItem(at: outputURL)
         _assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
@@ -41,8 +41,10 @@ actor VideoRecorder {
         _videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
         _videoInput?.expectsMediaDataInRealTime = true
 
-        let rotationTransform = CGAffineTransform(rotationAngle: .pi / 2)
-        _videoInput?.transform = rotationTransform
+        if rotateToPortrait {
+            let rotationTransform = CGAffineTransform(rotationAngle: .pi / 2)
+            _videoInput?.transform = rotationTransform
+        }
 
         let sourcePixelBufferAttributes: [String: Any] = [
             kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32ARGB),

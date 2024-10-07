@@ -23,6 +23,9 @@ class AnnotatingCamera {
         /// Original image, without any annotations.
         let originalImage: UIImage
 
+        /// Annotated image
+        let annotatedImage: UIImage
+
         /// JPEG data, with annotations if applicable. This is the image that should be sent to AI.
         let jpegBase64: String
 
@@ -47,6 +50,7 @@ class AnnotatingCamera {
             return Photo(
                 name: name,
                 originalImage: originalImage,
+                annotatedImage: originalImage,
                 jpegBase64: jpegBase64,
                 navigablePoints: [],
                 worldToCamera: nil,
@@ -74,21 +78,26 @@ class AnnotatingCamera {
         /// - Returns: `Photo` object if successful else `nil`.
         static func createWithNavigablePointAnnotations(name: String, originalImage: UIImage, navigablePoints: [NavigablePoint], worldToCamera: Matrix4x4?, intrinsics: Matrix3x3?, position: Vector3?, forward: Vector3?, headingDegrees: Float?) -> Photo? {
             var jpegBase64: String?
-            
+            var annotatedImage: UIImage?
+
             if !navigablePoints.isEmpty,
                let worldToCamera = worldToCamera,
                let intrinsics = intrinsics {
                 guard let annotatedPhoto = annotatePointNumbers(image: originalImage, with: navigablePoints, worldToCamera: worldToCamera, intrinsics: intrinsics, rotated: true) else { return nil }
                 jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+                annotatedImage = annotatedPhoto
             } else {
                 jpegBase64 = originalImage.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+                annotatedImage = originalImage
             }
 
-            guard let jpegBase64 = jpegBase64 else { return nil }
+            guard let jpegBase64 = jpegBase64,
+                  let annotatedImage = annotatedImage else { return nil }
 
             return Photo(
                 name: name,
                 originalImage: originalImage,
+                annotatedImage: annotatedImage,
                 jpegBase64: jpegBase64,
                 navigablePoints: navigablePoints,
                 worldToCamera: worldToCamera,
@@ -101,6 +110,7 @@ class AnnotatingCamera {
 
         static func createWithHeadingAndDistanceAnnotations(name: String, originalImage: UIImage, worldToCamera: Matrix4x4?, intrinsics: Matrix3x3?, position: Vector3?, forward: Vector3?, headingDegrees: Float?) -> Photo? {
             var jpegBase64: String?
+            var annotatedImage: UIImage?
 
             if let worldToCamera = worldToCamera,
                let intrinsics = intrinsics,
@@ -124,13 +134,16 @@ class AnnotatingCamera {
                 guard let distanceAnnotatedPhoto = annotateEquidistantCurves(image: originalImage, with: equidistantCurveByDistance, rotated: true) else { return nil }
                 guard let headingAnnotatedPhoto = annotateRadialHeadingLines(image: distanceAnnotatedPhoto, with: lineByDistance, rotated: true) else { return nil }
                 jpegBase64 = headingAnnotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+                annotatedImage = headingAnnotatedPhoto
             }
 
-            guard let jpegBase64 = jpegBase64 else { return nil }
+            guard let jpegBase64 = jpegBase64,
+                  let annotatedImage = annotatedImage else { return nil }
 
             return Photo(
                 name: name,
                 originalImage: originalImage,
+                annotatedImage: annotatedImage,
                 jpegBase64: jpegBase64,
                 navigablePoints: [],
                 worldToCamera: worldToCamera,
@@ -515,7 +528,8 @@ class AnnotatingCamera {
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
     private static func annotatePointNumbers(image: UIImage, with points: [NavigablePoint], worldToCamera: Matrix4x4, intrinsics: Matrix3x3, rotated: Bool) -> UIImage? {
-        let sideLength = CGFloat(20)
+        let sideLengthAt640Height = CGFloat(20)
+        let sideLength = CGFloat(image.size.height / 640.0) * sideLengthAt640Height
 
         // Get the image size
         let imageSize = image.size
@@ -567,7 +581,8 @@ class AnnotatingCamera {
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
     private static func annotateEquidistantCurves(image: UIImage, with equidistantCurveByDistance: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
-        let sideLength = CGFloat(32)
+        let sideLengthAt640Height = CGFloat(32)
+        let sideLength = CGFloat(image.size.height / 640.0) * sideLengthAt640Height
 
         // Get the image size
         let imageSize = image.size
@@ -652,7 +667,8 @@ class AnnotatingCamera {
     /// the points are specified. The points will be adjusted accordingly.
     /// - Returns: New image with annotations or `nil` if anything went wrong.
     private static func annotateRadialHeadingLines(image: UIImage, with lineByHeading: [Float: [CGPoint]], rotated: Bool) -> UIImage? {
-        let sideLength = CGFloat(26)
+        let sideLengthAt640Height = CGFloat(26)
+        let sideLength = CGFloat(image.size.height / 640.0) * sideLengthAt640Height
 
         // Get the image size
         let imageSize = image.size
