@@ -145,6 +145,7 @@
 		CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */; };
 		CCFF523E2C98DD3D007F27D7 /* WebRTCVAD.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		CCFF52432C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF52422C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift */; };
+		CCFFF9122CB3A5330033A333 /* FirstPersonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFFF9112CB3A5330033A333 /* FirstPersonVideo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -326,6 +327,7 @@
 		CCFF52382C98DC65007F27D7 /* WebRTCVAD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebRTCVAD.h; sourceTree = "<group>"; };
 		CCFF52392C98DC65007F27D7 /* WebRTCVAD.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebRTCVAD.swift; sourceTree = "<group>"; };
 		CCFF52422C98E031007F27D7 /* AVAudioPCMBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAudioPCMBuffer+Extensions.swift"; sourceTree = "<group>"; };
+		CCFFF9112CB3A5330033A333 /* FirstPersonVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstPersonVideo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -621,6 +623,7 @@
 				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
 				CC26CF822CAA5D5100ACC82E /* Map.swift */,
 				CC26CF842CAA611D00ACC82E /* Memory.swift */,
+				CCFFF9112CB3A5330033A333 /* FirstPersonVideo.swift */,
 			);
 			path = Brain;
 			sourceTree = "<group>";
@@ -1032,6 +1035,7 @@
 				CC26CF642C9B6CB800ACC82E /* AnnotatingCamera.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
+				CCFFF9122CB3A5330033A333 /* FirstPersonVideo.swift in Sources */,
 				CC26CF572C9A0AE100ACC82E /* SpeechDetector.swift in Sources */,
 				CC26CF852CAA611D00ACC82E /* Memory.swift in Sources */,
 				CC1125372C93B8F2007AF247 /* NavigationController.swift in Sources */,
