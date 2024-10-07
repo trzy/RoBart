@@ -127,7 +127,7 @@ class Settings: ObservableObject {
         }
 
         if let recordVideos = UserDefaults.standard.object(forKey: Self.k_recordVideosKey) as? Bool {
-            self.recordVideos = UserDefaults.standard.bool(forKey: Self.k_recordVideosKey)
+            self.recordVideos = recordVideos
         }
     }
 }

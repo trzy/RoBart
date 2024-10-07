@@ -26,7 +26,7 @@ func navigateToGoal(position goal: Vector3) async throws {
         if originalPath == nil {
             originalPath = await updatePath(to: goal, from: currentPosition)
         }
-        guard var path = originalPath else {
+        guard let path = originalPath else {
             if rescan {
                 // Already scanned this iteration, no path found. Must abort.
                 break
