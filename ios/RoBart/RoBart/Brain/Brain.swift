@@ -28,7 +28,7 @@ class Brain: ObservableObject {
 
     @Published private(set) var displayState: DisplayState? = .listening {
         didSet {
-            _video.setDisplayState(to: displayState)
+            _video.setDisplayState(displayState)
         }
     }
 
@@ -368,6 +368,9 @@ class Brain: ObservableObject {
 
             // Record point reached
             pointsTraversed.append(ARSessionManager.shared.transform.position)
+
+            // Update video recording data
+            _video.setNavigablePoints(photosByNavigablePoint)
         }
 
         // Log current position and heading to observations
@@ -495,10 +498,10 @@ class Brain: ObservableObject {
 
         let endPosition = ARSessionManager.shared.transform.position
         let actualDistanceMoved = (endPosition - startPosition).magnitude
-        let pctOfExpected = 100 * (actualDistanceMoved / expectedMovementDistance - 1.0)
+        let pctOfExpected = 100 * (actualDistanceMoved / expectedMovementDistance)
 
         if pctOfExpected < 0.25 {
-            return "Moved \(pctOfExpected)% of the way to the intended goal: \(actualDistanceMoved) meters toward point \(moveTo.pointNumber) -- much less than expeted; RoBart seems to be obstructed or stuck!"
+            return "Moved \(pctOfExpected)% of the way to the intended goal: \(actualDistanceMoved) meters toward point \(moveTo.pointNumber) -- much less than expected; RoBart seems to be obstructed or stuck!"
         }
         else if pctOfExpected < 0.8 {
             return "Moved \(pctOfExpected)% of the way to the intended goal: \(actualDistanceMoved) meters toward point \(moveTo.pointNumber) -- this seems a bit short, maybe there was an obstruction"
