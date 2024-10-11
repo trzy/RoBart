@@ -178,7 +178,7 @@ struct HumanInputThought: ThoughtRepresentable {
         var content: [MessageParameter.Message.Content.ContentObject] = [ .text("\(openingTag)\(_spokenWords)") ]
         if let photo = _photo {
             content.append(.text("\n\(photo.name):"))
-            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: photo.jpegBase64)))
+            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: photo.annotatedJPEGBase64)))
         }
         content.append(.text(closingTag))
         return content
@@ -189,7 +189,7 @@ struct HumanInputThought: ThoughtRepresentable {
         if let photo = _photo {
             let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
                 .chatCompletionContentPartTextParam(.init(text: "\(photo.name)")),
-                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.jpegBase64)", detail: .auto)))
+                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.annotatedJPEGBase64)", detail: .auto)))
             ])
             content.append(visionContent)
         }
@@ -244,7 +244,7 @@ struct ObservationsThought: ThoughtRepresentable {
         }
         for captionedPhoto in _captionedPhotos {
             content.append(.text("\n\(captionedPhoto.caption):"))
-            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: captionedPhoto.photo.jpegBase64)))
+            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: captionedPhoto.photo.annotatedJPEGBase64)))
         }
         content.append(.text(closingTag))
         return content
@@ -258,7 +258,7 @@ struct ObservationsThought: ThoughtRepresentable {
         for captionedPhoto in _captionedPhotos {
             let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
                 .chatCompletionContentPartTextParam(.init(text: "\n\(captionedPhoto.caption):")),
-                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(captionedPhoto.photo.jpegBase64)", detail: .auto)))
+                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(captionedPhoto.photo.annotatedJPEGBase64)", detail: .auto)))
             ])
             content.append(visionContent)
         }

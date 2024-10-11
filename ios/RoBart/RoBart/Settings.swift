@@ -79,6 +79,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var annotateVideos = true {
+        didSet {
+            UserDefaults.standard.set(annotateVideos, forKey: Self.k_annotateVideosKey)
+            log("Set: \(Self.k_annotateVideosKey) = \(annotateVideos)")
+        }
+    }
+
     @Published var driveToButtonUsesNavigation = true
 
     private static let k_roleKey = "role"
@@ -90,6 +97,7 @@ class Settings: ObservableObject {
     private static let k_maxPersonDistanceKey = "max_person_distance"
     private static let k_personDetectionHzKey = "person_detection_hz"
     private static let k_recordVideosKey = "record_videos"
+    private static let k_annotateVideosKey = "annotate_videos"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),
@@ -128,6 +136,10 @@ class Settings: ObservableObject {
 
         if let recordVideos = UserDefaults.standard.object(forKey: Self.k_recordVideosKey) as? Bool {
             self.recordVideos = recordVideos
+        }
+
+        if let annotateVideos = UserDefaults.standard.object(forKey: Self.k_annotateVideosKey) as? Bool {
+            self.annotateVideos = annotateVideos
         }
     }
 }

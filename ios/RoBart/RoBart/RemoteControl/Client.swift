@@ -421,7 +421,7 @@ class Client: ObservableObject {
     private func getAnnotatedView(connection: AsyncTCPConnection) async {
         let camera = AnnotatingCamera()
         if let photo = await camera.takePhoto(with: .navigablePoints) {
-            connection.send(AnnotatedViewMessage(imageBase64: photo.jpegBase64))
+            connection.send(AnnotatedViewMessage(imageBase64: photo.annotatedJPEGBase64))
         }
     }
 }
