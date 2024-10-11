@@ -294,11 +294,13 @@ class Brain: ObservableObject {
                 if !NavigationController.shared.occupancy.isLineUnobstructed(startPosition, targetPosition) {
                     resultsDescription.append("Unable to move \(move.distance) meters because there is an obstruction!")
                 } else {
+                    _video.setPath([ startPosition, targetPosition ])
                     HoverboardController.shared.send(.driveForward(distance: move.distance))
                     try? await Task.sleep(timeout: .seconds(maxMoveTime), until: { !HoverboardController.shared.isMoving })
                     let endPosition = ARSessionManager.shared.transform.position
                     let actualDistanceMoved = (endPosition - startPosition).magnitude
                     resultsDescription.append("Moved \(actualDistanceMoved) meters \(move.distance >= 0 ? "forwards" : "backwards")")
+                    _video.clearPath()
                 }
 
             case .moveTo(let moveTo):
@@ -467,7 +469,7 @@ class Brain: ObservableObject {
 
         if NavigationController.shared.occupancy.isLineUnobstructed(startPosition, navigablePoint.worldPoint) {
             // There is an unobstructed straight line path
-            
+
             // Orient toward goal initially
             let direction = (navigablePoint.worldPoint - startPosition).xzProjected.normalized
             HoverboardController.shared.send(.face(forward: direction))
@@ -479,6 +481,7 @@ class Brain: ObservableObject {
             let distanceToPoint = (navigablePoint.worldPoint - startPosition).magnitude
             let distanceToMove = max(0.5, distanceToPoint - 0.5)
             let goalPosition = startPosition + distanceToMove * direction
+            _video.setPath([ startPosition, goalPosition ])
 
             // Move to goal
             HoverboardController.shared.send(.driveTo(position: goalPosition))
@@ -490,11 +493,14 @@ class Brain: ObservableObject {
             if path.isEmpty {
                 return "Unable to move to point \(moveTo.pointNumber) because there is no clear path to it"
             }
+            _video.setPath(path)
 
             // Move along path
             NavigationController.shared.run(.follow(path: path))
             try? await Task.sleep(timeout: .seconds(maxMoveTime * Double(path.count) / 2), until: { !HoverboardController.shared.isMoving})
         }
+
+        _video.clearPath()
 
         let endPosition = ARSessionManager.shared.transform.position
         let actualDistanceMoved = (endPosition - startPosition).magnitude
@@ -698,7 +704,7 @@ class Brain: ObservableObject {
         var imageBase64ByName: [String: String] = [:]
         for thought in modelInput {
             for photo in thought.photos {
-                imageBase64ByName["\(photo.name)"] = photo.jpegBase64
+                imageBase64ByName["\(photo.name)"] = photo.annotatedJPEGBase64
             }
         }
 

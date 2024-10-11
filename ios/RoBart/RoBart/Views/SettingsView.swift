@@ -117,6 +117,9 @@ struct SettingsView: View {
 
                         // Whether to record videos for each task
                         Toggle("Record Videos", isOn: $_settings.recordVideos)
+
+                        // Whether to annotate the recorded videos with augmentations
+                        Toggle("Annotate Videos", isOn: $_settings.annotateVideos)
                     }
                     Spacer()
                 }

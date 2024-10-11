@@ -14,6 +14,7 @@ actor FirstPersonVideo {
     private var _videoRecorder: VideoRecorder?
     private var _displayState: Brain.DisplayState?
     private var _worldPointByID: [Int: Vector3] = [:]
+    private var _path: [Vector3] = []
 
     deinit {
         _task?.cancel()
@@ -29,6 +30,16 @@ actor FirstPersonVideo {
         Task { [weak self] in
             await self?.set(photosByNavigablePoint)
         }
+    }
+
+    nonisolated func setPath(_ path: [Vector3]) {
+        Task { [weak self] in
+            await self?.set(path)
+        }
+    }
+
+    nonisolated func clearPath() {
+        setPath([])
     }
 
     func record() {
@@ -67,17 +78,23 @@ actor FirstPersonVideo {
         }
     }
 
+    private func set(_ path: [Vector3]) {
+        _path = path
+    }
+
     private func recordVideoTask() async {
         do {
             // Wait for first frame in order to get size of image and spawn video recorder. We
             // rotate the image ourselves, so adjust the resolution accordingly here.
             guard let firstFrame = try? await ARSessionManager.shared.nextFrame() else { return }
             let resolution = CGSize(width: firstFrame.capturedImage.height, height: firstFrame.capturedImage.width)
-            _videoRecorder = VideoRecorder(outputSize: resolution, frameRate: 20)
+            let targetFrameRate = Settings.shared.annotateVideos ? 10 : 20  // hack: annotations slow things down, try to match frame rate
+            _videoRecorder = VideoRecorder(outputSize: resolution, frameRate: Int32(targetFrameRate))
             try await _videoRecorder?.startRecording(rotateToPortrait: false)
 
             // Record until exception (i.e., due to task canceled)
             while true {
+                let t0 = Date.now
                 try await Task.sleep(for: .milliseconds(50))
                 if _displayState != .thinking {
                     let frame = try await ARSessionManager.shared.nextFrame()
@@ -96,8 +113,26 @@ actor FirstPersonVideo {
     private func rotateToPortraitAndDrawAnnotations(frame: ARFrame) -> CVPixelBuffer? {
         guard let image = UIImage(pixelBuffer: frame.capturedImage)?.rotatedClockwise90() else { return nil }
 
+        if !Settings.shared.annotateVideos {
+            // No annotations necessary
+            return image.toPixelBuffer()
+        }
+
         let ourPosition = frame.camera.transform.position
         let ourForward = -frame.camera.transform.forward.xzProjected.normalized
+        let worldToCamera = frame.camera.transform.inverse
+        let intrinsics = frame.camera.intrinsics
+
+        guard let photo1 = AnnotatingCamera.Photo.createWithPathAnnotations(
+            name: "tmp",        // don't care
+            originalImage: image,
+            path: _path,
+            worldToCamera: worldToCamera,
+            intrinsics: intrinsics,
+            position: ourPosition,
+            forward: ourForward,
+            headingDegrees: nil
+        ) else { return nil }
 
         var navigablePoints: [AnnotatingCamera.NavigablePoint] = []
         let dummyCell = OccupancyMap.CellIndices(0, 0)  // don't care here
@@ -109,20 +144,18 @@ actor FirstPersonVideo {
             }
         }
 
-        let worldToCamera = frame.camera.transform.inverse
-        let intrinsics = frame.camera.intrinsics
-        guard let photo = AnnotatingCamera.Photo.createWithNavigablePointAnnotations(
+        guard let photo2 = AnnotatingCamera.Photo.createWithNavigablePointAnnotations(
             name: "tmp",        // don't care
-            originalImage: image,
+            originalImage: photo1.annotatedImage,   // render atop previous annotations
             navigablePoints: navigablePoints,
             worldToCamera: worldToCamera,
             intrinsics: intrinsics,
-            position: nil,      // don't care
-            forward: nil,       // ""
-            headingDegrees: nil // ""
+            position: ourPosition,
+            forward: ourForward,
+            headingDegrees: nil
         ) else { return nil }
 
-        return photo.annotatedImage.toPixelBuffer()
+        return photo2.annotatedImage.toPixelBuffer()
     }
 }
 

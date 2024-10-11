@@ -27,7 +27,7 @@ class AnnotatingCamera {
         let annotatedImage: UIImage
 
         /// JPEG data, with annotations if applicable. This is the image that should be sent to AI.
-        let jpegBase64: String
+        let annotatedJPEGBase64: String
 
         let navigablePoints: [NavigablePoint]
         let worldToCamera: Matrix4x4?
@@ -51,7 +51,7 @@ class AnnotatingCamera {
                 name: name,
                 originalImage: originalImage,
                 annotatedImage: originalImage,
-                jpegBase64: jpegBase64,
+                annotatedJPEGBase64: jpegBase64,
                 navigablePoints: [],
                 worldToCamera: nil,
                 intrinsics: nil,
@@ -98,7 +98,7 @@ class AnnotatingCamera {
                 name: name,
                 originalImage: originalImage,
                 annotatedImage: annotatedImage,
-                jpegBase64: jpegBase64,
+                annotatedJPEGBase64: jpegBase64,
                 navigablePoints: navigablePoints,
                 worldToCamera: worldToCamera,
                 intrinsics: intrinsics,
@@ -144,7 +144,57 @@ class AnnotatingCamera {
                 name: name,
                 originalImage: originalImage,
                 annotatedImage: annotatedImage,
-                jpegBase64: jpegBase64,
+                annotatedJPEGBase64: jpegBase64,
+                navigablePoints: [],
+                worldToCamera: worldToCamera,
+                intrinsics: intrinsics,
+                position: position,
+                forward: forward,
+                headingDegrees: headingDegrees
+            )
+        }
+
+        /// Creates a `Photo` object annotated with path on the ground.
+        /// - Parameter name: A name for the photo (e.g. "photo001").
+        /// - Parameter originalImage: The original image before annotation. For camera photos,
+        /// this should be in portrait mode (rotated clockwise 90 degrees from the original camera
+        /// image).
+        /// - Parameter path: Path in world points to draw.
+        /// - Parameter worldToCamera: Matrix transforming world-space points to camera-space
+        /// for this image.
+        /// - Parameter intrinsics: Camera intrinsic parameters, appropriately scaled for image
+        /// resolution.
+        /// - Parameter position: Position in world space the image was taken at (if this is a
+        /// camera photo) or `nil` otherwise.
+        /// - Parameter forward:Direction camera is pointing (photo direction), if applicable.
+        /// - Parameter headingDegrees: Absolute heading in degrees that photo is oriented towards.
+        /// - Returns: `Photo` object if successful else `nil`.
+        static func createWithPathAnnotations(name: String, originalImage: UIImage, path: [Vector3], worldToCamera: Matrix4x4?, intrinsics: Matrix3x3?, position: Vector3?, forward: Vector3?, headingDegrees: Float?) -> Photo? {
+            var jpegBase64: String?
+            var annotatedImage: UIImage?
+
+            if !path.isEmpty,
+               let position = position,
+               let forward = forward,
+               let worldToCamera = worldToCamera,
+               let intrinsics = intrinsics {
+                let imageSpacePathSegments = AnnotatingCamera.createImageSpacePathSegments(from: path, ourPosition: position, ourForward: forward, floorY: ARSessionManager.shared.floorY, worldToCamera: worldToCamera, intrinsics: intrinsics)
+                guard let annotatedPhoto = annotatePath(image: originalImage, with: imageSpacePathSegments, rotated: true) else { return nil }
+                jpegBase64 = annotatedPhoto.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+                annotatedImage = annotatedPhoto
+            } else {
+                jpegBase64 = originalImage.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+                annotatedImage = originalImage
+            }
+
+            guard let jpegBase64 = jpegBase64,
+                  let annotatedImage = annotatedImage else { return nil }
+
+            return Photo(
+                name: name,
+                originalImage: originalImage,
+                annotatedImage: annotatedImage,
+                annotatedJPEGBase64: jpegBase64,
                 navigablePoints: [],
                 worldToCamera: worldToCamera,
                 intrinsics: intrinsics,
@@ -520,7 +570,7 @@ class AnnotatingCamera {
     /// Necessary adjustments are made if the image has been rotated into a portrait orientation.
     /// Point numbers are rendered.
     /// - Parameter image: The image to annotate.
-    /// - Parameter with: Points to annotate.
+    /// - Parameter points: Points to annotate.
     /// - Parameter worldToCamera:Inverse camera transform matrix (i.e., world to camera-local space).
     /// - Parameter intrinsics:Camera intrinsics. Used with `worldToCamera`to convert world-space
     /// points to image-space annotations.
@@ -575,7 +625,7 @@ class AnnotatingCamera {
     /// distance from the position the photo was taken at). Necessary adjustments are made if the
     /// image has been rotated into a portrait orientation. Distance labels are rendered.
     /// - Parameter image: The image to annotate.
-    /// - Parameter with: Curves to draw. A dictionary with the key being distance and the value
+    /// - Parameter equidistantCurveByDistance: Curves to draw. A dictionary with the key being distance and the value
     /// being an array of points in image space.
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
@@ -661,7 +711,7 @@ class AnnotatingCamera {
     /// Renders radial heading lines on the image. Necessary adjustments are made if the image has
     /// been rotated into a portrait orientation. Each line is labeled by the degrees.
     /// - Parameter image: The image to annotate.
-    /// - Parameter with: Lines to draw. A dictionary with the key being heading (degrees) and the
+    /// - Parameter lineByHeading: Lines to draw. A dictionary with the key being heading (degrees) and the
     /// value being an array of points in image space.
     /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
     /// the points are specified. The points will be adjusted accordingly.
@@ -742,5 +792,155 @@ class AnnotatingCamera {
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return newImage
+    }
+
+    /// Renders path.
+    /// - Parameter image: The image to annotate.
+    /// - Parameter pathSegments: Path points in image space as a series of contiguous segments.
+    /// - Parameter rotated: If `true`, the image is rotated clockwise 90 degrees relative to how
+    /// the points are specified. The points will be adjusted accordingly.
+    /// - Returns: New image with annotations or `nil` if anything went wrong.
+    private static func annotatePath(image: UIImage, with pathSegments: [[CGPoint]], rotated: Bool) -> UIImage? {
+        if pathSegments.isEmpty {
+            return image
+        }
+
+        // Get the image size
+        let imageSize = image.size
+        let scale = image.scale
+
+        // Draw original image
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        image.draw(in: CGRect(origin: .zero, size: imageSize))
+
+        // Draw lines
+        context.setStrokeColor(UIColor.cyan.withAlphaComponent(0.5).cgColor)
+        context.setLineWidth(50.0)
+        context.setLineJoin(.round)
+        context.setLineCap(.round)
+        for path in pathSegments {
+            if path.isEmpty {
+                continue
+            }
+
+            // Draw this path semgent
+            context.move(to: path.first!)
+            for i in 1..<path.count {
+                // Get (x,y) and adjust for rotation if need be
+                let imagePoint = path[i]
+                let x = rotated ? (imageSize.width - imagePoint.y) : imagePoint.x
+                let y = rotated ? imagePoint.x : imagePoint.y
+                let point = CGPoint(x: x, y: y)
+
+                // Line
+                context.addLine(to: point)
+            }
+
+            // Draw the line
+            context.strokePath()
+        }
+
+        // Return new image
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+
+    /// Given a world-space path, chops it up into tiny increments and tests each point against the
+    /// current view to create a series of paths that should be visible in the image. A very crude
+    /// form of clipping.
+    private static func createImageSpacePathSegments(from path: [Vector3], ourPosition: Vector3, ourForward: Vector3, floorY: Float, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> [[CGPoint]] {
+        if path.count <= 1 {
+            return []
+        }
+
+        // Chop up into fine steps
+        let stepSize: Float = 0.05
+        var finePath: [Vector3] = []
+        for i in 0..<(path.count - 1) {
+            let p0 = Vector3(x: path[i].x, y: floorY, z: path[i].z)
+            let p1 = Vector3(x: path[i + 1].x, y: floorY, z: path[i + 1].z)
+            let dir = (p1 - p0).normalized
+            let length = (p1 - p0).magnitude
+            let numSteps = Int(ceil(length / stepSize))
+            let step = length / Float(numSteps)
+            for j in 0..<numSteps {
+                finePath.append(p0 + Float(j) * step * dir)
+            }
+        }
+
+        // Create a series of on-screen segments by testing the world points to ensure they
+        // are in front of camera. Whenever a point falls off screen, we terminate the
+        // current path and begin a new segment.
+        var pathSegments: [[Vector3]] = []
+        var currentSegment: [Vector3] = []
+        for i in 0..<finePath.count {
+            let worldPoint = finePath[i]
+            let inFrontOfCamera = Vector3.dot(ourForward, worldPoint - ourPosition) >= 0
+            if inFrontOfCamera {
+                currentSegment.append(worldPoint)
+            } else {
+                // Point is off-screen, end current segment
+                if !currentSegment.isEmpty {
+                    pathSegments.append(currentSegment)
+                    currentSegment = []
+                }
+            }
+        }
+
+        if !currentSegment.isEmpty {
+            pathSegments.append(currentSegment)
+        }
+
+        // Return everything in image space
+        return pathSegments.map { $0.map { Self.imagePoint(worldPoint: $0, worldToCamera: worldToCamera, intrinsics: intrinsics) } }
+    }
+
+    /// Image point with origin in lower-left (+y is up).
+    private static func imagePoint(worldPoint: Vector3, worldToCamera: Matrix4x4, intrinsics: Matrix3x3) -> CGPoint {
+        /*
+         * Transform world point to view space. Note that the *camera* space in ARKit is:
+         *      ---> +y
+         *      +----+
+         *      |    | |
+         *      |    | |
+         *      |    | V
+         *      |    | +x
+         *      +----+
+         *
+         * Assuming the phone is held in portrait mode. The way the camera sensor is oriented, the
+         * image we get is:
+         *
+         *      --> +x
+         *   +y +------------+
+         *    ^ |            |
+         *    | |            |
+         *    | +------------+
+         *
+         * With +z pointing out of the screen. However, the viewspace coordinates are not quite the
+         * same. They are:
+         *
+         *      --> +x
+         *    | +------------+
+         *    | |            |
+         *    V |            |
+         *   +y +------------+
+         *
+         * With +z pointing into the screen (into the scene from the back side of the phone). This
+         * is what the intrinsic matrix assumes. Therefore, we must rotate 180 degrees about the x
+         * axis to invert both y and z. Or just multiply these components on a position in camera
+         * space by -1, as we do here. Note that this coordinate system maps onto the typical
+         * upper-left origin 2D bitmap (x,y) space.
+         */
+
+        var cameraPoint = worldToCamera.transformPoint(worldPoint)
+        cameraPoint.y *= -1
+        cameraPoint.z *= -1
+
+        // Project onto the 2D frame where the origin is in the upper-left and +y is down
+        let homogeneous = Vector3(x: cameraPoint.x / cameraPoint.z, y: cameraPoint.y / cameraPoint.z, z: 1)
+        let projected = intrinsics * homogeneous
+        return CGPoint(x: CGFloat(projected.x), y: CGFloat(projected.y))
     }
 }
