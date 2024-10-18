@@ -85,7 +85,6 @@ struct RenderSceneGeometryMessage: JSONMessage {
 }
 
 struct RequestOccupancyMapMessage: JSONMessage {
-    let unused: Bool    // Python side doesn't support empty messages so create a dummy field
 }
 
 struct OccupancyMapMessage: JSONMessage {
@@ -102,7 +101,6 @@ struct DrivePathMessage: JSONMessage {
 }
 
 struct RequestAnnotatedViewMessage: JSONMessage {
-    let unused: Bool
 }
 
 struct AnnotatedViewMessage: JSONMessage {
