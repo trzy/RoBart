@@ -67,7 +67,7 @@ class RenderSceneGeometryMessage(BaseModel):
     meshes: bool
 
 class RequestOccupancyMapMessage(BaseModel):
-    unused: bool = False
+    pass
 
 class OccupancyMapMessage(BaseModel):
     cellsWide: int
@@ -81,7 +81,7 @@ class DrivePathMessage(BaseModel):
     pathFinding: bool
 
 class RequestAnnotatedViewMessage(BaseModel):
-    unused: bool = False
+    pass
 
 class AnnotatedViewMessage(BaseModel):
     imageBase64: str
