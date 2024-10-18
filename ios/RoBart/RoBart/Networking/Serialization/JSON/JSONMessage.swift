@@ -30,9 +30,10 @@ extension JSONMessage {
         do {
             // Encode as JSON and replace the final '}' with ',"__id":"ClassName"}'
             var jsonData = try JSONEncoder().encode(self)
-            if jsonData.count > 0 && jsonData[jsonData.count - 1] == Character("}").asciiValue! {
+            if jsonData.count >= 2 && jsonData[jsonData.count - 1] == Character("}").asciiValue! {
                 if let extraData = "\"__id\":\"\(Self.id)\"}".data(using: .utf8) {
-                    jsonData[jsonData.count - 1] = Character(",").asciiValue!
+                    // If JSON is just {}, do not replace end bracket with ,
+                    jsonData[jsonData.count - 1] = jsonData.count == 2 ? Character(" ").asciiValue! : Character(",").asciiValue!
                     jsonData.append(extraData)
                 }
             }
