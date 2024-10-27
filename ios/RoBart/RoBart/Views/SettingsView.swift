@@ -30,6 +30,8 @@ struct SettingsView: View {
                             Text("Handheld").tag(Role.handheld)
                         }
 
+                        Toggle("Watch Voice Input", isOn: $_settings.watchEnabled)
+
                         Picker("AI Model", selection: $_settings.model) {
                             Text("Claude 3.5 Sonnet").tag(Brain.Model.claude35Sonnet)
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)

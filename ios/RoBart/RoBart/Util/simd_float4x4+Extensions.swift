@@ -60,3 +60,20 @@ extension simd_float4x4: Codable {
         fatalError("Decodable init(from:) not implemented on simd_float4x4")
     }
 }
+
+extension Matrix4x4: SimpleBinaryCodable {
+    func write(to writer: SimpleBinaryEncoder) throws {
+        try self.columns.0.write(to: writer)
+        try self.columns.1.write(to: writer)
+        try self.columns.2.write(to: writer)
+        try self.columns.3.write(to: writer)
+    }
+
+    static func read(from reader: SimpleBinaryDecoder) throws -> Matrix4x4 {
+        let column0 = try Vector4.read(from: reader)
+        let column1 = try Vector4.read(from: reader)
+        let column2 = try Vector4.read(from: reader)
+        let column3 = try Vector4.read(from: reader)
+        return Matrix4x4(column0, column1, column2, column3)
+    }
+}

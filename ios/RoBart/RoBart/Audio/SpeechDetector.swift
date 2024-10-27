@@ -31,23 +31,28 @@ class SpeechDetector: ObservableObject {
         guard !_isListening else { return }
         log("Starting speech detector")
         _isListening = true
-        AudioManager.shared.startRecording() { [weak self] (buffer: AVAudioPCMBuffer, time: AVAudioTime) in
+        AudioManager.shared.startRecording() { [weak self] (buffer: AVAudioPCMBuffer, isStream: Bool) in
             guard let self = self else { return }
 
             // Convert audio to Deepgram and VAD format
             _converter = createConverter(from: buffer.format, to: _outputFormat)
             guard let audioBuffer = convertAudio(buffer) else { return }
 
-            // Use VAD to minimize voice uploads
-            let numSpeechFrames = _voiceExtractor.process(outputSpeechBuffer: _speechBuffer, inputAudioBuffer: audioBuffer)
-            if numSpeechFrames > 0 {
-                log("Detected \(Double(numSpeechFrames) / _speechBuffer.format.sampleRate) sec of speech")
+            if isStream {
+                // If streaming from microphone, use VAD to minimize voice uploads
+                let numSpeechFrames = _voiceExtractor.process(outputSpeechBuffer: _speechBuffer, inputAudioBuffer: audioBuffer)
+                if numSpeechFrames > 0 {
+                    log("Detected \(Double(numSpeechFrames) / _speechBuffer.format.sampleRate) sec of speech")
 
-                // Send to Deepgram for transcription
-                transcribe(_speechBuffer)
+                    // Send to Deepgram for transcription
+                    transcribe(_speechBuffer)
 
-                // Reset speech buffer
-                _speechBuffer.frameLength = 0
+                    // Reset speech buffer
+                    _speechBuffer.frameLength = 0
+                }
+            } else {
+                // We received a complete audio buffer
+                transcribe(buffer)
             }
         }
     }
@@ -85,7 +90,8 @@ class SpeechDetector: ObservableObject {
     private func convertAudio(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
         guard let converter = _converter else { return nil }
 
-        guard let outputAudioBuffer = AVAudioPCMBuffer(pcmFormat: _outputFormat, frameCapacity: buffer.frameLength) else {
+        let outputFrameCapacity = AVAudioFrameCount(ceil(converter.outputFormat.sampleRate / buffer.format.sampleRate) * Double(buffer.frameLength))
+        guard let outputAudioBuffer = AVAudioPCMBuffer(pcmFormat: _outputFormat, frameCapacity: outputFrameCapacity) else {
             log("Error: Unable to allocate output buffer for conversion")
             return nil
         }
@@ -112,7 +118,8 @@ class SpeechDetector: ObservableObject {
 
     private func toData(_ buffer: AVAudioPCMBuffer) -> Data? {
         let audioBuffer = buffer.audioBufferList.pointee.mBuffers
-        return Data(bytes: audioBuffer.mData!, count: Int(audioBuffer.mDataByteSize))
+        guard let audioBytes = audioBuffer.mData else { return nil }
+        return Data(bytes: audioBytes, count: Int(audioBuffer.mDataByteSize))
     }
 
     private func transcribe(_ buffer: AVAudioPCMBuffer) {
