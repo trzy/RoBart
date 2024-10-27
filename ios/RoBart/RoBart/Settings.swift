@@ -19,6 +19,14 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var watchEnabled = false {
+        didSet {
+            // Watch enabled is saved
+            UserDefaults.standard.set(watchEnabled, forKey: Self.k_watchKey)
+            log("Set: \(Self.k_watchKey) = \(watchEnabled)")
+        }
+    }
+
     @Published var model: Brain.Model = .claude35Sonnet {
         didSet {
             // Model is saved
@@ -89,6 +97,7 @@ class Settings: ObservableObject {
     @Published var driveToButtonUsesNavigation = true
 
     private static let k_roleKey = "role"
+    private static let k_watchKey = "watch"
     private static let k_modelKey = "model"
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
@@ -103,6 +112,10 @@ class Settings: ObservableObject {
         if let value = UserDefaults.standard.string(forKey: Self.k_roleKey),
            let role = Role(rawValue: value) {
             self.role = role
+        }
+
+        if let watchEnabled = UserDefaults.standard.object(forKey: Self.k_watchKey) as? Bool {
+            self.watchEnabled = watchEnabled
         }
 
         if let value = UserDefaults.standard.string(forKey: Self.k_modelKey),

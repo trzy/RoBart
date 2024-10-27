@@ -5,6 +5,7 @@
 //  Created by Bart Trzynadlowski on 9/19/24.
 //
 
+import Combine
 import AVFoundation
 
 class AudioManager {
@@ -16,20 +17,46 @@ class AudioManager {
     private var _playerNode = AVAudioPlayerNode()
     private let _tempDir: URL
 
+    private var _usingWatch = false
+    private var _watchSubscription: Cancellable?
+    private var _watchAudioChunks: [Int32: Data] = [:]
+
     fileprivate init() {
         _tempDir = FileManager.default.temporaryDirectory
     }
 
-    func startRecording(onSamplesRecorded: @escaping AVAudioNodeTapBlock) {
+    func startRecording(onSamplesRecorded: @escaping (_ buffer: AVAudioPCMBuffer, _ isStream: Bool) -> Void) {
         if !_isRunning {
             start()
         }
-        let format = _silenceInputMixerNode.outputFormat(forBus: 0)
-        _silenceInputMixerNode.installTap(onBus: 0, bufferSize: 4096, format: format, block: onSamplesRecorded)
+
+        if (Settings.shared.watchEnabled) {
+            // Listen to Watch for audio messages
+            _usingWatch = true
+            _watchAudioChunks = [:]
+            _watchSubscription = WatchConnectivityManager.shared.$receivedMessage.sink { [weak self] (messages: [WatchMessageKey: Data]) in
+                guard let self = self else { return }
+                if let completeBuffer = handleMessagesFromWatch(messages) {
+                    onSamplesRecorded(completeBuffer, false)
+    //                if let convertedBuffer = convertAudio(completeBuffer, outputFormat: _playerNode.outputFormat(forBus: 0)) {
+    //                    _playerNode.play()
+    //                    _playerNode.scheduleBuffer(convertedBuffer)
+    //                }
+                }
+            }
+        } else {
+            // Record using iPhone microphone
+            _usingWatch = false
+            let format = _silenceInputMixerNode.outputFormat(forBus: 0)
+            _silenceInputMixerNode.installTap(onBus: 0, bufferSize: 4096, format: format, block: { (buffer: AVAudioPCMBuffer, time: AVAudioTime) in onSamplesRecorded(buffer, true) })
+        }
     }
 
     func stopRecording() {
-        _silenceInputMixerNode.removeTap(onBus: 0)
+        if !_usingWatch {
+            _silenceInputMixerNode.removeTap(onBus: 0)
+        }
+        _watchSubscription = nil
     }
 
     func playSound(url: URL, delete: Bool = false, continuation: AsyncStream<Void>.Continuation? = nil) {
@@ -147,8 +174,33 @@ class AudioManager {
             try _audioEngine.start()
             log("Started audio engine")
         } catch {
-            print("[AudioRecorder] Could not start audio engine: \(error)")
+            log("Error: Could not start audio engine: \(error)")
         }
+    }
+
+    private func handleMessagesFromWatch(_ messages: [WatchMessageKey: Data]) -> AVAudioPCMBuffer? {
+        for (_, data) in messages {
+            if let msg = WatchAudioMessage.deserialize(from: data) {
+                log("Received audio: chunkNumber=\(msg.chunkNumber) size=\(msg.samples.count) end=\(msg.finished)")
+
+                _watchAudioChunks[msg.chunkNumber] = msg.samples
+
+                if msg.finished {
+                    // Assemble complete audio buffer
+                    let chunks = _watchAudioChunks.sorted(by: { $0.key < $1.key })
+                    var data = Data()
+                    for chunk in chunks {
+                        data.append(chunk.value)
+                        log("Appended \(chunk.key)")
+                    }
+
+                    // Reset map and return the buffer
+                    _watchAudioChunks = [:]
+                    return AVAudioPCMBuffer.fromData(data, format: AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false)!)
+                }
+            }
+        }
+        return nil
     }
 }
 

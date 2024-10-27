@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC1110702CCDC56D0047CB40 /* RoBartRemoteControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11106F2CCDC56D0047CB40 /* RoBartRemoteControl.swift */; };
+		CC1110722CCDC56D0047CB40 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1110712CCDC56D0047CB40 /* ContentView.swift */; };
+		CC1110742CCDC56E0047CB40 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC1110732CCDC56E0047CB40 /* Assets.xcassets */; };
+		CC1110772CCDC56E0047CB40 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC1110762CCDC56E0047CB40 /* Preview Assets.xcassets */; };
+		CC11107A2CCDC56E0047CB40 /* RoBart Remote Control Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CC11106D2CCDC56D0047CB40 /* RoBart Remote Control Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CC11107F2CCDCA100047CB40 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11107E2CCDCA100047CB40 /* AudioRecorder.swift */; };
+		CC1110822CCDDCB00047CB40 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1110812CCDDCB00047CB40 /* WatchConnectivityManager.swift */; };
+		CC1110832CCDDD6A0047CB40 /* SimpleBinaryDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1362C62E1CE00B0401C /* SimpleBinaryDecoder.swift */; };
+		CC1110842CCDDD6A0047CB40 /* SimpleBinaryMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1382C62E1FB00B0401C /* SimpleBinaryMessage.swift */; };
+		CC1110852CCDDD6A0047CB40 /* SimpleBinaryCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1302C62E12400B0401C /* SimpleBinaryCodable.swift */; };
+		CC1110862CCDDD6A0047CB40 /* SimpleBinaryEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1322C62E18700B0401C /* SimpleBinaryEncoder.swift */; };
+		CC1110872CCDDD6A0047CB40 /* SimpleBinaryCodingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1342C62E1AD00B0401C /* SimpleBinaryCodingError.swift */; };
+		CC1110882CCDDD6D0047CB40 /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
+		CC1110892CCDE7BB0047CB40 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1110812CCDDCB00047CB40 /* WatchConnectivityManager.swift */; };
+		CC11108B2CCDF4190047CB40 /* AVAudioPCMBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11108A2CCDF4190047CB40 /* AVAudioPCMBuffer+Extensions.swift */; };
 		CC1125332C9384B8007AF247 /* Scan360.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1125322C9384B8007AF247 /* Scan360.swift */; };
 		CC1125352C93A9A5007AF247 /* Task+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1125342C93A9A5007AF247 /* Task+Extensions.swift */; };
 		CC1125372C93B8F2007AF247 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1125362C93B8F2007AF247 /* NavigationController.swift */; };
@@ -149,6 +164,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		CC1110782CCDC56E0047CB40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CCA9A0F02C62D35E00B0401C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC11106C2CCDC56D0047CB40;
+			remoteInfo = "RoBart Remote Control Watch App";
+		};
 		CCFF523F2C98DD3D007F27D7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CCA9A0F02C62D35E00B0401C /* Project object */;
@@ -159,6 +181,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		CC1110592CCDC4E00047CB40 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				CC11107A2CCDC56E0047CB40 /* RoBart Remote Control Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCFF52412C98DD3D007F27D7 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -173,6 +206,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CC11106D2CCDC56D0047CB40 /* RoBart Remote Control Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RoBart Remote Control Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC11106F2CCDC56D0047CB40 /* RoBartRemoteControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoBartRemoteControl.swift; sourceTree = "<group>"; };
+		CC1110712CCDC56D0047CB40 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CC1110732CCDC56E0047CB40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CC1110762CCDC56E0047CB40 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		CC11107E2CCDCA100047CB40 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
+		CC1110812CCDDCB00047CB40 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
+		CC11108A2CCDF4190047CB40 /* AVAudioPCMBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAudioPCMBuffer+Extensions.swift"; sourceTree = "<group>"; };
 		CC1125322C9384B8007AF247 /* Scan360.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scan360.swift; sourceTree = "<group>"; };
 		CC1125342C93A9A5007AF247 /* Task+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Task+Extensions.swift"; sourceTree = "<group>"; };
 		CC1125362C93B8F2007AF247 /* NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
@@ -331,6 +372,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		CC11106A2CCDC56D0047CB40 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCA9A0F52C62D35E00B0401C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -353,6 +401,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CC11106E2CCDC56D0047CB40 /* RoBart Remote Control Watch App */ = {
+			isa = PBXGroup;
+			children = (
+				CC11106F2CCDC56D0047CB40 /* RoBartRemoteControl.swift */,
+				CC1110712CCDC56D0047CB40 /* ContentView.swift */,
+				CC11107E2CCDCA100047CB40 /* AudioRecorder.swift */,
+				CC1110732CCDC56E0047CB40 /* Assets.xcassets */,
+				CC1110752CCDC56E0047CB40 /* Preview Content */,
+			);
+			path = "RoBart Remote Control Watch App";
+			sourceTree = "<group>";
+		};
+		CC1110752CCDC56E0047CB40 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				CC1110762CCDC56E0047CB40 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		CC1110802CCDDC760047CB40 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				CCA9A12C2C62E08E00B0401C /* Serialization */,
+				CC1110812CCDDCB00047CB40 /* WatchConnectivityManager.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		CC11252F2C938371007AF247 /* Mapping */ = {
 			isa = PBXGroup;
 			children = (
@@ -459,6 +536,8 @@
 			children = (
 				CCA9A0FA2C62D35E00B0401C /* RoBart */,
 				CCFF512B2C98DB3B007F27D7 /* Thirdparty */,
+				CC1110802CCDDC760047CB40 /* Shared */,
+				CC11106E2CCDC56D0047CB40 /* RoBart Remote Control Watch App */,
 				CCA9A0F92C62D35E00B0401C /* Products */,
 				CCA9A13C2C62E5A800B0401C /* Frameworks */,
 			);
@@ -469,6 +548,7 @@
 			children = (
 				CCA9A0F82C62D35E00B0401C /* RoBart.app */,
 				CCFF519E2C98DBF8007F27D7 /* WebRTCVAD.framework */,
+				CC11106D2CCDC56D0047CB40 /* RoBart Remote Control Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -537,6 +617,7 @@
 				CC1125342C93A9A5007AF247 /* Task+Extensions.swift */,
 				CC26CF612C9B682400ACC82E /* UIImage+Extensions.swift */,
 				CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */,
+				CC11108A2CCDF4190047CB40 /* AVAudioPCMBuffer+Extensions.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -586,7 +667,6 @@
 		CCA9A12B2C62E07F00B0401C /* Networking */ = {
 			isa = PBXGroup;
 			children = (
-				CCA9A12C2C62E08E00B0401C /* Serialization */,
 				CCA9A12E2C62E0B300B0401C /* AsyncBluetoothManager.swift */,
 				CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */,
 				CC38DE382C7CFBB9003EEBDE /* PeerManager.swift */,
@@ -896,6 +976,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		CC11106C2CCDC56D0047CB40 /* RoBart Remote Control Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC11107B2CCDC56E0047CB40 /* Build configuration list for PBXNativeTarget "RoBart Remote Control Watch App" */;
+			buildPhases = (
+				CC1110692CCDC56D0047CB40 /* Sources */,
+				CC11106A2CCDC56D0047CB40 /* Frameworks */,
+				CC11106B2CCDC56D0047CB40 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RoBart Remote Control Watch App";
+			productName = "RoBart Remote Control Watch App";
+			productReference = CC11106D2CCDC56D0047CB40 /* RoBart Remote Control Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		CCA9A0F72C62D35E00B0401C /* RoBart */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CCA9A1062C62D35F00B0401C /* Build configuration list for PBXNativeTarget "RoBart" */;
@@ -904,11 +1001,13 @@
 				CCA9A0F52C62D35E00B0401C /* Frameworks */,
 				CCA9A0F62C62D35E00B0401C /* Resources */,
 				CCFF52412C98DD3D007F27D7 /* Embed Frameworks */,
+				CC1110592CCDC4E00047CB40 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				CCFF52402C98DD3D007F27D7 /* PBXTargetDependency */,
+				CC1110792CCDC56E0047CB40 /* PBXTargetDependency */,
 			);
 			name = RoBart;
 			packageProductDependencies = (
@@ -947,6 +1046,9 @@
 				LastSwiftUpdateCheck = 1540;
 				LastUpgradeCheck = 1540;
 				TargetAttributes = {
+					CC11106C2CCDC56D0047CB40 = {
+						CreatedOnToolsVersion = 15.4;
+					};
 					CCA9A0F72C62D35E00B0401C = {
 						CreatedOnToolsVersion = 15.4;
 						LastSwiftMigration = 1540;
@@ -975,11 +1077,21 @@
 			targets = (
 				CCA9A0F72C62D35E00B0401C /* RoBart */,
 				CCFF519D2C98DBF8007F27D7 /* WebRTCVAD */,
+				CC11106C2CCDC56D0047CB40 /* RoBart Remote Control Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CC11106B2CCDC56D0047CB40 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC1110772CCDC56E0047CB40 /* Preview Assets.xcassets in Resources */,
+				CC1110742CCDC56E0047CB40 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCA9A0F62C62D35E00B0401C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1000,6 +1112,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		CC1110692CCDC56D0047CB40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC11107F2CCDCA100047CB40 /* AudioRecorder.swift in Sources */,
+				CC1110882CCDDD6D0047CB40 /* JSONMessage.swift in Sources */,
+				CC1110832CCDDD6A0047CB40 /* SimpleBinaryDecoder.swift in Sources */,
+				CC1110842CCDDD6A0047CB40 /* SimpleBinaryMessage.swift in Sources */,
+				CC1110852CCDDD6A0047CB40 /* SimpleBinaryCodable.swift in Sources */,
+				CC1110862CCDDD6A0047CB40 /* SimpleBinaryEncoder.swift in Sources */,
+				CC1110872CCDDD6A0047CB40 /* SimpleBinaryCodingError.swift in Sources */,
+				CC1110722CCDC56D0047CB40 /* ContentView.swift in Sources */,
+				CC1110822CCDDCB00047CB40 /* WatchConnectivityManager.swift in Sources */,
+				CC1110702CCDC56D0047CB40 /* RoBartRemoteControl.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCA9A0F42C62D35E00B0401C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1065,6 +1194,8 @@
 				CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */,
 				CCA9A11C2C62D95900B0401C /* SceneMeshRenderer.swift in Sources */,
 				CC38DE392C7CFBB9003EEBDE /* PeerManager.swift in Sources */,
+				CC1110892CCDE7BB0047CB40 /* WatchConnectivityManager.swift in Sources */,
+				CC11108B2CCDF4190047CB40 /* AVAudioPCMBuffer+Extensions.swift in Sources */,
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
 				CC38DE3B2C7D0744003EEBDE /* PeerMessages.swift in Sources */,
 				CCA9A10B2C62D73500B0401C /* ARSessionManager.swift in Sources */,
@@ -1114,6 +1245,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		CC1110792CCDC56E0047CB40 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC11106C2CCDC56D0047CB40 /* RoBart Remote Control Watch App */;
+			targetProxy = CC1110782CCDC56E0047CB40 /* PBXContainerItemProxy */;
+		};
 		CCFF52402C98DD3D007F27D7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = CCFF519D2C98DBF8007F27D7 /* WebRTCVAD */;
@@ -1122,6 +1258,66 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		CC11107C2CCDC56E0047CB40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"RoBart Remote Control Watch App/Preview Content\"";
+				DEVELOPMENT_TEAM = 7T2874S592;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "RoBart Remote Control";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.cambrianmoment.RoBart;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.5;
+			};
+			name = Debug;
+		};
+		CC11107D2CCDC56E0047CB40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"RoBart Remote Control Watch App/Preview Content\"";
+				DEVELOPMENT_TEAM = 7T2874S592;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "RoBart Remote Control";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.cambrianmoment.RoBart;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cambrianmoment.RoBart.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.5;
+			};
+			name = Release;
+		};
 		CCA9A1042C62D35F00B0401C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1244,6 +1440,7 @@
 		CCA9A1072C62D35F00B0401C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -1284,6 +1481,7 @@
 		CCA9A1082C62D35F00B0401C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -1405,6 +1603,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CC11107B2CCDC56E0047CB40 /* Build configuration list for PBXNativeTarget "RoBart Remote Control Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC11107C2CCDC56E0047CB40 /* Debug */,
+				CC11107D2CCDC56E0047CB40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CCA9A0F32C62D35E00B0401C /* Build configuration list for PBXProject "RoBart" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
