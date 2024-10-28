@@ -98,7 +98,7 @@ extension SimpleBinaryMessage {
             try encoder.encode(self)            // body
             var encodedData = encoder.data
             guard var numBytes = UInt32(exactly: encodedData.count) else {
-                fatalError("Failed to serialize message because its size (\(encodedData.count) bytes) exceeds maximum message size of 255 bytes")
+                fatalError("Failed to serialize message because its size (\(encodedData.count) bytes) exceeds maximum message size")
             }
             encodedData.replaceSubrange(0..<4, with: &numBytes, count: 4)   // patch message size into header
             return encodedData
