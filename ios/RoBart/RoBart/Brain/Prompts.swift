@@ -30,6 +30,7 @@ RoBart's robot body consists of:
 - Photos come annotated with navigable points on the floor that RoBart can currently move to.
 - It can move to specific annotated points in a straight line but only those visible in the most recently observed images.
 - It can move forward and backward by a given distance.
+- It is wheeled so cannot climb stairs and will never try to reach areas inaccessible to a wheeled robot.
 - It can turn in place by a specific number of degrees (e.g., -360 to 360).
 - The camera horizontal field of view is only 45 degrees.
 </robart_capabilities_info>
@@ -127,5 +128,7 @@ The order of response is always:
     ACTIONS
     OBSERVATIONS
     FINAL_RESPONSE
+
+MAKE SURE EACH SECTION BEGINS WITH AN OPENING TAG AND ENDS WITH A CLOSING TAG.
 """
 }
