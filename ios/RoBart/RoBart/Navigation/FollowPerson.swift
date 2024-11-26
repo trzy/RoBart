@@ -4,6 +4,21 @@
 //
 //  Created by Bart Trzynadlowski on 9/23/24.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import ARKit
 import CoreGraphics
@@ -19,7 +34,7 @@ func followPerson(duration followDuration: TimeInterval?, distance followDistanc
 
     var lastPosition: Vector3?
     var lastForward: Vector3?
-    
+
     var nextPersonDetectionTime = Date.now
     var searchForPersonTime: Date? = nil
     var goalPositionHistory: [Vector3] = Array(repeating: ARSessionManager.shared.transform.position, count: 5)
@@ -62,7 +77,7 @@ func followPerson(duration followDuration: TimeInterval?, distance followDistanc
         if now >= nextPersonDetectionTime,
            let frame = try? await ARSessionManager.shared.nextFrame() {
             let people = detectHumans(in: frame, maximumDistance: Settings.shared.maxPersonDistance)
-            
+
             if let nearestPerson = people.sorted(by: { $0.magnitude > $1.magnitude }).first {
                 // Compute goal position safe distance from person
                 let targetDistanceToPerson = Settings.shared.followDistance

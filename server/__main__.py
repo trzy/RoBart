@@ -2,6 +2,23 @@
 # __main__.py
 # Bart Trzynadlowski
 #
+# This file is part of RoBart.
+#
+# RoBart is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# RoBart is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with RoBart. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
 # Debug server main module. Listens for TCP connections from iPhone and takes keyboard commands from
 # the user.
 #
@@ -83,15 +100,15 @@ class RoBartDebugServer(MessageHandler):
     @handler(AngularVelocityMeasurementMessage)
     async def handle_AngularVelocityMeasurementMessage(self, session: Session, msg: AngularVelocityMeasurementMessage, timestamp: float):
         print(f"Measured angular velocity = {msg.angularVelocityResult} deg/sec")
-    
+
     @handler(OccupancyMapMessage)
     async def handle_OccupancyMapMessage(self, session: Session, msg: OccupancyMapMessage, timestamp: float):
         self._navigation_ui.show(occupancy_map=msg)
-    
+
     @handler(AnnotatedViewMessage)
     async def handle_AnnotatedViewMessage(self, session: Session, msg: AnnotatedViewMessage, timestamp: float):
         self._image_viewer.show(image=base64.b64decode(msg.imageBase64), name="Robot Annotated View")
-    
+
     @handler(AIStepMessage)
     async def handle_AIStepMessage(self, session: Session, msg: AIStepMessage, timestamp: float):
         dir = os.path.join("data", msg.timestamp, f"{msg.stepNumber}")
