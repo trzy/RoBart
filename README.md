@@ -68,6 +68,18 @@ The components are:
 
 ### Motor Control
 
+`HoverboardController` communicates with the Arduino firmware via BLE. It sends individual motor throttle values (ranging from -1.0 to +1.0, with sign indicating direction) directly. A number of basic trajectory commands are handled on iOS by employing a PID controller that uses ARKit's 6dof pose for feedback (yes, running a PID loop like this through BLE and with ARKit's latency is engineering malpractice but it almost works). These include:
+
+- **drive:** Sets the individual throttle values for the left and right motors, open loop.
+- **rotateInPlace:** Turns in place with the given angular velocity (-1 being left at full throttle and +1 being right at full throttle), open loop.
+- **rotateInPlaceBy:** Rotates in place by a specified number of degrees.
+- **face:** Turns in place to face the given world space direction vector.
+- **driveForward:** Drive forward by the specified distance in meters.
+- **driveTo:** Drives to the specified world space position in a straight line, both turning to face the point and moving towards it.
+- **driveToFacing:** Drives to the specified position while facing the given direction. Particularly useful for driving backwards to a point.
+
+There is currently no feedback on the Arduino side. No encoder is present on the motors. A watchdog mechanism exists that will cut motor power when either the BLE connection is lost or if motor throttle values are not updated within a certain number of seconds. In the PID controlled modes, a stream of constant updates is sent, which prevents the watchdog from engaging. 
+
 ### Position Tracking and Mapping with ARKit
 
 ### Photo Input
