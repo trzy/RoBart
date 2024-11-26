@@ -1,7 +1,7 @@
 # RoBart: Autonomous LLM-controlled robot using iPhone
 *Copyright 2024 Bart Trzynadlowski*
 
-**What if you could put your brain in a robot body?** Okay, okay, that's not possible, but what if you could put Claude or GPT-4 in a robot body? And not just any robot body but a robot body based on a salvaged hoverboard and an iPhone for compute and sensors? That's exactly what I did. Read on, human!
+**What if you could put your brain in a robot body?** Okay, okay, that's not possible, but what if you could put Claude or GPT-4 in a robot body? And not just any robot body but a robot body based on a salvaged hoverboard and an iPhone Pro for compute and sensors? That's exactly what I did. Read on, human!
 
 <p align="center"><img src="docs/Readme/Images/sealab.jpg" /></p>
 
@@ -184,4 +184,18 @@ Current view, photo1 taken during last actions step: <image>
 ```
 
 ## Mechanical and Electrical Design
+
+The RoBart iOS code is only very weakly dependent on the actual physical form factor of the robot. It would be trivial to build a very different mobile platform. Here, I'll loosely describe the platform I use (which I received some invaluable help from a friend at [BridgeWire](https://bridgewire.org/)).
+
+### Mechanical Design
+
+RoBart is based on the [Hover-1 H1](https://www.amazon.com/Hover-1-Electric-Balancing-Hoverboard-Scooter/dp/B0DJQ6996R) with plastic shell and original electronics removed. Aluminum extrusions are used to create a frame to which a rear caster and the iPhone are attached.
+
+There is a 3D-printed mount for the phone holder atop the vertical extrusion. The extrusion itself has been cut and joined with a removable plastic connector in order to allow RoBart to be transported in the trunk of a car.
+
+### Electrical Design
+
+#### Bill of Materials
+
+
 
