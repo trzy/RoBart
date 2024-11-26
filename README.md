@@ -1,7 +1,7 @@
 # RoBart: Autonomous LLM-controlled robot using iPhone
 *Copyright 2024 Bart Trzynadlowski*
 
-**What if you could put your brain in a robot body?** Ok, ok, that's not possible, but what if you could put Claude or GPT-4 in a robot body? And not just any robot body but a robot body based on a salvaged hoverboard and an iPhone for compute and sensors? That's exactly what I did. Read on, human!
+**What if you could put your brain in a robot body?** Okay, okay, that's not possible, but what if you could put Claude or GPT-4 in a robot body? And not just any robot body but a robot body based on a salvaged hoverboard and an iPhone for compute and sensors? That's exactly what I did. Read on, human!
 
 <p align="center"><img src="docs/Readme/Images/sealab.jpg" /></p>
 
@@ -103,7 +103,23 @@ For collision avoidance, RoBart constructs an occupancy map. This is a regular 2
 
 ### Photo Input
 
+`AnnotatingCamera` takes photos captured by ARKit (which include the camera pose and camera intrinsics) and annotates them with navigable points. This is performed by first placing a series of fixed points on the floor (recall that the floor elevation is provided by `ARSessionManager`) in 3D space near the robot and then determining which of these are *navigable*. That is, which points can be reached from the current position without hitting any obstructions, as indicated by the occupancy map. Finally, the navigable points are projected onto the 2D photo using the camera intrinsics and rendered as numbers atop black rectangles on the image. These annotated images allow the LLM to generate specific instructions for navigation. A video I made covering this topic is linked below.
+
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/shorts/68BlqNpVZNE"><img src="docs/Readme/Images/how_does_robart_see_cover.jpg" /></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/shorts/68BlqNpVZNE">How does RoBart see?</a> A video explaining how photos are used in conjunction with the navigation system.</td>
+  </tr>
+</table>
+
 ### Voice Input
+
+Two methods of voice input are provided:
+
+1. The iOS app can listen directly to the microphone. The WebRTC VAD (voice activity detector) is used to detect human speech. Speech is uploaded to [Deepgram](https://www.deepgram.com) for transcription. An API key must be provided in the settings view. The built-in `SFSpeechRecognizer` could have been used but given how intensively ARKit is used, it would add even more computational load. The big drawback of the current system, however, is that the VAD is not very good, especially in noisy settings.
+2. A Watch app target is provided that allows Apple Watch to be used as a microphone. Audio is streamed to the iOS app seamlessly via [Watch Connectivity](https://developer.apple.com/documentation/watchconnectivity). Because recording is manually started and stopped, this is much more reliable and I frequently use this when giving demos of RoBart outside the home.
 
 ### Agent Loop
 
