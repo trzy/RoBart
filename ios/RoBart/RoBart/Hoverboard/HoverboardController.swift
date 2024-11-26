@@ -13,6 +13,21 @@
 //    rotation angles are counter-clockwise rotations: (0,0,-1) rotated by +90 degrees about up
 //    axis becomes (-1,0,0).
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import ARKit
 import Combine
@@ -330,14 +345,14 @@ class HoverboardController {
                 // Position PID -> desired forward velocity
                 let positionError = positionErrorAlongForwardAxis(currentPosition: currentPosition, targetPosition: targetPosition, currentForward: currentForward)
                 let targetLinearVelocity = _positionPID.update(deltaTime: deltaTime, error: positionError)
-                
+
                 // Velocity -> throttle. If PID P gain is 1.0, this is simply a matter of rescaling to
                 // allowed throttle range.
                 let direction = sign(targetLinearVelocity)
                 let throttle = abs(targetLinearVelocity).mapClamped(oldMin: 0, oldMax: 1, newMin: 0, newMax: maxThrottle)
                 leftMotorThrottle += direction * throttle
                 rightMotorThrottle += direction * throttle
-                
+
                 log("Position: error=\(positionError) speed=\(speed) targetVel=\(targetLinearVelocity) throttle=\(direction * throttle)")
             }
 

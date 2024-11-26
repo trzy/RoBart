@@ -4,6 +4,21 @@
 //
 //  Created by Bart Trzynadlowski on 9/17/24.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import AVFoundation
 import WebRTCVAD
@@ -76,7 +91,7 @@ class VoiceExtractor {
     /// output buffer that contain a complete speech segment. The state is reset as soon as a non-zero value is returned.
     func process(outputSpeechBuffer speechBuffer: AVAudioPCMBuffer, inputAudioBuffer buffer: AVAudioPCMBuffer) -> AVAudioFrameCount {
         assert(buffer.format == speechBuffer.format)
-        
+
         guard let windowBuffer = getWindowBuffer(format: buffer.format) else {
             return 0
         }
@@ -115,7 +130,7 @@ class VoiceExtractor {
             // Are we inside speech or not? Assess entire window.
             let wasInsideSpeech = _insideSpeech
             let nowInsideSpeech = windowIsSpeech()
-            
+
             if nowInsideSpeech {
                 _insideSpeech = nowInsideSpeech
 
@@ -136,7 +151,7 @@ class VoiceExtractor {
                     }
                     continue
                 }
-            } 
+            }
 
             if !nowInsideSpeech && wasInsideSpeech {
                 // We are still inside a speech segment until endpoint silence threshold is
@@ -187,7 +202,7 @@ class VoiceExtractor {
 
     private func appendToWindow(from buffer: AVAudioPCMBuffer, fromIdx: AVAudioFrameCount) -> (AVAudioFrameCount, AVAudioFrameCount) {
         guard let windowBuffer = _windowBuffer else { return (AVAudioFrameCount(0), AVAudioFrameCount(0)) }
-        
+
         if _partialChunkFramesWritten > 0 {
             // We are adding to a partially completed chunk. We only want to fill up the chunk!
             let chunkStartIdx = _nextWindowWriteIdx - _partialChunkFramesWritten
