@@ -6,6 +6,21 @@
  * Cooperative multitasking. Simply create a task and call tick() periodically.
  *
  * Taken from: https://github.com/trzy/PixArt
+ *
+ * This file is part of RoBart.
+ *
+ * RoBart is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * RoBart is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with RoBart. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -51,24 +66,24 @@ namespace util
         m_count += 1;
       }
     }
-  
+
     void tick()
     {
       tick(micros());
     }
-  
+
     cooperative_task(util::time::duration<TimeResolution> period, const std::function<void(util::time::duration<util::microsecond::resolution>, size_t)> task)
       : m_task_cb(task),
         m_period(period),
         m_last_time(micros())
     {
     }
-  
+
     cooperative_task()
       : m_last_time(micros())
     {
     }
-  
+
   private:
     std::function<void(util::time::duration<util::microsecond::resolution>, size_t)> m_task_cb;
     util::time::duration<util::microsecond::resolution> m_period = 0;

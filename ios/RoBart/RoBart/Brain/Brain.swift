@@ -4,6 +4,21 @@
 //
 //  Created by Bart Trzynadlowski on 9/17/24.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import Combine
 import Foundation
@@ -449,7 +464,7 @@ class Brain: ObservableObject {
             let allowablePointIDs = Set(captionedPhotos.flatMap({ $0.photo.navigablePoints }).map({ "\($0.id)" }))
             if allowablePointIDs.isEmpty {
                 resultsDescription.append("No navigable points are reachable. Area may be obstructed or RoBart may be stuck. Proceed carefully.")
-            } 
+            }
             // Redundant? LLM should be able to understand from images what points are accessible.
 //            else {
 //                resultsDescription.append("Currently accessible navigable points: \(allowablePointIDs.joined(separator: ", "))")
@@ -636,7 +651,7 @@ class Brain: ObservableObject {
         // For all the photos currently in the database, determine which of their navigable points,
         // if any, are reachable and produce new photos annotated only with those points
         let ourPosition = ARSessionManager.shared.transform.position
-        
+
         // Deduplicate the same photos by looking at name
         var photosByName: [String: AnnotatingCamera.Photo] = [:]
         for photo in photosByNavigablePoint.values.flatMap({ $0 }) {
