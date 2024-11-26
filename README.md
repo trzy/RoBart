@@ -32,7 +32,39 @@ If you have ideas or contributions, I encourage you to reach out!
 
 ## System Architecture
 
+RoBart is a bit of a fever dream of ideas, many only partly finished. I'll attempt to describe how the code base works here.
+
 ### High-Level Overview
+
+The RoBart code base contains four distinct applications, only two of which constitute the robot:
+
+1. **iOS application:** This is the main RoBart app that runs on iPhone and controls RoBart. It does not rely on a companion server and makes calls to public LLM APIs directly. The app actually has two modes: robot and handheld, the latter localizing itself to the same SLAM map and allowing for remote control. Located at `ios/RoBart/`.
+2. **Arduino firmware:** Firmware that runs on the [Adafruit Feather nRF52 Bluefruit LE](https://www.adafruit.com/product/3406?g=&gad_source=1&gclid=CjwKCAiA3ZC6BhBaEiwAeqfvykMG2eNFgYPQH7afzyBHNYS5us6RZF8WMFso22wj9rWsmRq58V3ItRoC2-QQAvD_BwE) to control the motors. Communicates with the iOS app via Bluetooth Low Energy. Located at `hoverboard/`.
+3. **watchOS application:** An optional Apple Watch app that allows voice commands to be issued from Watch. This is useful in noisy environments that confound the VAD running on the iPhone. Located at `ios/RoBart/` as a watchOS build target.
+4. **Debug server:** A Python-based server that the iOS app will attempt to connect to. Provides an interactive terminal that allows various debug commands to be issued, both to control the robot and request data from it. This is not required to operate the robot. Located at `server/`.
+
+The main components of the RoBart iOS app are shown in the diagram below.
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="docs/Readme/Images/system_diagram.png" /></td>
+    </tr>
+    <tr>
+      <td align="center">RoBart iOS app architecture.</td>
+    </tr>
+  </table>
+</p>
+
+The components are:
+
+- **ARSessionManager:** Using ARKit, publishes camera transform and frame updates, performs scene meshing and floor plane detection, and even supports collaborative sessions with other phones running the app in handheld mode. RoBart components frequently poll the current camera transform or wait for the next frame.
+- **SpeechDetector:** Listens for spoken audio, transcribes it using Deepgram, and then publishes the resulting transcript. An external transcription API is used because iOS's `SFSpeechRecognizer` is performance intensive.
+- **AudioManager:** Plays audio samples (i.e., RoBart's spoken utterances) and controls the microphone (used by `SpeechDetector`).
+- **HoverboardController:** Executes trajectories (e.g., rotate N degrees, drive forward N meters) using PID control on iOS and by sending motor throttle commands to the hoverboard Arduino firmware via BLE.
+- **NavigationController:** Higher-level motion control and navigation. Builds an occupancy map, performs very crude pathfinding, provides a nearest-human following task, and executes motion tasks using `HoverboardController`.
+- **AnnotatingCamera:** Takes photos and annotates them with navigable points (using the occupancy map). This allows the AI agent to reason about where it can move.
+- **Brain:** The AI agent that runs RoBart. Listens for speech and will then attempt to complete the requested task using all of RoBart's capabilities and the chosen LLM.
 
 ### Motor Control
 
