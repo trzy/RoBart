@@ -99,7 +99,7 @@ There is currently no feedback on the Arduino side. No encoder is present on the
 [ARKit](https://developer.apple.com/augmented-reality/arkit/) provides [SLAM](https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping) for 6dof position and a slew of other useful perception capabilities. The `ARSessionManager` singleton, found in `ios/RoBart/RoBart/AR/ARSessionManager.swift`,
 handles the AR session and exposes various useful properties. [RealityKit](https://developer.apple.com/documentation/realitykit) is used for debug rendering of meshes and planes. The AR session is initiated from the AR view container in `ios/RoBart/RoBart/Views/AR/ARViewContainer.swift`
 
-For collision avoidance, RoBart constructs an occupancy map. This is a regular 2D grid on the xz-plane indicating cells that contain world geometry. It is computed by taking all of the vertices produced by scene meshing (see [`ARMeshAnchor`](https://developer.apple.com/documentation/arkit/armeshanchor)) and using a [Metal](https://developer.apple.com/metal/) compute shader to project them onto a 2D grid. The resulting map is used to test for obstructions and plot paths. The occupancy map code is found in `ios/RoBart/RoBart/Navigation/Mapping/`. In order to build it, RoBart needs to know the floor height (i.e., its world-space y component) because the occupancy map is computed by looking for obstacles that are within a certain height range above the floor.
+For collision avoidance, RoBart constructs an occupancy map. This is a regular 2D grid on the xz-plane indicating cells that contain world geometry. It is computed by taking all of the vertices produced by scene meshing (see [`ARMeshAnchor`](https://developer.apple.com/documentation/arkit/armeshanchor)) and using a [Metal](https://developer.apple.com/metal/) compute shader to project them onto a 2D grid. The resulting map is used to test for obstructions and plot paths. The occupancy map code is found in `ios/RoBart/RoBart/Navigation/Mapping/`. In order to build it, RoBart needs to know the floor height (i.e., its world space y component) because the occupancy map is computed by looking for obstacles that are within a certain height range above the floor.
 
 <table align="center">
   <tr>
@@ -146,7 +146,7 @@ RoBart uses a very simple ReAct-like (reason and act) prompting method for its a
 1. The transcribed speech was wrapped in a `<HUMAN_INPUT>` section along with a photo from that moment and sent to Claude.
 2. As per its system instructions, the agent responded with `<PLAN>`, `<MEMORY>` (initially empty), `<INTERMEDIATE_RESPONSE>`, and finally, `<ACTIONS>` containing actions to perform.
 3. The two actions were executed in sequence: turn 180 degrees, take photo.
-4. An `<OBSERVATIONS>` section was appended and send to Claude. This contains the photo taken by the `takePhoto` command as well as some textual information about how RoBart moved and its final position.
+4. An `<OBSERVATIONS>` section was appended and sent to Claude. This contains the photo taken by the `takePhoto` command as well as some textual information about how RoBart moved and its final position.
 5. The agent responded with `<FINAL_RESPONSE>` because the task was completed successfully.
 
 ```
