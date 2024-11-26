@@ -5,20 +5,18 @@
 
 <p align="center"><img src="docs/Readme/Images/sealab.jpg" /></p>
 
-<p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td> <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td>
-    </tr>
-    <tr>
-      <td align="center">Hide and seek</td> <td align="center">Hide and seek</td>
-    </tr>
-  </table>
-</p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td> <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td>
+  </tr>
+  <tr>
+    <td align="center">Hide and seek</td> <td align="center">Hide and seek</td>
+  </tr>
+</table>
 
 ## Objectives
 
-RoBart began as an attempt to build a cheap mobile base using a hoverboard and iPhone. Mobile phones are easy to work with and provide plenty of compute, connectivity, and useful peripherals: RGB cameras, LiDAR, microphones, speakers. Using [ARKit](https://developer.apple.com/augmented-reality/arkit/), we get SLAM, scene understanding, spatial meshing, and more. Let's see what we can do with this!
+RoBart began as an attempt to build a cheap mobile base using a hoverboard and iPhone Pro. Mobile phones are easy to work with and provide plenty of compute, connectivity, and useful peripherals: RGB cameras, LiDAR, microphones, speakers. Using [ARKit](https://developer.apple.com/augmented-reality/arkit/), we get SLAM, scene understanding, spatial meshing, and more. Let's see what we can do with this!
 
 I'm open sourcing this project to stimulate discussion and encourage exploration. Some topics to consider:
 
@@ -45,16 +43,14 @@ The RoBart code base contains four distinct applications, only two of which cons
 
 The main components of the RoBart iOS app are shown in the diagram below.
 
-<p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="docs/Readme/Images/system_diagram.png" /></td>
-    </tr>
-    <tr>
-      <td align="center">RoBart iOS app architecture.</td>
-    </tr>
-  </table>
-</p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/system_diagram.png" /></td>
+  </tr>
+  <tr>
+    <td align="center">RoBart iOS app architecture.</td>
+  </tr>
+</table>
 
 The components are:
 
@@ -78,9 +74,32 @@ The components are:
 - **driveTo:** Drives to the specified world space position in a straight line, both turning to face the point and moving towards it.
 - **driveToFacing:** Drives to the specified position while facing the given direction. Particularly useful for driving backwards to a point.
 
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/turn_right.png" /></td>
+  </tr>
+  <tr>
+    <td align="center">Schematic top-down view of the hoverboard. Rotating right can be accomplished with multiple commands, e.g., <b>drive(leftThrottle: 1, rightThrottle: -1)</b>.</td>
+  </tr>
+</table>
+
 There is currently no feedback on the Arduino side. No encoder is present on the motors. A watchdog mechanism exists that will cut motor power when either the BLE connection is lost or if motor throttle values are not updated within a certain number of seconds. In the PID controlled modes, a stream of constant updates is sent, which prevents the watchdog from engaging. 
 
 ### Position Tracking and Mapping with ARKit
+
+[ARKit](https://developer.apple.com/augmented-reality/arkit/) provides [SLAM](https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping) for 6dof position and a slew of other useful perception capabilities. The `ARSessionManager` singleton, found in `ios/RoBart/RoBart/AR/ARSessionManager.swift`,
+handles the AR session and exposes various useful properties. [RealityKit](https://developer.apple.com/documentation/realitykit) is used for debug rendering of meshes and planes. The AR session is initiated from the AR view container in `ios/RoBart/RoBart/Views/AR/ARViewContainer.swift`
+
+For collision avoidance, RoBart constructs an occupancy map. This is a regular 2D grid on the xz-plane indicating cells that contain world geometry. It is computed by taking all of the vertices produced by scene meshing (see [`ARMeshAnchor`](https://developer.apple.com/documentation/arkit/armeshanchor)) and using a [https://developer.apple.com/metal/](Metal) compute shader to project them onto a 2D grid. The resulting map is used to test for obstructions and plot paths. The occupancy map code is found in `ios/RoBart/RoBart/Navigation/Mapping/`. In order to build it, RoBart needs to know the floor height (i.e., its world-space y component) because the occupancy map is computed by looking for obstacles that are within a certain height range above the floor.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/occupancy_map.gif" /></td>
+  </tr>
+  <tr>
+    <td align="center">Occupancy map and paths as RoBart explores my house.</td>
+  </tr>
+</table>
 
 ### Photo Input
 
