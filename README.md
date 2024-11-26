@@ -47,7 +47,7 @@ The RoBart code base contains four distinct applications, only two of which cons
 
 1. **iOS application:** This is the main RoBart app that runs on iPhone and controls RoBart. It does not rely on a companion server and makes calls to public LLM APIs directly. The app actually has two modes: robot and handheld, the latter localizing itself to the same SLAM map and allowing for remote control. Located in `ios/RoBart/`.
 2. **Arduino firmware:** Firmware that runs on the [Adafruit Feather nRF52 Bluefruit LE](https://www.adafruit.com/product/3406?g=&gad_source=1&gclid=CjwKCAiA3ZC6BhBaEiwAeqfvykMG2eNFgYPQH7afzyBHNYS5us6RZF8WMFso22wj9rWsmRq58V3ItRoC2-QQAvD_BwE) to control the motors. Communicates with the iOS app via Bluetooth Low Energy. Located in `hoverboard/`.
-3. **watchOS application:** An optional Apple Watch app that allows voice commands to be issued from Watch. This is useful in noisy environments that confound the VAD running on the iPhone. Located in `ios/RoBart/` as a watchOS build target.
+3. **watchOS application:** An optional Apple Watch app that allows voice commands to be issued from Watch. This is useful in noisy environments that confound the VAD running on the iPhone. Located in `ios/RoBart/RoBart Remote Control Watch App/` as a watchOS build target.
 4. **Debug server:** A Python-based server that the iOS app will attempt to connect to. Provides an interactive terminal that allows various debug commands to be issued, both to control the robot and request data from it. This is not required to operate the robot. Located in `server/`.
 
 The main components of the RoBart iOS app are shown in the diagram below.
