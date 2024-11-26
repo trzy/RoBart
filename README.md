@@ -103,7 +103,7 @@ For collision avoidance, RoBart constructs an occupancy map. This is a regular 2
 
 ### Photo Input
 
-`AnnotatingCamera` takes photos captured by ARKit (which include the camera pose and camera intrinsics) and annotates them with navigable points. This is performed by first placing a series of fixed points on the floor (recall that the floor elevation is provided by `ARSessionManager`) in 3D space near the robot and then determining which of these are *navigable*. That is, which points can be reached from the current position without hitting any obstructions, as indicated by the occupancy map. Finally, the navigable points are projected onto the 2D photo using the camera intrinsics and rendered as numbers atop black rectangles on the image. These annotated images allow the LLM to generate specific instructions for navigation. A video I made covering this topic is linked below.
+`AnnotatingCamera` takes photos captured by ARKit (which include the camera pose and camera intrinsics) and annotates them with *navigable points*. This is performed by first placing a series of fixed points on the floor (recall that the floor elevation is provided by `ARSessionManager`) in 3D space near the robot and then determining which of these are *navigable*. That is, points reachable from the current position without obstruction, as indicated by the occupancy map. Finally, the navigable points are projected onto the 2D photo using the camera intrinsics and rendered as numbers atop black rectangles on the image. These annotated images allow the LLM to generate specific instructions for navigation. A video I made covering this topic is linked below.
 
 <table align="center">
   <tr>
