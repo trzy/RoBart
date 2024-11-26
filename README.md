@@ -7,10 +7,10 @@
 
 <table align="center">
   <tr>
-    <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td> <td align="center"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></td>
+    <td align="center"><a href="https://www.youtube.com/watch?v=-iW3Vzzr3oU"><img src="docs/Readme/Images/grocery_cover.jpg" /></a></td> <td align="center"><a href="https://www.youtube.com/shorts/hnw6pvyZSns"><img src="docs/Readme/Images/hide_and_seek_cover.jpg" /></a></td>
   </tr>
   <tr>
-    <td align="center">Hide and seek</td> <td align="center">Hide and seek</td>
+    <td align="center"><a href="https://www.youtube.com/watch?v=-iW3Vzzr3oU">Grocery shopping</a></td> <td align="center"><a href="https://www.youtube.com/shorts/hnw6pvyZSns">Hide and seek</a></td>
   </tr>
 </table>
 
