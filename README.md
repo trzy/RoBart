@@ -28,6 +28,15 @@ I'm open sourcing this project to stimulate discussion and encourage exploration
 
 If you have ideas or contributions, I encourage you to reach out!
 
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://youtube.com/shorts/GWkYCer5hi8"><img src="docs/Readme/Images/health_monitoring_robot_cover.jpg" /></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://youtube.com/shorts/GWkYCer5hi8">Contactless health monitoring.</a> Source code for this prototype is not included in this repo.</td>
+  </tr>
+</table>
+
 ## System Architecture
 
 RoBart is a bit of a fever dream of ideas, many only partly finished. I'll attempt to describe how the code base works here.
@@ -185,17 +194,19 @@ Current view, photo1 taken during last actions step: <image>
 
 ## Mechanical and Electrical Design
 
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/watch?v=M3eoZ8f6cRU"><img src="docs/Readme/Images/how_robart_built_cover.jpg" /></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/watch?v=M3eoZ8f6cRU">How RoBart is constructed.</a> A video explaining the physical construction.</td>
+  </tr>
+</table>
+
 The RoBart iOS code is only very weakly dependent on the actual physical form factor of the robot. It would be trivial to build a very different mobile platform. Here, I'll loosely describe the platform I use (which I received some invaluable help from a friend at [BridgeWire](https://bridgewire.org/)).
 
-### Mechanical Design
+RoBart is based on the [Hover-1 H1](https://www.amazon.com/Hover-1-Electric-Balancing-Hoverboard-Scooter/dp/B0DJQ6996R) with plastic shell and original electronics removed. Aluminum extrusions (2020) are used to create a frame to which a rear caster and the iPhone are attached. 
 
-RoBart is based on the [Hover-1 H1](https://www.amazon.com/Hover-1-Electric-Balancing-Hoverboard-Scooter/dp/B0DJQ6996R) with plastic shell and original electronics removed. Aluminum extrusions are used to create a frame to which a rear caster and the iPhone are attached.
+The hoverboard motors are controlled by an [Adafruit Feather nRF52 Bluefruit LE](https://www.adafruit.com/product/3406?g=&gad_source=1&gclid=CjwKCAiA3ZC6BhBaEiwAeqfvykMG2eNFgYPQH7afzyBHNYS5us6RZF8WMFso22wj9rWsmRq58V3ItRoC2-QQAvD_BwE), which communicates wirelessly via BLE with the iPhone. A [DC-DC converter](https://www.amazon.com/gp/product/B0B7MG2TSB/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) steps down the 36V battery voltage to the 3.3V required by the Feather board. Two [RioRand 350W](https://www.amazon.com/RioRand-6-60V-Brushless-Electric-Controller/dp/B087M2378D) brushless DC motor drivers are used to drive the hoverboard motors. The appropriate connectors will be necessary -- I believe I used [these](https://www.amazon.com/dp/B083GQHG5R?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1) and [these](https://www.amazon.com/dp/B09DTL4T1W?ref=ppx_yo2ov_dt_b_fed_asin_title) to connect the motors to the driver boards, [Dupont connectors](https://www.amazon.com/dp/B0CL9L3W68?ref=ppx_yo2ov_dt_b_fed_asin_title) to connect the driver boards to the Feather, and various XT60 splitter cables for routing battery power.
 
-There is a 3D-printed mount for the phone holder atop the vertical extrusion. The extrusion itself has been cut and joined with a removable plastic connector in order to allow RoBart to be transported in the trunk of a car.
-
-### Electrical Design
-
-#### Bill of Materials
-
-
-
+There is a 3D-printed mount for the phone holder atop the vertical extrusion. The extrusion itself has been cut and joined with a removable plastic connector in order to allow RoBart to be transported in the trunk of a car. STL files for all 3D printed parts are available in `parts/`, including a case that houses one of the original Hover-1 H1 logic boards to use as a battery charger.
