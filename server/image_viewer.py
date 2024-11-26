@@ -2,6 +2,23 @@
 # image_viewer.py
 # Bart Trzynadlowski, 2024
 #
+# This file is part of RoBart.
+#
+# RoBart is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# RoBart is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with RoBart. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
 # Image viewer window.
 #
 
@@ -42,7 +59,7 @@ class ImageViewer:
         self._image_size = pil_image.size
         self._window_title = name if name is not None else "Image"
         self._visible.set()
-    
+
     async def run(self):
         while True:
             # Wait until visible, then show if window exists
@@ -57,11 +74,11 @@ class ImageViewer:
                 self._root.geometry(f"{self._image_size[0]}x{self._image_size[1]}")
                 self._root.update()
                 await asyncio.sleep(0.1)
-            
+
             # Hide
             self._root.withdraw()
             self._root.update() # update to take effect
-    
+
     @staticmethod
     def _resize_image(image: Image, width: int | None, height: int | None) -> Image:
         original_width, original_height = image.size

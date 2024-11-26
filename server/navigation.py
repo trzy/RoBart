@@ -2,6 +2,23 @@
 # navigation.py
 # Bart Trzynadlowski
 #
+# This file is part of RoBart.
+#
+# RoBart is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# RoBart is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with RoBart. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
 # Navigation UI.
 #
 
@@ -38,18 +55,18 @@ class MapWindow:
 
         self._360_button = tk.Button(self._root, text=f"360{DEGREE_SIGN}", command=self._scan_360, fg="black", bg="lightgray")
         self._360_button.pack(side=tk.LEFT, padx=5, pady=5)
-        
+
         self._traverse_waypoints_button = tk.Button(self._root, text="Traverse Waypoints", command=self._traverse_waypoints, fg="black", bg="lightgray")
         self._traverse_waypoints_button.pack(side=tk.LEFT, padx=5, pady=5)
-        
+
         self._path_button = tk.Button(self._root, text="Pathfind Waypoints", command=self._traverse_path, fg="black", bg="lightgray")
         self._path_button.pack(side=tk.LEFT, padx=5, pady=5)
-        
+
         self._canvas.bind("<Button-1>", self._on_click)
 
         self._is_running = True
         self._root.protocol("WM_DELETE_WINDOW", self._on_closed)
-        
+
         self._draw_map()
 
     def show(self):
@@ -106,7 +123,7 @@ class MapWindow:
                 (x + 1) * CELL_SIZE, (z + 1) * CELL_SIZE,
                 fill="green", outline=""
             )
-        
+
         # Render path that we have drawn
         for i in range(len(self._path) - 1):
             x1, z1 = self._path[i]
@@ -133,7 +150,7 @@ class MapWindow:
             (robot_x + 1) * CELL_SIZE, (robot_z + 1) * CELL_SIZE,
             fill="red", outline=""
         )
-            
+
     def _on_click(self, event):
         x = event.x // CELL_SIZE
         z = event.y // CELL_SIZE
@@ -144,7 +161,7 @@ class MapWindow:
             self._path.append((robot_x, robot_z))
         self._path.append((x, z))
         self._draw_map()
-    
+
     def _refresh_map(self):
         msg = RequestOccupancyMapMessage()
         asyncio.ensure_future(self._send_message(msg))
@@ -153,7 +170,7 @@ class MapWindow:
     def _clear_path(self):
         self._path = []
         self._draw_map()
-    
+
     def _traverse_waypoints(self):
         msg = DrivePathMessage(pathCells=[[x, z] for x, z in self._path], pathFinding=False)
         asyncio.ensure_future(self._send_message(msg))
@@ -177,7 +194,7 @@ class NavigationUI:
     def __init__(self):
         self._visible = asyncio.Event()
         self._window = None
-    
+
     async def run(self, send_message: Callable[[BaseModel,], Awaitable[None]]):
         self._send_message = send_message
         while True:
@@ -189,10 +206,10 @@ class NavigationUI:
             while self._visible.is_set():
                 self._window.update()
                 await asyncio.sleep(0.01)
-            
+
             # Hide
             self._window.hide()
-    
+
     def show(self, occupancy_map: Optional[OccupancyMapMessage]):
         if occupancy_map is not None:
             # Destroy existing window and create a new one for this occupancy map
@@ -202,7 +219,7 @@ class NavigationUI:
         else:
             # Hide
             self._visible.clear()
-        
+
     def _create_window(self, occupancy_map: OccupancyMapMessage):
         self._window = MapWindow(occupancy_map=occupancy_map, send_message=self._send_message)
 

@@ -4,6 +4,21 @@
 //
 //  Created by Bart Trzynadlowski on 9/19/24.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import Combine
 import AVFoundation
@@ -128,7 +143,7 @@ class AudioManager {
             log("Error: AVAudioSession: \(error)")
         }
     }
-    
+
     private func setupAudioGraph() {
         // Feed input into mixer node that suppresses audio to avoid feedback while recording. For
         // some reason, need to reduce input volume to 0 (which doesn't affect taps on this node,

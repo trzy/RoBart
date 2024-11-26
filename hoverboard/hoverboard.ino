@@ -5,6 +5,21 @@
  *
  * Hoverboard controller for Adafruit Feather nRF52832 board. Listens for commands from iOS via
  * Bluetooth and drives two RioRand 350W BLDC motor controllers.
+ *
+ * This file is part of RoBart.
+ *
+ * RoBart is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * RoBart is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with RoBart. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "nRF52_PWM.h"  // nrF52_PWM package
@@ -177,7 +192,7 @@ static void init_motors()
 
 
 /***************************************************************************************************
- Watchdog 
+ Watchdog
 
  Cut the motors after a certain period of inactivity (i.e., incoming control messages).
 ***************************************************************************************************/
@@ -262,7 +277,7 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
   {
     uint32_t message_length = *reinterpret_cast<uint32_t *>(&data[0]);
     uint32_t message_id = *reinterpret_cast<uint32_t *>(&data[4]);
-  
+
     if (message_length != length)
     {
       Serial.printf("Error: Received %d bytes but message header says %d bytes\n", length, message_length);
@@ -296,7 +311,7 @@ static void on_received(uint16_t connection_handle, BLECharacteristic *character
         Serial.printf("Error: watchdog_message has incorrect length (%d)\n", length);
       }
       break;
-    
+
     case PWMMessage:
       if (length == sizeof(pwm_message))
       {
