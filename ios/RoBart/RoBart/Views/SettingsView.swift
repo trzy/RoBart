@@ -48,6 +48,8 @@ struct SettingsView: View {
                         Toggle("Watch Voice Input", isOn: $_settings.watchEnabled)
 
                         Picker("AI Model", selection: $_settings.model) {
+                            Text("Claude 3.7 Sonnet (Latest)").tag(Brain.Model.claude37SonnetLatest)
+                            Text("Claude 3.7 Sonnet (2025-02-19)").tag(Brain.Model.claude37Sonnet20250219)
                             Text("Claude 3.5 Sonnet").tag(Brain.Model.claude35Sonnet)
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
                             Text("GPT-4o").tag(Brain.Model.gpt4o)

@@ -27,6 +27,8 @@ import SwiftAnthropic
 
 class Brain: ObservableObject {
     enum Model: String {
+        case claude37SonnetLatest
+        case claude37Sonnet20250219
         case claude35Sonnet
         case gpt4o
         case gpt4Turbo
@@ -167,6 +169,12 @@ class Brain: ObservableObject {
         setDisplayState(to: .thinking)
 
         switch Settings.shared.model {
+        case .claude37SonnetLatest:
+            return await submitToClaude(model: .other("claude-3-7-sonnet-latest"), thoughts: thoughts, stopAt: stopAt)
+
+        case .claude37Sonnet20250219:
+            return await submitToClaude(model: .other("claude-3-7-sonnet-20250219"), thoughts: thoughts, stopAt: stopAt)
+
         case .claude35Sonnet:
             return await submitToClaude(model: .claude35Sonnet, thoughts: thoughts, stopAt: stopAt)
 
