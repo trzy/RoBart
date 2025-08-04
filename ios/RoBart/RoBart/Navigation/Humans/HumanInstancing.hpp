@@ -25,6 +25,7 @@
 
 #include "BoxDepth.hpp"
 #include <CoreVideo/CoreVideo.h>
+#include <vector>
 
 extern std::vector<Box2D> findHumans(CVPixelBufferRef segmentationMap, uint8_t minimumConfidence);
 
