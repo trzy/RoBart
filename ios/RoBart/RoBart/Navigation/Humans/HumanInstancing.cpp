@@ -21,7 +21,6 @@
 //
 
 #include "HumanInstancing.hpp"
-#include <vector>
 
 int findOverlappingBoxIndex(const std::vector<Box2D> &humans, const Box2D &box)
 {
