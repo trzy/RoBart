@@ -32,6 +32,7 @@ class Brain: ObservableObject {
         case claude35Sonnet
         case gpt4o
         case gpt4Turbo
+        case gpt5
     }
 
     enum DisplayState: String {
@@ -179,10 +180,13 @@ class Brain: ObservableObject {
             return await submitToClaude(model: .claude35Sonnet, thoughts: thoughts, stopAt: stopAt)
 
         case .gpt4o:
-            return await submitToGPT4(model: .gpt4_o, thoughts: thoughts, stopAt: stopAt)
+            return await submitToGPT(model: .gpt4_o, thoughts: thoughts, stopAt: stopAt)
 
         case .gpt4Turbo:
-            return await submitToGPT4(model: .gpt4_turbo, thoughts: thoughts, stopAt: stopAt)
+            return await submitToGPT(model: .gpt4_turbo, thoughts: thoughts, stopAt: stopAt)
+
+        case .gpt5:
+            return await submitToGPT(model: .gpt5, thoughts: thoughts, stopAt: stopAt)
         }
     }
 
@@ -217,26 +221,28 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToGPT4(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+    private func submitToGPT(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
         do {
             log("Messages: \(thoughts.toOpenAIUserMessages())")
             let query = ChatQuery(
-                messages: [ .system(.init(content: Prompts.system)) ] + thoughts.toOpenAIUserMessages(),
+                messages: [ .system(.init(content: .textContent(Prompts.system))) ] + thoughts.toOpenAIUserMessages(),
                 model: model,
                 stop: stopAt.isEmpty ? nil : .stringList(stopAt)
             )
             let response = try await _openAI.chats(query: query)
 
-            if let responseText = response.choices[0].message.content?.string {
+            if let responseText = response.choices[0].message.content {
                 log("Response: \(responseText)")
                 let responseThoughts = parseBlocks(from: responseText).toThoughts()
                 return responseThoughts.isEmpty ? nil : responseThoughts
             }
+
+            log("Error: No content!")
+            return [ FinalResponseThought(spokenWords: "An error occurred and GPT delivered no content in its response.") ]
         } catch {
             log("Error: \(error.localizedDescription)")
+            return [ FinalResponseThought(spokenWords: "The following error occurred: \(error.localizedDescription)")]
         }
-
-        return nil
     }
 
     private func prune(_ history: [ThoughtRepresentable]) -> [ThoughtRepresentable] {

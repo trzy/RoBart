@@ -32,7 +32,7 @@ protocol ThoughtRepresentable {
     var photos: [AnnotatingCamera.Photo] { get }
     func humanReadableContent() -> String
     func anthropicContent() -> [MessageParameter.Message.Content.ContentObject]
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content]
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content]
     func withPhotosRemoved() -> ThoughtRepresentable
 }
 
@@ -199,12 +199,12 @@ struct HumanInputThought: ThoughtRepresentable {
         return content
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
-        var content: [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] = [ .string("\(openingTag)\(_spokenWords)") ]
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
+        var content: [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] = [ .string("\(openingTag)\(_spokenWords)") ]
         if let photo = _photo {
-            let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
-                .chatCompletionContentPartTextParam(.init(text: "\(photo.name)")),
-                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.annotatedJPEGBase64)", detail: .auto)))
+            let visionContent = ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content.contentParts([
+                .text(.init(text: "\(photo.name)")),
+                .image(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(photo.annotatedJPEGBase64)", detail: .auto)))
             ])
             content.append(visionContent)
         }
@@ -265,15 +265,15 @@ struct ObservationsThought: ThoughtRepresentable {
         return content
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
-        var content: [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] = [ .string(openingTag) ]
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
+        var content: [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] = [ .string(openingTag) ]
         if let text = _text {
             content.append(.string(text))
         }
         for captionedPhoto in _captionedPhotos {
-            let visionContent = ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content.vision([
-                .chatCompletionContentPartTextParam(.init(text: "\n\(captionedPhoto.caption):")),
-                .chatCompletionContentPartImageParam(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(captionedPhoto.photo.annotatedJPEGBase64)", detail: .auto)))
+            let visionContent = ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content.contentParts([
+                .text(.init(text: "\n\(captionedPhoto.caption):")),
+                .image(.init(imageUrl: .init(url: "data:image/jpeg;base64,\(captionedPhoto.photo.annotatedJPEGBase64)", detail: .auto)))
             ])
             content.append(visionContent)
         }
@@ -309,7 +309,7 @@ struct MemoryThought: ThoughtRepresentable {
         return [ .text("\(openingTag)\(_jsonText)\(closingTag)") ]
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
         return [ .string("\(openingTag)\(_jsonText)\(closingTag)") ]
     }
 }
@@ -331,7 +331,7 @@ struct PlanThought: ThoughtRepresentable {
         return [ .text("\(openingTag)\(_text)\(closingTag)") ]
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
         return [ .string("\(openingTag)\(_text)\(closingTag)") ]
     }
 }
@@ -355,7 +355,7 @@ struct ActionsThought: ThoughtRepresentable {
         return [ .text(humanReadableContent()) ]
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
         return [ .string(humanReadableContent()) ]
     }
 }
@@ -379,7 +379,7 @@ struct IntermediateResponseThought: ThoughtRepresentable {
         return [ .text(humanReadableContent()) ]
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
         return [ .string(humanReadableContent()) ]
     }
 }
@@ -403,7 +403,7 @@ struct FinalResponseThought: ThoughtRepresentable {
         return [ .text(humanReadableContent()) ]
     }
 
-    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.ChatCompletionUserMessageParam.Content] {
+    func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content] {
         return [ .string(humanReadableContent()) ]
     }
 }
