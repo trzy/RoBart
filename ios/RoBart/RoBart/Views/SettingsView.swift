@@ -53,6 +53,7 @@ struct SettingsView: View {
                             Text("Claude 3.5 Sonnet").tag(Brain.Model.claude35Sonnet)
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
                             Text("GPT-4o").tag(Brain.Model.gpt4o)
+                            Text("GPT-5").tag(Brain.Model.gpt5)
                         }
 
                         LabeledContent {

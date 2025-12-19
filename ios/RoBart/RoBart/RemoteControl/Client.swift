@@ -61,7 +61,7 @@ class Client: ObservableObject {
     private func runTask() async {
         while true {
             do {
-                let connection = try await AsyncTCPConnection(host: "192.168.0.123", port: 8000)
+                let connection = try await AsyncTCPConnection(host: "192.168.0.128", port: 8000)
                 _connection = connection
                 connection.send(HelloMessage(message: "Hello from iOS!"))
                 for try await receivedMessage in connection {
