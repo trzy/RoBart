@@ -48,12 +48,16 @@ struct SettingsView: View {
                         Toggle("Watch Voice Input", isOn: $_settings.watchEnabled)
 
                         Picker("AI Model", selection: $_settings.model) {
+                            Text("Claude 4.5 Sonnet (Latest)").tag(Brain.Model.claude45SonnetLatest)
+                            Text("Claude 4.5 Sonnet (2025-09-29)").tag(Brain.Model.claude45Sonnet20250929)
+                            Text("Claude 4.5 Opus (Latest)").tag(Brain.Model.claude45OpusLatest)
+                            Text("Claude 4.5 Opus (2025-11-01)").tag(Brain.Model.claude45Opus20251101)
                             Text("Claude 3.7 Sonnet (Latest)").tag(Brain.Model.claude37SonnetLatest)
                             Text("Claude 3.7 Sonnet (2025-02-19)").tag(Brain.Model.claude37Sonnet20250219)
                             Text("Claude 3.5 Sonnet").tag(Brain.Model.claude35Sonnet)
+                            Text("GPT-5").tag(Brain.Model.gpt5)
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
                             Text("GPT-4o").tag(Brain.Model.gpt4o)
-                            Text("GPT-5").tag(Brain.Model.gpt5)
                         }
 
                         LabeledContent {
