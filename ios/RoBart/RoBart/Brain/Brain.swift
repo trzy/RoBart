@@ -27,9 +27,13 @@ import SwiftAnthropic
 
 class Brain: ObservableObject {
     enum Model: String {
-        case claude37SonnetLatest
-        case claude37Sonnet20250219
         case claude35Sonnet
+        case claude37Sonnet20250219
+        case claude37SonnetLatest
+        case claude45Sonnet20250929
+        case claude45SonnetLatest
+        case claude45Opus20251101
+        case claude45OpusLatest
         case gpt4o
         case gpt4Turbo
         case gpt5
@@ -169,28 +173,38 @@ class Brain: ObservableObject {
     private func submitToAI(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
         setDisplayState(to: .thinking)
 
-        switch Settings.shared.model {
-        case .claude37SonnetLatest:
-            return await submitToClaude(model: .other("claude-3-7-sonnet-latest"), thoughts: thoughts, stopAt: stopAt)
+        let modelToAnthropicId: [Brain.Model: SwiftAnthropic.Model] = [
+            .claude35Sonnet: .claude35Sonnet,
+            .claude37Sonnet20250219: .other("claude-3-7-sonnet-20250219"),
+            .claude37SonnetLatest: .claude37Sonnet,
+            .claude45Sonnet20250929: .other("claude-sonnet-4-5-20250929"),
+            .claude45SonnetLatest: .other("claude-sonnet-4-5"),
+            .claude45Opus20251101: .other("claude-opus-4-5-20251101"),
+            .claude45OpusLatest: .other("claude-opus-4-5")
+        ]
 
-        case .claude37Sonnet20250219:
-            return await submitToClaude(model: .other("claude-3-7-sonnet-20250219"), thoughts: thoughts, stopAt: stopAt)
+        let modelToOpenAIId: [Brain.Model: String] = [
+            .gpt4o: .gpt4_o,
+            .gpt4Turbo: .gpt4_turbo,
+            .gpt5: .gpt5
+        ]
 
-        case .claude35Sonnet:
-            return await submitToClaude(model: .claude35Sonnet, thoughts: thoughts, stopAt: stopAt)
-
-        case .gpt4o:
-            return await submitToGPT(model: .gpt4_o, thoughts: thoughts, stopAt: stopAt)
-
-        case .gpt4Turbo:
-            return await submitToGPT(model: .gpt4_turbo, thoughts: thoughts, stopAt: stopAt)
-
-        case .gpt5:
-            return await submitToGPT(model: .gpt5, thoughts: thoughts, stopAt: stopAt)
+        // Anthropic model?
+        if let model = modelToAnthropicId[Settings.shared.model] {
+            return await submitToAnthropic(model: model, thoughts: thoughts, stopAt: stopAt)
         }
+
+        // OpenAI model?
+        if let model = modelToOpenAIId[Settings.shared.model] {
+            return await submitToOpenAI(model: model, thoughts: thoughts, stopAt: stopAt)
+        }
+
+        // Unknown! Internal error.
+        log("Error: Unknown model: \(Settings.shared.model)")
+        return [ FinalResponseThought(spokenWords: "The requested AI model is unknown. I cannot handle the request. Please check the source code to ensure the model string is valid.")]
     }
 
-    private func submitToClaude(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
+    private func submitToAnthropic(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
         do {
             let response = try await _anthropic.createMessage(
                 MessageParameter(
@@ -202,7 +216,7 @@ class Brain: ObservableObject {
                 )
             )
 
-            if case let .text(responseText) = response.content[0] {
+            if case let .text(responseText, _) = response.content[0] {
                 log("Response: \(responseText)")
                 let responseThoughts = parseBlocks(from: responseText).toThoughts()
                 if responseThoughts.isEmpty {
@@ -221,7 +235,7 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToGPT(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+    private func submitToOpenAI(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
         do {
             log("Messages: \(thoughts.toOpenAIUserMessages())")
             let query = ChatQuery(
