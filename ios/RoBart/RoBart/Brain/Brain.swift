@@ -183,10 +183,10 @@ class Brain: ObservableObject {
             .claude45OpusLatest: .other("claude-opus-4-5")
         ]
 
-        let modelToOpenAIId: [Brain.Model: String] = [
-            .gpt4o: .gpt4_o,
-            .gpt4Turbo: .gpt4_turbo,
-            .gpt5: .gpt5
+        let modelToOpenAIIdAndStopSupport: [Brain.Model: (String, Bool)] = [
+            .gpt4o: (.gpt4_o, true),
+            .gpt4Turbo: (.gpt4_turbo, true),
+            .gpt5: (.gpt5, false)   // GPT-5 does not support stop tokens
         ]
 
         // Anthropic model?
@@ -195,8 +195,8 @@ class Brain: ObservableObject {
         }
 
         // OpenAI model?
-        if let model = modelToOpenAIId[Settings.shared.model] {
-            return await submitToOpenAI(model: model, thoughts: thoughts, stopAt: stopAt)
+        if let (model, supportsStop) = modelToOpenAIIdAndStopSupport[Settings.shared.model] {
+            return await submitToOpenAI(model: model, thoughts: thoughts, stopAt: stopAt, useStop: supportsStop)
         }
 
         // Unknown! Internal error.
@@ -235,13 +235,17 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToOpenAI(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
+    private func submitToOpenAI(model: String, thoughts: [ThoughtRepresentable], stopAt: [String], useStop: Bool) async -> [ThoughtRepresentable]? {
+        // Need to append extra instructions if we are using an OpenAI model lacking stop token support
+        let systemPrompt = Prompts.system + (useStop == false ? Prompts.systemFooterForModelsWithoutStopSupport : "")
+
+        // Submit
         do {
             log("Messages: \(thoughts.toOpenAIUserMessages())")
             let query = ChatQuery(
-                messages: [ .system(.init(content: .textContent(Prompts.system))) ] + thoughts.toOpenAIUserMessages(),
+                messages: [ .system(.init(content: .textContent(systemPrompt))) ] + thoughts.toOpenAIUserMessages(),
                 model: model,
-                stop: stopAt.isEmpty ? nil : .stringList(stopAt)
+                stop: (stopAt.isEmpty || !useStop) ? nil : .stringList(stopAt)
             )
             let response = try await _openAI.chats(query: query)
 

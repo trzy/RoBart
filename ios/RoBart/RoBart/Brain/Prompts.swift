@@ -148,4 +148,10 @@ The order of response is always:
 
 MAKE SURE EACH SECTION BEGINS WITH AN OPENING TAG AND ENDS WITH A CLOSING TAG.
 """
+
+    // GPT-5 no longer supports stop tokens, so we need additional guidance
+    static let systemFooterForModelsWithoutStopSupport = """
+STOP EACH TIME </ACTIONS> OR </FINAL_RESPONSE> HAS BEEN GENERATED.
+AFTER OBSERVATIONS, IF THE TASK IS COMPLETED, DELIVER A FINAL RESPONSE, OTHERWISE LOOP AROUND TO PLAN.
+"""
 }
