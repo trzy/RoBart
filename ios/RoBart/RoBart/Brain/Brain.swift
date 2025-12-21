@@ -218,7 +218,8 @@ class Brain: ObservableObject {
 
             if case let .text(responseText, _) = response.content[0] {
                 log("Response: \(responseText)")
-                let responseThoughts = parseBlocks(from: responseText).toThoughts()
+                let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)  // not needed for Claude but just in case...
+                let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
                 if responseThoughts.isEmpty {
                     // This occasionally happens when there is an error or Claude thinks the
                     // content is prohibited. We deliver its response verbatim.
@@ -251,7 +252,8 @@ class Brain: ObservableObject {
 
             if let responseText = response.choices[0].message.content {
                 log("Response: \(responseText)")
-                let responseThoughts = parseBlocks(from: responseText).toThoughts()
+                let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)
+                let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
                 return responseThoughts.isEmpty ? nil : responseThoughts
             }
 
