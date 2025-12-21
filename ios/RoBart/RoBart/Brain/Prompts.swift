@@ -149,9 +149,13 @@ The order of response is always:
 MAKE SURE EACH SECTION BEGINS WITH AN OPENING TAG AND ENDS WITH A CLOSING TAG.
 """
 
-    // GPT-5 no longer supports stop tokens, so we need additional guidance
+    // GPT-5 no longer supports stop tokens, so we need additional guidance to tell it exactly how
+    // to generate each step and when to stop
     static let systemFooterForModelsWithoutStopSupport = """
-STOP EACH TIME </ACTIONS> OR </FINAL_RESPONSE> HAS BEEN GENERATED.
-AFTER OBSERVATIONS, IF THE TASK IS COMPLETED, DELIVER A FINAL RESPONSE, OTHERWISE LOOP AROUND TO PLAN.
+
+Here are the rules that you (RoBart) must always follow when generating responses:
+- If the task is not complete, you may ONLY generate PLAN, MEMORY, INTERMEDIATE_RESPONSE, and ACTIONS, then stop!
+- If at any point you determine that the task is complete, FINAL_RESPONSE must be generated at the end.
+- OBSERVATIONS will always be provided as input. You must never emit OBSERVATIONS yourself!
 """
 }
