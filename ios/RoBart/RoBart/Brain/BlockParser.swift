@@ -109,3 +109,38 @@ func parseBlocks(from text: String) -> [(tag: String, contents: String)] {
 
     return result
 }
+
+/// Truncates text as soon as a stop sequence is encountered.
+///
+/// For example, given the following text and stop sequence `<bar>`:
+/// ```
+/// <foo>
+///     hello
+/// </foo>
+/// <bar>world</bar>
+/// <baz>!</baz>
+/// ```
+///
+/// The output is:
+/// ```
+/// <foo>
+///     hello
+/// </foo>
+/// ```
+///
+/// This is useful for truncating LLM responses at a given token.
+///
+/// - Parameter text: The text to truncate.
+/// - Parameter stopAt: A sequence of strings to look for at which to truncate. Each is tried
+/// iteratively.
+/// - Returns: The string up until the first of the stop strings found.
+func truncateText(text: String, stopAt: [String]) -> String {
+        var truncated = text
+        for stopWord in stopAt {
+                if let range = truncated.range(of: stopWord) {
+                        truncated = String(truncated[truncated.startIndex..<range.lowerBound])
+                }
+        }
+        return truncated
+}
+
