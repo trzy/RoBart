@@ -65,7 +65,7 @@ extension simd_float4x4 {
     }
 }
 
-extension simd_float4x4: Codable {
+extension simd_float4x4: @retroactive Codable {
     public func encode(to encoder: any Encoder) throws {
         fatalError("Encodable method encode(to:) not implemented on simd_float4x4")
     }
