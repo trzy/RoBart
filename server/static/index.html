@@ -5,47 +5,203 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RoBart</title>
     <style>
-        body { font-family: monospace; margin: 20px; }
-        button { margin: 5px; padding: 8px 15px; }
-        #messages { 
-            border: 1px solid #ccc; 
-            height: 300px; 
-            overflow-y: auto; 
-            padding: 10px; 
-            margin: 10px 0;
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1d2e;
+            color: #e0e0e0;
         }
+        
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .left-column, .right-column {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .center-video {
+            flex-shrink: 0;
+        }
+        
+        h1 {
+            color: #4a9eff;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+        }
+        
+        button { 
+            padding: 8px 16px;
+            background: #2d3548;
+            color: #4a9eff;
+            border: 1px solid #4a9eff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #3d4558;
+        }
+
+        button:disabled {
+            background: #1a1d2e;
+            color: #4a5568;
+            border-color: #2d3548;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
         .status { 
-            padding: 10px; 
-            margin: 10px 0; 
-            background: #f0f0f0; 
+            padding: 8px;
+            background: #252a3d;
+            border-left: 3px solid #4a9eff;
+            border-radius: 4px;
+            font-size: 12px;
         }
-        .msg { margin: 5px 0; }
-        .sent { color: blue; }
-        .received { color: green; }
-        input[type="text"] { 
-            width: 80%; 
-            padding: 8px; 
+        
+        #localVideo {
+            width: 200px;
+            height: 150px;
+            background: #000;
+            border: 2px solid #2d3548;
+            border-radius: 4px;
+        }
+        
+        #remoteVideo {
+            width: 512px;
+            height: 682px;
+            background: #000;
+            border: 2px solid #2d3548;
+            border-radius: 4px;
+        }
+        
+        .dpad {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 4px;
+            background: #252a3d;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .dpad-btn {
+            background: #2d3548;
+            border: 1px solid #3d4558;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            border-radius: 4px;
+        }
+        
+        .dpad-btn:hover {
+            background: #3d4558;
+        }
+        
+        .dpad-btn.active {
+            background: #4a9eff;
+            color: #fff;
+            border-color: #4a9eff;
+        }
+        
+        .dpad-center {
+            background: #1a1d2e;
+            cursor: default;
+        }
+        
+        .throttle-control {
+            background: #252a3d;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        
+        .throttle-label {
+            color: #4a9eff;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #2d3548;
+            outline: none;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #4a9eff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #4a9eff;
+            cursor: pointer;
+            border: none;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <h1>RoBart</h1>
-    
-    <div class="status" id="status">Status: Not connected</div>
-    
-    <div>
-        <button id="connectBtn">Connect</button>
-    </div>
-
-    <div>
-        <h3>Video</h3>
-        <div id="videoContainer" style="display: flex; gap: 10px;">
-            <div><p>Local</p><video id="localVideo" autoplay muted playsinline style="width: 320px; height: 240px; background: #000;"></video></div>
-            <div><p>Remote</p><video id="remoteVideo" autoplay playsinline style="width: 512px; height: 682px; background: #000;"></video></div>
+    <div class="main-container">
+        <div class="left-column">
+            <div>
+                <h1>RoBart</h1>
+                <div class="status" id="status">Not connected</div>
+                <button id="connectBtn">Connect</button>
+            </div>
+            
+            <div class="dpad">
+                <div></div>
+                <div class="dpad-btn" data-direction="up">▲</div>
+                <div></div>
+                <div class="dpad-btn" data-direction="left">◄</div>
+                <div class="dpad-center"></div>
+                <div class="dpad-btn" data-direction="right">►</div>
+                <div></div>
+                <div class="dpad-btn" data-direction="down">▼</div>
+                <div></div>
+            </div>
+            
+            <div class="throttle-control">
+                <div class="throttle-label" id="throttleLabel">Throttle: 0.02</div>
+                <input type="range" id="throttleSlider" min="0" max="0.1" step="0.01" value="0.02">
+            </div>
         </div>
-    </div>
-    
-    <div id="arrows">
+        
+        <div class="center-video">
+            <video id="remoteVideo" autoplay playsinline></video>
+        </div>
+        
+        <div class="right-column">
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
     </div>
 
     <!-- Must be type "module" so we can immediately start calling async functions -->

@@ -18,7 +18,7 @@ const config = {
 
 // UI Elements
 const connectBtn = document.getElementById('connectBtn');
-const sendBtn = document.getElementById('sendBtn');
+//const sendBtn = document.getElementById('sendBtn');
 const messageInput = document.getElementById('messageInput');
 const messagesDiv = document.getElementById('messages');
 const statusDiv = document.getElementById('status');
@@ -187,12 +187,12 @@ function initPeerConnection() {
 function setupDataChannel() {
     dataChannel.onopen = () => {
         updateStatus('Data channel open! You can now chat.');
-        sendBtn.disabled = false;
+        //sendBtn.disabled = false;
     };
     
     dataChannel.onclose = () => {
         updateStatus('Data channel closed');
-        sendBtn.disabled = true;
+        //sendBtn.disabled = true;
     };
     
     dataChannel.onmessage = (e) => {
@@ -265,6 +265,27 @@ const commandByMotionDirection = {
 
 let inputDirection = MotionDirection.STOP;
 
+// DPad UI buttons
+const dpadUp = document.querySelector('.dpad-btn[data-direction="up"]');
+const dpadDown = document.querySelector('.dpad-btn[data-direction="down"]');
+const dpadLeft = document.querySelector('.dpad-btn[data-direction="left"]');
+const dpadRight = document.querySelector('.dpad-btn[data-direction="right"]');
+
+function updateButtons() {
+    const buttons = [ dpadUp, dpadDown, dpadLeft, dpadRight ];
+    for (let button of buttons) {
+        button.classList.remove("active");
+    }
+    
+    switch (inputDirection) {
+    case MotionDirection.FORWARD:   dpadUp.classList.add("active"); break;
+    case MotionDirection.BACKWARD:  dpadDown.classList.add("active"); break;
+    case MotionDirection.LEFT:      dpadLeft.classList.add("active"); break;
+    case MotionDirection.RIGHT:     dpadRight.classList.add("active"); break;
+    default:    break;
+    }
+}
+
 document.addEventListener('keydown', (event) => {
     console.log('Key pressed:', event.key);
     switch (event.key) {
@@ -281,6 +302,7 @@ document.addEventListener('keydown', (event) => {
             inputDirection = MotionDirection.RIGHT;
             break;
     }
+    updateButtons();
 });
 
 document.addEventListener('keyup', (event) => {
@@ -306,6 +328,30 @@ document.addEventListener('keyup', (event) => {
             }
             break;
     }
+    updateButtons();
+});
+
+const throttleSlider = document.getElementById('throttleSlider');
+const throttleLabel = document.getElementById('throttleLabel');
+
+function getThrottleValue() {
+    return parseFloat(throttleSlider.value);
+}
+
+function setThrottleValue(value) {
+    throttleSlider.value = value;
+    throttleLabel.textContent = `Throttle: ${value.toFixed(2)}`;
+}
+
+// Update throttle label
+throttleSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value).toFixed(2);
+    throttleLabel.textContent = `Throttle: ${value}`;
+});
+
+throttleSlider.addEventListener('change', (e) => {
+    const throttle = parseFloat(e.target.value);
+    console.log('Throttle changed to:', throttle);
 });
 
 window.addEventListener("blur", (event) => {
@@ -327,11 +373,13 @@ function animationLoop(timestamp) {
     lastTime = timestamp - (elapsed % targetInterval);
 
     if (dataChannel && dataChannel.readyState === 'open') {
-        // Send motion command on data channel
-        dataChannel.send(commandByMotionDirection[inputDirection]);
+        // Send motion command on data channel followed by throttle value
+        const directionCommand = commandByMotionDirection[inputDirection];
+        const throttleCommand = `${getThrottleValue()}`;
+        const command = directionCommand + throttleCommand;
+        dataChannel.send(command);
+        console.log(`Sent: ${command}`);
     }
-
-    arrowsDiv.textContent = inputDirection;
   }
   requestAnimationFrame(animationLoop);
 }
