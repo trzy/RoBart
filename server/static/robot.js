@@ -363,6 +363,15 @@ window.addEventListener("focus", (event) => {
     // Window focus gained
 });
 
+const cameraSelectMenu = document.getElementById("cameraView");
+cameraSelectMenu.addEventListener("change", function(event) {
+    // 'event.target' refers to the <select> element itself
+    const selectedValue = event.target.value;
+    console.log("Camera selection changed:", selectedValue);
+    if (dataChannel && dataChannel.readyState == 'open') {
+        dataChannel.send(`c${selectedValue}`);
+    }
+});
 
 let lastTime = 0;
 const targetInterval = 1000 / 10;   // target interval for N Hz: 1000 ms / N frames = ms/frame
