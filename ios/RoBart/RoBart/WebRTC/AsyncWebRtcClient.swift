@@ -4,6 +4,21 @@
 //
 //  Created by Bart Trzynadlowski on 12/27/25.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
 
 import Combine
 import WebRTC
@@ -121,6 +136,9 @@ actor AsyncWebRtcClient: ObservableObject {
         optionalConstraints: nil
     )
 
+    private var _desiredCamera = CameraType.backDefault
+    private var _isCapturing = false
+
     private var _dataChannel: RTCDataChannel?
     private var _videoCapturer: RTCVideoCapturer?
     private var _localVideoTrack: RTCVideoTrack?
@@ -228,16 +246,26 @@ actor AsyncWebRtcClient: ObservableObject {
             let wasCanceled = await task.value
             if wasCanceled {
                 // If explicitly canceled, finish; otherwise, keep trying
-                await log("WebRTC run canceled!")
+                log("WebRTC run canceled!")
                 return
             } else {
-                await log("Retrying...")
+                log("Retrying...")
             }
         }
     }
 
+    func switchToCamera(_ cameraType: CameraType) async {
+        _desiredCamera = cameraType
+
+        if _isCapturing {
+            log("Switching cameras...")
+            stopCapture()
+            startCapture()
+        }
+    }
+
     func stop() async {
-        await log("Stopping...")
+        log("Stopping...")
         _mainTask?.cancel()
     }
 
@@ -249,23 +277,23 @@ actor AsyncWebRtcClient: ObservableObject {
 
     /// Accept offer from a remote peer.
     func onOfferReceived(jsonString: String) async {
-        await log("Received offer")
-        guard let offer = await Offer.decode(jsonString: jsonString) else { return }
+        log("Received offer")
+        guard let offer = Offer.decode(jsonString: jsonString) else { return }
         let sdp = RTCSessionDescription(type: .offer, sdp: offer.sdp)
         _sdpReceivedContinuation?.yield(sdp)
     }
 
     /// Accept answer from a remote peer.
     func onAnswerReceived(jsonString: String) async {
-        await log("Received answer")
-        guard let answer = await Answer.decode(jsonString: jsonString) else { return }
+        log("Received answer")
+        guard let answer = Answer.decode(jsonString: jsonString) else { return }
         let sdp = RTCSessionDescription(type: .answer, sdp: answer.sdp)
         _sdpReceivedContinuation?.yield(sdp)
     }
 
     /// Accept an ICE candidate from the remote peer.
     func onIceCandidateReceived(jsonString: String) async {
-        guard let iceCandidate = await ICECandidate.decode(jsonString: jsonString) else { return }
+        guard let iceCandidate = ICECandidate.decode(jsonString: jsonString) else { return }
         let candidate = RTCIceCandidate(
             sdp: iceCandidate.candidate,
             sdpMLineIndex: iceCandidate.sdpMLineIndex,
@@ -275,11 +303,11 @@ actor AsyncWebRtcClient: ObservableObject {
         if let continuation = _iceCandidateReceivedContinuation {
             // If SDP exchange is complete, a stream will have been set up to process these as they
             // arrive
-            await log("Received ICE candidate message from remote peer")
+            log("Received ICE candidate message from remote peer")
             continuation.yield(candidate)
         } else {
             // Otherwise, enqueue them
-            await log("Received and enqueued ICE candidate message from remote peer")
+            log("Received and enqueued ICE candidate message from remote peer")
             _iceCandidateQueue.append(candidate)
         }
     }
@@ -288,7 +316,7 @@ actor AsyncWebRtcClient: ObservableObject {
     func sendTextData(_ text: String) async {
         let buffer = RTCDataBuffer(data: text.data(using: .utf8)!, isBinary: false)
         guard let dataChannel = _dataChannel else {
-            await logError("No data channel to send on")
+            logError("No data channel to send on")
             return
         }
         dataChannel.sendData(buffer)
@@ -299,9 +327,10 @@ actor AsyncWebRtcClient: ObservableObject {
     /// Runs the client for one connection session and returns true if canceled, otherwise false
     /// if either an error or a disconnect occurred.
     private func runOneSession() async -> Bool {
-        await log("Running session...")
+        log("Running session...")
 
         defer {
+            stopCapture()
             closeConnection()
         }
 
@@ -355,7 +384,6 @@ actor AsyncWebRtcClient: ObservableObject {
                         }
                         try await Task.sleep(for: .milliseconds(100))
                     }
-                    await log("time out")
                     throw InternalError.sdpExchangeTimedOut
                 }
 
@@ -370,7 +398,7 @@ actor AsyncWebRtcClient: ObservableObject {
             }
 
             try Task.checkCancellation()
-            await log("SDP exchanged")
+            log("SDP exchanged")
 
             // We should be connected and can accept remote ICE candidates now and wait until
             // the connection finishes
@@ -417,17 +445,17 @@ actor AsyncWebRtcClient: ObservableObject {
                 }
             }
         } catch is CancellationError {
-            await log("WebRTC task was canceled")
+            log("WebRTC task was canceled")
             return true // was canceled
         } catch {
-            await logError(error.localizedDescription)
+            logError(error.localizedDescription)
         }
 
         return false
     }
 
     private func createConnection() async throws {
-        await log("Creating peer connection")
+        log("Creating peer connection")
 
         let (config, constraints) = createConnectionConfiguration()
         guard let peerConnection = _factory.peerConnection(with: config, constraints: constraints, delegate: nil) else {
@@ -449,7 +477,7 @@ actor AsyncWebRtcClient: ObservableObject {
             }
             await task.value
             _dataChannel = dataChannel
-            await log("Created data channel")
+            log("Created data channel")
         }
 
         // Create video track
@@ -458,10 +486,12 @@ actor AsyncWebRtcClient: ObservableObject {
         _localVideoTrack = videoTrack
         peerConnection.add(videoTrack, streamIds: [ "stream" ])
         _remoteVideoTrack = peerConnection.transceivers.first { $0.mediaType == .video }?.receiver.track as? RTCVideoTrack
+
+        // 
     }
 
     private func waitForSdp() async throws {
-        await log("Waiting for remote SDP")
+        log("Waiting for remote SDP")
 
         let sdpStream: AsyncStream<RTCSessionDescription> = AsyncStream { continuation in
             _sdpReceivedContinuation = continuation
@@ -469,7 +499,7 @@ actor AsyncWebRtcClient: ObservableObject {
 
         for await sdp in sdpStream {
             try await _peerConnection?.setRemoteDescription(sdp)
-            await log("Received remote SDP")
+            log("Received remote SDP")
             break
         }
 
@@ -487,7 +517,7 @@ actor AsyncWebRtcClient: ObservableObject {
         }
         let container = String(data: try! JSONEncoder().encode(Answer(sdp: sdpString)), encoding: .utf8)!
         _answerToSendContinuation?.yield(container)
-        await log("Sent answer")
+        log("Sent answer")
     }
 
     private func createAndSendOffer() async throws {
@@ -500,7 +530,7 @@ actor AsyncWebRtcClient: ObservableObject {
         }
         let container = String(data: try! JSONEncoder().encode(Offer(sdp: sdpString)), encoding: .utf8)!
         _offerToSendContinuation?.yield(container)
-        await log("Sent offer")
+        log("Sent offer")
     }
 
     private func startConnectionProcessAndWaitForRole() async throws -> Role? {
@@ -511,12 +541,12 @@ actor AsyncWebRtcClient: ObservableObject {
         // Indicate to signaling server that we are ready to begin connecting. Server will respond
         // with role.
         _readyToConnectEventContinuation?.yield()
-        await log("Ready to start connection process")
+        log("Ready to start connection process")
 
         // Await role. This waits indefinitely unless the entire task is canceled by a disconnect
         for await role in roleStream {
             _roleContinuation = nil
-            await log("Received role: \(role == .initiator ? "initiator" : "responder")")
+            log("Received role: \(role == .initiator ? "initiator" : "responder")")
             return role
         }
 
@@ -534,15 +564,15 @@ actor AsyncWebRtcClient: ObservableObject {
         let iceCandidateQueue = _iceCandidateQueue
         _iceCandidateQueue = []
         for candidate in iceCandidateQueue {
-            await log("Adding ICE candidate...")
+            log("Adding ICE candidate...")
             try await _peerConnection?.add(candidate)
         }
-        await log("Processed \(iceCandidateQueue.count) enqueued ICE candidates")
+        log("Processed \(iceCandidateQueue.count) enqueued ICE candidates")
 
         // Process any ICE candidates coming in from this point onwards using stream
         for await candidate in iceCandidateStream {
             try await _peerConnection?.add(candidate)
-            await log("Processed ICE candidate")
+            log("Processed ICE candidate")
         }
 
         _iceCandidateReceivedContinuation = nil
@@ -582,29 +612,82 @@ actor AsyncWebRtcClient: ObservableObject {
         return (videoCapturer, videoTrack)
     }
 
+//    private func startCapture() {
+//        // Start capturing immediately
+//        guard let capturer = self._videoCapturer as? RTCCameraVideoCapturer else { return }
+//        guard let frontCamera = (RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }),
+//              let format = (RTCCameraVideoCapturer.supportedFormats(for: frontCamera).sorted { (fmt1, fmt2) -> Bool in
+//                  let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
+//                  let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
+//                  return width1 < width2
+//              }).last,
+//              // Choose highest FPS
+//              let fps = (format.videoSupportedFrameRateRanges.sorted { return $0.maxFrameRate < $1.maxFrameRate }.last) else {
+//            return
+//        }
+//
+//        // NOTE: Never use the async version of the below function. This enclosing method must be
+//        // declared synchronous in order to use the synchronous version below. I am not sure why,
+//        // but it will quickly degrade the connection and result in disconnects.
+//        capturer.startCapture(with: frontCamera, format: format, fps: Int(fps.maxFrameRate))
+//        Task { @MainActor in log("Started video capture: \(format.formatDescription)") }
+//    }
+
     private func startCapture() {
-        // Start capturing immediately
-        guard let capturer = self._videoCapturer as? RTCCameraVideoCapturer else { return }
-        guard let frontCamera = (RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }),
-              let format = (RTCCameraVideoCapturer.supportedFormats(for: frontCamera).sorted { (fmt1, fmt2) -> Bool in
-                  let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
-                  let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
-                  return width1 < width2
-              }).last,
-              // Choose highest FPS
-              let fps = (format.videoSupportedFrameRateRanges.sorted { return $0.maxFrameRate < $1.maxFrameRate }.last) else {
+        guard let capturer = _videoCapturer as? RTCCameraVideoCapturer else { return }
+        guard let camera = findCamera() else { return }
+        guard let format = (RTCCameraVideoCapturer.supportedFormats(for: camera).sorted { (fmt1, fmt2) -> Bool in
+            let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
+            let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
+            return width1 < width2
+        }).last,
+        let fps = (format.videoSupportedFrameRateRanges.sorted { $0.maxFrameRate < $1.maxFrameRate }.last) else {
             return
         }
 
-        // NOTE: Never use the async version of the below function. This enclosing method must be
-        // declared synchronous in order to use the synchronous version below. I am not sure why,
-        // but it will quickly degrade the connection and result in disconnects.
-        capturer.startCapture(with: frontCamera, format: format, fps: Int(fps.maxFrameRate))
-        Task { @MainActor in log("Started video capture: \(format.formatDescription)") }
+        capturer.startCapture(with: camera, format: format, fps: Int(fps.maxFrameRate))
+        _isCapturing = true
+
+        Task { @MainActor in
+            print("Started video apture: \(format.formatDescription)")
+        }
     }
 
-    private func setDataChannel(_ dataChannel: RTCDataChannel) {
-        _dataChannel = dataChannel
+    private func stopCapture() {
+        guard _isCapturing else { return }
+        guard let capturer = self._videoCapturer as? RTCCameraVideoCapturer else { return }
+        capturer.stopCapture()
+        _isCapturing = false
+    }
+
+    private func findCamera() -> AVCaptureDevice? {
+        switch _desiredCamera {
+        case .front:
+            return RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }
+        case .backDefault:
+            return RTCCameraVideoCapturer.captureDevices().first { $0.position == .back }
+        case .backWide:
+            let session = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInWideAngleCamera],
+                mediaType: .video,
+                position: .back
+            )
+            return session.devices.first ?? (RTCCameraVideoCapturer.captureDevices().first { $0.position == .back })
+        case .backUltraWide:
+            let session = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInUltraWideCamera],
+                mediaType: .video,
+                position: .back
+            )
+            return session.devices.first ?? (RTCCameraVideoCapturer.captureDevices().first { $0.position == .back })
+        case .backTelephoto:
+            let session = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInTelephotoCamera],
+                mediaType: .video,
+                position: .back
+            )
+            return session.devices.first ?? (RTCCameraVideoCapturer.captureDevices().first { $0.position == .back })
+        }
     }
 }
 

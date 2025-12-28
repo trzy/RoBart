@@ -14,6 +14,9 @@
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
+		CC66808C2F01C7030029C49A /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808B2F01C7000029C49A /* Settings.swift */; };
+		CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808D2F01C7CC0029C49A /* SettingsView.swift */; };
+		CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808F2F01D8D40029C49A /* CameraType.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
 		CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */; };
 		CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */; };
@@ -82,6 +85,9 @@
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
+		CC66808B2F01C7000029C49A /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		CC66808D2F01C7CC0029C49A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CC66808F2F01D8D40029C49A /* CameraType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraType.swift; sourceTree = "<group>"; };
 		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamMulticaster.swift; sourceTree = "<group>"; };
 		CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+Extensions.swift"; sourceTree = "<group>"; };
@@ -190,6 +196,7 @@
 				CCA9A1282C62E02A00B0401C /* Hoverboard */,
 				CCA9A11D2C62D98A00B0401C /* Views */,
 				CCA9A0FB2C62D35E00B0401C /* RoBartApp.swift */,
+				CC66808B2F01C7000029C49A /* Settings.swift */,
 				CCA9A0FF2C62D35F00B0401C /* Assets.xcassets */,
 				CCA9A1012C62D35F00B0401C /* Preview Content */,
 			);
@@ -234,6 +241,7 @@
 			children = (
 				CCA9A1212C62DADF00B0401C /* Hoverboard */,
 				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
+				CC66808D2F01C7CC0029C49A /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -285,6 +293,7 @@
 		CCB01A2E2F010F4E00B00AEA /* WebRTC */ = {
 			isa = PBXGroup;
 			children = (
+				CC66808F2F01D8D40029C49A /* CameraType.swift */,
 				CCB01A362F010FFD00B00AEA /* AsyncWebRtcClient.swift */,
 				CCB01A342F010FDF00B00AEA /* Messages.swift */,
 				CCB01A2F2F010F5500B00AEA /* SignalTransport.swift */,
@@ -386,12 +395,14 @@
 				CCA9A0FE2C62D35E00B0401C /* ContentView.swift in Sources */,
 				CCA9A11A2C62D90500B0401C /* simd_float4x4+Extensions.swift in Sources */,
 				CCA9A1422C62F83400B0401C /* HoverboardControlView.swift in Sources */,
+				CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
 				CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */,
 				CCB01A352F010FE200B00AEA /* Messages.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
 				CCA9A12A2C62E05700B0401C /* HoverboardController.swift in Sources */,
+				CC66808C2F01C7030029C49A /* Settings.swift in Sources */,
 				CCA9A1122C62D81900B0401C /* HexDump.swift in Sources */,
 				CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */,
 				CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */,
@@ -411,6 +422,7 @@
 				CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */,
 				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
 				CCB01A302F010F5800B00AEA /* SignalTransport.swift in Sources */,
+				CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

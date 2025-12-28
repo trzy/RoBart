@@ -44,6 +44,12 @@ struct ContentView: View {
                         Image(systemName: "car.front.waves.down")
                             .imageScale(.large)
                     }
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Image(systemName: "gear")
+                            .imageScale(.large)
+                    }
                 }
             }
         }
