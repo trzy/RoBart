@@ -1,0 +1,367 @@
+/*
+ * RoBart control
+ */
+
+let pc = null;
+let dataChannel = null;
+let ws = null;
+let myRole = null;
+let iceCandidateQueue = [];
+let localStream = null;
+
+// ICE servers for NAT traversal
+const config = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' }
+    ]
+};
+
+// UI Elements
+const connectBtn = document.getElementById('connectBtn');
+const sendBtn = document.getElementById('sendBtn');
+const messageInput = document.getElementById('messageInput');
+const messagesDiv = document.getElementById('messages');
+const statusDiv = document.getElementById('status');
+const arrowsDiv = document.getElementById('arrows');
+
+function enqueueICECandidate(candidate) {
+    iceCandidateQueue.push(candidate);
+}
+
+async function processEnqueuedICECandidates() {
+    for (const candidate of iceCandidateQueue) {
+        await pc.addIceCandidate(candidate);
+    }
+    iceCandidateQueue = [];
+}
+
+function createReadyToConnectMessage() {
+    const message = { type: "ReadyToConnectMessage" }
+    return JSON.stringify(message)
+}
+
+function createOfferMessageFromLocalDescription() {
+    const offer = JSON.stringify(pc.localDescription);
+    const message = { type: "OfferMessage", data: offer };
+    return JSON.stringify(message);
+}
+
+function createAnswerMessageFromLocalDescription() {
+    const offer = JSON.stringify(pc.localDescription);
+    const message = { type: "AnswerMessage", data: offer };
+    return JSON.stringify(message);
+}
+
+function createICECandidateMessage(candidate) {
+    console.log("ICE JSON: " + JSON.stringify(candidate));
+    const message = { type: "ICECandidateMessage", data: JSON.stringify(candidate) };
+    return JSON.stringify(message);
+}
+
+// Connect to signaling server
+connectBtn.onclick = () => {
+    ws = new WebSocket('ws://localhost:8000/ws');
+    
+    ws.onopen = () => {
+        updateStatus('Connected to signaling server, waiting for role assignment...');
+        connectBtn.disabled = true;
+
+        // Indicate to server that we are ready to begin
+        ws.send(createReadyToConnectMessage());
+    };
+    
+    ws.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
+        console.log('Signaling message:', message.type);
+        
+        if (message.type === 'RoleMessage') {
+            // Server assigned us a role
+            myRole = message.role;
+            updateStatus(`Role: ${myRole}`);
+            
+            if (myRole === 'initiator') {
+                // We're the first peer, wait for responder
+                updateStatus('Waiting for peer to connect...');
+            } else {
+                // We're the responder, wait for offer
+                updateStatus('Connected as responder, waiting for offer...');
+            }
+
+            if (myRole === 'initiator') {
+                updateStatus('Peer connected, creating offer...');
+                initPeerConnection();
+                createOffer();
+            }
+            
+        } else if (message.type === 'OfferMessage') {
+            // Responder receives offer
+            if (!pc) {
+                initPeerConnection();
+            }
+            const offer = JSON.parse(message.data);
+            await pc.setRemoteDescription(offer);
+            await processEnqueuedICECandidates();
+            
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            ws.send(createAnswerMessageFromLocalDescription());
+            updateStatus('Sent answer, establishing connection...');
+            
+        } else if (message.type === 'AnswerMessage') {
+            // Initiator receives answer
+            const answer = JSON.parse(message.data);
+            await pc.setRemoteDescription(answer);
+            await processEnqueuedICECandidates();
+            updateStatus('Received answer, establishing connection...');
+            
+        } else if (message.type === 'ICECandidateMessage' && message.data) {
+            const candidate = JSON.parse(message.data);
+            try {
+                if (pc && pc.remoteDescription) {
+                    await pc.addIceCandidate(candidate);
+                } else {
+                    enqueueICECandidate(candidate);
+                }
+            } catch (err) {
+                console.error('Error adding ICE candidate:', err);
+            }
+        } else if (message.type == 'HelloMessage') {
+            console.log('Peer said hello:', message.message);
+        }
+    };
+    
+    ws.onerror = (err) => {
+        updateStatus('WebSocket error - is server running?');
+        console.error('WebSocket error:', err);
+    };
+    
+    ws.onclose = () => {
+        updateStatus('Disconnected from signaling server');
+        connectBtn.disabled = false;
+    };
+};
+
+// Initialize peer connection
+function initPeerConnection() {
+    pc = new RTCPeerConnection(config);
+
+    pc.addStream(localStream);
+    
+    // ICE candidate handling
+    pc.onicecandidate = (e) => {
+        if (e.candidate) {
+            console.log('ICE candidate generated: ' + e.candidate);
+            ws.send(createICECandidateMessage(e.candidate));
+        }
+    };
+    
+    // Connection state
+    pc.onconnectionstatechange = () => {
+        updateStatus('Connection: ' + pc.connectionState);
+        if (pc.connectionState === 'connected') {
+            updateStatus('WebRTC Connected! You can now chat.');
+        }
+    };
+    
+    // Data channel from remote peer
+    pc.ondatachannel = (e) => {
+        dataChannel = e.channel;
+        setupDataChannel();
+    };
+
+    // Stream from remote peer
+    pc.onaddstream = (e) => {
+        console.log(`Got remote stream`);
+        const remoteVideo = document.getElementById('remoteVideo');
+        remoteVideo.srcObject = e.stream;
+    };
+    
+    // If we're initiator, create data channel
+    if (myRole === 'initiator') {
+        dataChannel = pc.createDataChannel('chat');
+        setupDataChannel();
+    }
+}
+
+// Setup data channel handlers
+function setupDataChannel() {
+    dataChannel.onopen = () => {
+        updateStatus('Data channel open! You can now chat.');
+        sendBtn.disabled = false;
+    };
+    
+    dataChannel.onclose = () => {
+        updateStatus('Data channel closed');
+        sendBtn.disabled = true;
+    };
+    
+    dataChannel.onmessage = (e) => {
+        addMessage('Peer: ' + e.data, 'received');
+    };
+}
+
+// Create offer (initiator only)
+async function createOffer() {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    ws.send(createOfferMessageFromLocalDescription());
+    console.log('Offer:', JSON.stringify(pc.localDescription));
+    updateStatus('Sent offer, waiting for answer...');
+}
+
+// // Send message
+// sendBtn.onclick = () => {
+//     const msg = messageInput.value.trim();
+//     if (msg && dataChannel && dataChannel.readyState === 'open') {
+//         dataChannel.send(msg);
+//         addMessage('You: ' + msg, 'sent');
+//         messageInput.value = '';
+//     }
+// };
+
+// Send on Enter key
+// messageInput.onkeypress = (e) => {
+//     if (e.key === 'Enter') {
+//         sendBtn.onclick();
+//     }
+// };
+
+// UI helpers
+function addMessage(text, className) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + className;
+    div.textContent = text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function updateStatus(text) {
+    statusDiv.textContent = 'Status: ' + text;
+}
+
+// Disable send initially
+// sendBtn.disabled = true;
+
+
+/***************************************************************************************************
+ Robot Control
+***************************************************************************************************/
+
+const MotionDirection = Object.freeze({
+    FORWARD: 'FORWARD',
+    BACKWARD: 'BACKWARD',
+    LEFT: 'LEFT',
+    RIGHT: 'RIGHT',
+    STOP: 'STOP',
+});
+
+const commandByMotionDirection = {
+    'FORWARD': 'f',
+    'BACKWARD': 'b',
+    'LEFT': 'l',
+    'RIGHT': 'r',
+    'STOP': 's'
+};
+
+let inputDirection = MotionDirection.STOP;
+
+document.addEventListener('keydown', (event) => {
+    console.log('Key pressed:', event.key);
+    switch (event.key) {
+        case 'w':
+            inputDirection = MotionDirection.FORWARD;
+            break;
+        case 's':
+            inputDirection = MotionDirection.BACKWARD;
+            break;
+        case 'a':
+            inputDirection = MotionDirection.LEFT;
+            break;
+        case 'd':
+            inputDirection = MotionDirection.RIGHT;
+            break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch (event.key) {
+        case 'w':
+            if (inputDirection == MotionDirection.FORWARD) {
+                inputDirection = MotionDirection.STOP;
+            }
+            break;
+        case 's':
+            if (inputDirection == MotionDirection.BACKWARD) {
+                inputDirection = MotionDirection.STOP;
+            }
+            break;
+        case 'a':
+            if (inputDirection == MotionDirection.LEFT) {
+                inputDirection = MotionDirection.STOP;
+            }
+            break;
+        case 'd':
+            if (inputDirection == MotionDirection.RIGHT) {
+                inputDirection = MotionDirection.STOP;
+            }
+            break;
+    }
+});
+
+window.addEventListener("blur", (event) => {
+    // Window lost focus
+    inputDirection = MotionDirection.STOP;
+});
+
+window.addEventListener("focus", (event) => {
+    // Window focus gained
+});
+
+
+let lastTime = 0;
+const targetInterval = 1000 / 10;   // target interval for N Hz: 1000 ms / N frames = ms/frame
+
+function animationLoop(timestamp) {
+  const elapsed = timestamp - lastTime;
+  if (elapsed >= targetInterval) {
+    lastTime = timestamp - (elapsed % targetInterval);
+
+    if (dataChannel && dataChannel.readyState === 'open') {
+        // Send motion command on data channel
+        dataChannel.send(commandByMotionDirection[inputDirection]);
+    }
+
+    arrowsDiv.textContent = inputDirection;
+  }
+  requestAnimationFrame(animationLoop);
+}
+
+requestAnimationFrame(animationLoop);
+
+/***************************************************************************************************
+ Video
+***************************************************************************************************/
+
+async function initVideoStream() {
+    const localVideo = document.getElementById('localVideo');
+    
+    const constraints = {
+        video: true,
+        audio: false
+    };
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        localVideo.srcObject = stream;
+        return stream;
+    } catch (error) {
+        console.log('Error: Failed to obtain video stream:', error);
+    }
+
+    return null;
+}
+
+localStream = await initVideoStream();
+if (localStream && localStream.getVideoTracks().length > 0) {
+    console.log(`Using video device: ${localStream.getVideoTracks()[0].label}`);
+}

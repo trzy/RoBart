@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoBart</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        button { margin: 5px; padding: 8px 15px; }
+        #messages { 
+            border: 1px solid #ccc; 
+            height: 300px; 
+            overflow-y: auto; 
+            padding: 10px; 
+            margin: 10px 0;
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            background: #f0f0f0; 
+        }
+        .msg { margin: 5px 0; }
+        .sent { color: blue; }
+        .received { color: green; }
+        input[type="text"] { 
+            width: 80%; 
+            padding: 8px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>RoBart</h1>
+    
+    <div class="status" id="status">Status: Not connected</div>
+    
+    <div>
+        <button id="connectBtn">Connect</button>
+    </div>
+
+    <div>
+        <h3>Video</h3>
+        <div id="videoContainer" style="display: flex; gap: 10px;">
+            <div><p>Local</p><video id="localVideo" autoplay muted playsinline style="width: 320px; height: 240px; background: #000;"></video></div>
+            <div><p>Remote</p><video id="remoteVideo" autoplay playsinline style="width: 512px; height: 682px; background: #000;"></video></div>
+        </div>
+    </div>
+    
+    <div id="arrows">
+    </div>
+
+    <!-- Must be type "module" so we can immediately start calling async functions -->
+    <script type="module" src="robot.js"></script>
+</body>
+</html>
