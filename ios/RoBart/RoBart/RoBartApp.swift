@@ -32,6 +32,19 @@
 import Combine
 import SwiftUI
 
+fileprivate func parseCommand(_ text: String) -> (direction: String, throttle: Float)? {
+    guard text.count >= 2 else { return nil }
+
+    let direction = String(text.first!)
+
+    let floatString = text[text.index(after: text.startIndex)...]
+    if let value = Float(floatString) {
+        return (direction: direction, throttle: value)
+    }
+
+    return nil
+}
+
 @main
 struct RoBartApp: App {
     @StateObject private var _asyncWebRtcClient = AsyncWebRtcClient()
@@ -50,8 +63,11 @@ struct RoBartApp: App {
                     for await text in _asyncWebRtcClient.textDataReceived {
                         print("[RoBartApp] Control: \(text)")
 
-                        let throttle: Float = 0.02
-                        let inputToCommand: [String: HoverboardCommand] = [
+                        guard let command = parseCommand(text) else { continue }
+                        let direction = command.direction
+                        let throttle = command.throttle
+
+                        let directionToHoverboard: [String: HoverboardCommand] = [
                             "f": .drive(leftThrottle: throttle, rightThrottle: throttle),
                             "b": .drive(leftThrottle: -throttle, rightThrottle: -throttle),
                             "l": .drive(leftThrottle: -throttle, rightThrottle: throttle),
@@ -59,8 +75,8 @@ struct RoBartApp: App {
                             "s": .drive(leftThrottle: 0, rightThrottle: 0)
                         ]
 
-                        if let command = inputToCommand[text] {
-                            HoverboardController.shared.send(command)
+                        if let hoverboardCommand = directionToHoverboard[direction] {
+                            HoverboardController.shared.send(hoverboardCommand)
                         }
                     }
                 }
