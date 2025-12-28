@@ -1,4 +1,4 @@
-numpy
-matplotlib
-pydantic
-scipy
+
+fastapi==0.127.0
+uvicorn==0.40.0
+websockets==15.0.1
