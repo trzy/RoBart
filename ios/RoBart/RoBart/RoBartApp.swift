@@ -32,7 +32,7 @@
 import Combine
 import SwiftUI
 
-fileprivate func parseCommand(_ text: String) -> (direction: String, throttle: Float)? {
+fileprivate func parseMoveCommand(_ text: String) -> (direction: String, throttle: Float)? {
     guard text.count >= 2 else { return nil }
 
     let direction = String(text.first!)
@@ -43,6 +43,15 @@ fileprivate func parseCommand(_ text: String) -> (direction: String, throttle: F
     }
 
     return nil
+}
+
+fileprivate func parseCameraCommand(_ text: String) -> CameraType? {
+    guard text.count >= 2 else { return nil  }
+    guard text.first == "c" else { return nil }
+
+    let cameraString = String(text[text.index(after: text.startIndex)...])
+
+    return CameraType.fromString(cameraString)
 }
 
 @main
@@ -63,20 +72,23 @@ struct RoBartApp: App {
                     for await text in _asyncWebRtcClient.textDataReceived {
                         print("[RoBartApp] Control: \(text)")
 
-                        guard let command = parseCommand(text) else { continue }
-                        let direction = command.direction
-                        let throttle = command.throttle
+                        if let command = parseMoveCommand(text) {
+                            let direction = command.direction
+                            let throttle = command.throttle
 
-                        let directionToHoverboard: [String: HoverboardCommand] = [
-                            "f": .drive(leftThrottle: throttle, rightThrottle: throttle),
-                            "b": .drive(leftThrottle: -throttle, rightThrottle: -throttle),
-                            "l": .drive(leftThrottle: -throttle, rightThrottle: throttle),
-                            "r": .drive(leftThrottle: throttle, rightThrottle: -throttle),
-                            "s": .drive(leftThrottle: 0, rightThrottle: 0)
-                        ]
+                            let directionToHoverboard: [String: HoverboardCommand] = [
+                                "f": .drive(leftThrottle: throttle, rightThrottle: throttle),
+                                "b": .drive(leftThrottle: -throttle, rightThrottle: -throttle),
+                                "l": .drive(leftThrottle: -throttle, rightThrottle: throttle),
+                                "r": .drive(leftThrottle: throttle, rightThrottle: -throttle),
+                                "s": .drive(leftThrottle: 0, rightThrottle: 0)
+                            ]
 
-                        if let hoverboardCommand = directionToHoverboard[direction] {
-                            HoverboardController.shared.send(hoverboardCommand)
+                            if let hoverboardCommand = directionToHoverboard[direction] {
+                                HoverboardController.shared.send(hoverboardCommand)
+                            }
+                        } else if let camera = parseCameraCommand(text) {
+                            await _asyncWebRtcClient.switchToCamera(camera)
                         }
                     }
                 }
