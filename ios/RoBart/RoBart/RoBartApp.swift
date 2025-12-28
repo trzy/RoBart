@@ -20,23 +20,96 @@
 //  with RoBart. If not, see <http://www.gnu.org/licenses/>.
 //
 
+//
+// TODO:
+// -----
+// - Configurable settings page for IP address to server
+// - Second connect indicator for signal server
+// - Render web cam on iOS
+// - Audio!
+//
+
+import Combine
 import SwiftUI
 
 @main
 struct RoBartApp: App {
-    private let _audio = AudioManager.shared
-    private let _brain = Brain.shared
-    private let _client = Client.shared
-    private let _peerManager = PeerManager.shared
+    @StateObject private var _asyncWebRtcClient = AsyncWebRtcClient()
+    @State var isConnected: Bool = false
+
+    private let _transport = SignalTransport()
+    private var _subscriptions = Set<AnyCancellable>()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(isConnected: $isConnected)
                 .task {
                     await HoverboardController.shared.runTask()
                 }
                 .task {
-                    await NavigationController.shared.runTask()
+                    // Run WebRTC on connection to signaling server
+                    for await isConnected in _transport.$isConnected.values {
+                        if isConnected {
+                            print("Connected")
+                            await _asyncWebRtcClient.run()
+                        }
+                    }
+                }
+                .task {
+                    // Disconnect
+                    for await isConnected in _transport.$isConnected.values {
+                        if !isConnected {
+                            print("Disconnected")
+                            await _asyncWebRtcClient.stop()
+                        }
+                    }
+                }
+                .task {
+                    for await connected in _asyncWebRtcClient.isConnected {
+                        isConnected = connected
+                    }
+                }
+                .task {
+                    // When WebRTC is locally ready to establish a connection, let the signaling
+                    // server know
+                    for await _ in _asyncWebRtcClient.readyToConnectEvent {
+                        _transport.send(ReadyToConnectMessage().toJSON())
+                    }
+                }
+                .task {
+                    for await sdp in _asyncWebRtcClient.offerToSend {
+                        _transport.send(OfferMessage(data: sdp).toJSON())
+                    }
+                }
+                .task {
+                    for await sdp in _asyncWebRtcClient.answerToSend {
+                        _transport.send(AnswerMessage(data: sdp).toJSON())
+                    }
+                }
+                .task {
+                    for await candidate in _asyncWebRtcClient.iceCandidateToSend {
+                        _transport.send(ICECandidateMessage(data: candidate).toJSON())
+                    }
+                }
+                .task {
+                    for await message in _transport.$message.values {
+                        switch (message) {
+                        case .role(let message):
+                            await _asyncWebRtcClient.onRoleAssigned(message.role == "initiator" ? .initiator : .responder)
+
+                        case .iceCandidate(let message):
+                            await _asyncWebRtcClient.onIceCandidateReceived(jsonString: message.data)
+
+                        case .offer(let message):
+                            await _asyncWebRtcClient.onOfferReceived(jsonString: message.data)
+
+                        case .answer(let message):
+                            await _asyncWebRtcClient.onAnswerReceived(jsonString: message.data)
+
+                        default:
+                            break;
+                        }
+                    }
                 }
         }
     }

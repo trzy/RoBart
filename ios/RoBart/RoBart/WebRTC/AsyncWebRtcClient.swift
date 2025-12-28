@@ -1,0 +1,717 @@
+//
+//  AsyncWebRtcClient.swift
+//  RoBart
+//
+//  Created by Bart Trzynadlowski on 12/27/25.
+//
+
+import Combine
+import WebRTC
+
+// Bundle offer SDP like this (on JavaScript side, this is the expected format)
+fileprivate struct Offer: nonisolated Codable {
+    var type = "offer"
+    var sdp: String
+
+    static func decode(jsonString: String) -> Offer? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(Offer.self, from: jsonData)
+            return offer
+        } catch {
+            print("[WebRTCClient] Error decoding offer: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+// Bundle answer SDP like this
+fileprivate struct Answer: nonisolated Codable {
+    var type = "answer"
+    var sdp: String
+
+    static func decode(jsonString: String) -> Answer? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(Answer.self, from: jsonData)
+            return offer
+        } catch {
+            print("[WebRTCClient] Error decoding answer: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+// Bundle ICE candidate like this
+fileprivate struct ICECandidate: nonisolated Codable {
+    let candidate: String
+    let sdpMLineIndex: Int32
+    let sdpMid: String?
+
+    static func decode(jsonString: String) -> ICECandidate? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(ICECandidate.self, from: jsonData)
+            return offer
+        } catch {
+            print("[WebRTCClient] Error decoding ICE candidate: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+actor AsyncWebRtcClient: ObservableObject {
+    // MARK: Internal errors
+
+    fileprivate enum InternalError: Error {
+        case failedToCreatePeerConnection
+        case roleAssignmentFailed
+        case sdpExchangeTimedOut
+        case failedToCreateAnswerSdp
+        case failedToCreateOfferSdp
+        case failedToCreateLocalSdpString
+        case peerConnectionTimedOut
+        case peerDisconnected
+    }
+
+    // MARK: Internal state
+
+    private let _factory: RTCPeerConnectionFactory
+
+    // Continuations for API streams
+    private var _isConnectedContinuation: AsyncStream<Bool>.Continuation?
+    private var _peerConnectionStateContinuation: AsyncStream<RTCPeerConnectionState>.Continuation?
+    private var _readyToConnectEventContinuation: AsyncStream<Void>.Continuation?
+    private var _offerToSendContinuation: AsyncStream<String>.Continuation?
+    private var _iceCandidateToSendContinuation: AsyncStream<String>.Continuation?
+    private var _answerToSendContinuation: AsyncStream<String>.Continuation?
+    private var _textDataReceivedContinuation: AsyncStream<String>.Continuation?
+
+    /// Task used to run complete WebRTC flow
+    private var _mainTask: Task<Bool, Never>?
+
+    /// Connection object that is created per connection
+    private var _peerConnection: RTCPeerConnection?
+
+    private let _iceServers = [
+        RTCIceServer(
+            urlStrings: [
+                "stun:stun.l.google.com:19302",
+                "stun:stun.l.google.com:5349",
+                "stun:stun1.l.google.com:3478",
+                "stun:stun1.l.google.com:5349",
+                "stun:stun2.l.google.com:19302",
+                "stun:stun2.l.google.com:5349",
+                "stun:stun3.l.google.com:3478",
+                "stun:stun3.l.google.com:5349",
+                "stun:stun4.l.google.com:19302",
+                "stun:stun4.l.google.com:5349"
+            ]
+        )
+    ]
+
+    private let _mediaConstraints = RTCMediaConstraints(
+        mandatoryConstraints: [
+            //TODO: verify that this really does inhibit receiving of video (which should reduce bandwidth)
+            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueFalse
+        ],
+        optionalConstraints: nil
+    )
+
+    private var _dataChannel: RTCDataChannel?
+    private var _videoCapturer: RTCVideoCapturer?
+    private var _localVideoTrack: RTCVideoTrack?
+    private var _remoteVideoTrack: RTCVideoTrack?
+
+    private let _peerConnectionState: AsyncStream<RTCPeerConnectionState>
+
+    private var _iceCandidateQueue: [RTCIceCandidate] = []
+
+    private var _sdpReceivedContinuation: AsyncStream<RTCSessionDescription>.Continuation?
+    private var _roleContinuation: AsyncStream<Role>.Continuation?
+    private var _iceCandidateReceivedContinuation: AsyncStream<RTCIceCandidate>.Continuation?
+
+
+    // MARK: Delegate objects (because actor cannot directly conform to RTC delegate protocols)
+
+    fileprivate class RtcDelegateAdapeter: NSObject {
+        var client: AsyncWebRtcClient?
+    }
+
+    private let _rtcDelegateAdapter: RtcDelegateAdapeter
+
+    // MARK: API - Roles
+
+    enum Role {
+        case initiator
+        case responder
+    }
+
+    // MARK: API - Session state (for e.g. UI)
+
+    let isConnected: AsyncStream<Bool>
+
+    // MARK: API - Generated messages to transmit to peers via external signal transport
+
+    let readyToConnectEvent: AsyncStream<Void>
+    let offerToSend: AsyncStream<String>
+    let iceCandidateToSend: AsyncStream<String>
+    let answerToSend: AsyncStream<String>
+
+    // MARK: API - Data received via WebRTC
+
+    let textDataReceived: AsyncStream<String>
+
+    // MARK: API - Methods
+
+    init(queue: DispatchQueue = .main) {
+        //RTCSetMinDebugLogLevel(RTCLoggingSeverity.info)
+
+        _factory = RTCPeerConnectionFactory(
+            encoderFactory: RTCDefaultVideoEncoderFactory(),
+            decoderFactory: RTCDefaultVideoDecoderFactory()
+        )
+
+        // Create streams
+        var boolContinuation: AsyncStream<Bool>.Continuation?
+        var voidContinuation: AsyncStream<Void>.Continuation?
+        var stringContinuation: AsyncStream<String>.Continuation?
+
+        isConnected = AsyncStream { continuation in
+            boolContinuation = continuation
+        }
+        _isConnectedContinuation = boolContinuation
+
+        var peerConnectionStateContinuation: AsyncStream<RTCPeerConnectionState>.Continuation?
+        _peerConnectionState = AsyncStream { continuation in
+            peerConnectionStateContinuation = continuation
+        }
+        _peerConnectionStateContinuation = peerConnectionStateContinuation
+
+        readyToConnectEvent = AsyncStream { continuation in
+            voidContinuation = continuation
+        }
+        _readyToConnectEventContinuation = voidContinuation
+
+        offerToSend = AsyncStream { continuation in
+            stringContinuation = continuation
+        }
+        _offerToSendContinuation = stringContinuation
+
+        iceCandidateToSend = AsyncStream { continuation in
+            stringContinuation = continuation
+        }
+        _iceCandidateToSendContinuation = stringContinuation
+
+        answerToSend = AsyncStream { continuation in
+            stringContinuation = continuation
+        }
+        _answerToSendContinuation = stringContinuation
+
+        textDataReceived = AsyncStream { continuation in
+            stringContinuation = continuation
+        }
+        _textDataReceivedContinuation = stringContinuation
+
+        // Delegate adapters -- this is all bullshit machinery to work around actor restrictions
+        _rtcDelegateAdapter = RtcDelegateAdapeter()
+        _rtcDelegateAdapter.client = self
+    }
+
+    func run() async {
+        while true {
+            let task = Task { return await self.runOneSession() }
+            _mainTask = task
+            let wasCanceled = await task.value
+            if wasCanceled {
+                // If explicitly canceled, finish; otherwise, keep trying
+                await log("WebRTC run canceled!")
+                return
+            } else {
+                await log("Retrying...")
+            }
+        }
+    }
+
+    func stop() async {
+        await log("Stopping...")
+        _mainTask?.cancel()
+    }
+
+    /// Sets role, which will govern which side will kick off the connection process by producing
+    /// an offer once the other side is present. This is assigned by our signaling server.
+    func onRoleAssigned(_ role: Role) async {
+        _roleContinuation?.yield(role)
+    }
+
+    /// Accept offer from a remote peer.
+    func onOfferReceived(jsonString: String) async {
+        await log("Received offer")
+        guard let offer = await Offer.decode(jsonString: jsonString) else { return }
+        let sdp = RTCSessionDescription(type: .offer, sdp: offer.sdp)
+        _sdpReceivedContinuation?.yield(sdp)
+    }
+
+    /// Accept answer from a remote peer.
+    func onAnswerReceived(jsonString: String) async {
+        await log("Received answer")
+        guard let answer = await Answer.decode(jsonString: jsonString) else { return }
+        let sdp = RTCSessionDescription(type: .answer, sdp: answer.sdp)
+        _sdpReceivedContinuation?.yield(sdp)
+    }
+
+    /// Accept an ICE candidate from the remote peer.
+    func onIceCandidateReceived(jsonString: String) async {
+        guard let iceCandidate = await ICECandidate.decode(jsonString: jsonString) else { return }
+        let candidate = RTCIceCandidate(
+            sdp: iceCandidate.candidate,
+            sdpMLineIndex: iceCandidate.sdpMLineIndex,
+            sdpMid: iceCandidate.sdpMid
+        )
+
+        if let continuation = _iceCandidateReceivedContinuation {
+            // If SDP exchange is complete, a stream will have been set up to process these as they
+            // arrive
+            await log("Received ICE candidate message from remote peer")
+            continuation.yield(candidate)
+        } else {
+            // Otherwise, enqueue them
+            await log("Received and enqueued ICE candidate message from remote peer")
+            _iceCandidateQueue.append(candidate)
+        }
+    }
+
+    /// Send a string on the chat data channel.
+    func sendTextData(_ text: String) async {
+        let buffer = RTCDataBuffer(data: text.data(using: .utf8)!, isBinary: false)
+        guard let dataChannel = _dataChannel else {
+            await logError("No data channel to send on")
+            return
+        }
+        dataChannel.sendData(buffer)
+    }
+
+    // MARK: Internal
+
+    /// Runs the client for one connection session and returns true if canceled, otherwise false
+    /// if either an error or a disconnect occurred.
+    private func runOneSession() async -> Bool {
+        await log("Running session...")
+
+        defer {
+            closeConnection()
+        }
+
+        do {
+            try Task.checkCancellation()
+
+            // Clear out ICE candidate queue. This may be populated even before SDP exchange,
+            // and we must buffer them until after that completes.
+            _iceCandidateQueue = []
+            try await createConnection()
+
+            // Kick off connection process and wait for exchange of SDPs (offer and answer) to
+            // occur before proceeding
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var role: Role?
+                var gotSDP = false
+
+                // Wait for SDP (offer or answer) and respond with answer if we are responder.
+                // Task group is useful here because this task need not be explicitly canceled
+                // if there is a subsequent failure in the group.
+                group.addTask { [weak self] in
+                    guard let self = self else { return }
+                    try await waitForSdp()
+                    if role == .responder {
+                        try await createAndSendAnswer()
+                    }
+                    gotSDP = true
+                }
+
+                // Notify signal server we are ready to begin connection process. Once the
+                // other peer signals the same, roles will be distributed and we may proceed.
+                guard let assignedRole = try await startConnectionProcessAndWaitForRole() else {
+                    throw InternalError.roleAssignmentFailed
+                }
+                role = assignedRole
+
+                // If we are the initiator, create and send an offer
+                if role == .initiator {
+                    try await createAndSendOffer()
+                }
+
+                // Wait up to N seconds for SDP exchange. If the other task does not succeed
+                // in the meantime, this will throw, and the entire group will be canceled.
+                group.addTask { [weak self] in
+                    guard let self = self else { return }
+                    let numSecondsToWait = 10
+                    let intervals = Int(Float(numSecondsToWait) / 0.1) + 1
+                    for _ in 1...intervals {
+                        if await _peerConnection?.remoteDescription != nil {  // could also check "gotSDP"
+                            return
+                        }
+                        try await Task.sleep(for: .milliseconds(100))
+                    }
+                    await log("time out")
+                    throw InternalError.sdpExchangeTimedOut
+                }
+
+                // Wait for one of the exchange tasks to complete (this also rethrows)
+                for try await _ in group {
+                    // Something should have succeeded. If timeout task failed, we should not
+                    // be here (unless outer task canceled)...
+                    try Task.checkCancellation()
+                    precondition(gotSDP == true)
+                    return
+                }
+            }
+
+            try Task.checkCancellation()
+            await log("SDP exchanged")
+
+            // We should be connected and can accept remote ICE candidates now and wait until
+            // the connection finishes
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                // Wait up to N seconds for RTC session to be established
+                group.addTask { [weak self] in
+                    guard let self = self else { return }
+                    try await Task.sleep(for: .seconds(10))
+                    if await _peerConnection?.connectionState != .connected {
+                        throw InternalError.peerConnectionTimedOut
+                    }
+                }
+
+                // Once connected, any subsequent disconnect should terminate this connection
+                group.addTask { [weak self] in
+                    guard let self = self else { return }
+
+                    // Wait for connect
+                    for await state in _peerConnectionState {
+                        if state == .connected {
+                            break
+                        }
+                    }
+
+                    // We are connected, start video capture
+                    await startCapture()
+
+                    // Wait for disconnect or fail
+                    for await state in _peerConnectionState {
+                        if state == .disconnected || state == .failed {
+                            throw InternalError.peerDisconnected
+                        }
+                    }
+                }
+
+                // Process ICE candidates as they come
+                group.addTask { [weak self] in
+                    guard let self = self else { return }
+                    try await processIceCandidates()
+                }
+
+                // Wait for all and rethrow (waitForAll() does not seem to do so?)
+                for try await _ in group {
+                }
+            }
+        } catch is CancellationError {
+            await log("WebRTC task was canceled")
+            return true // was canceled
+        } catch {
+            await logError(error.localizedDescription)
+        }
+
+        return false
+    }
+
+    private func createConnection() async throws {
+        await log("Creating peer connection")
+
+        let (config, constraints) = createConnectionConfiguration()
+        guard let peerConnection = _factory.peerConnection(with: config, constraints: constraints, delegate: nil) else {
+            throw InternalError.failedToCreatePeerConnection
+        }
+
+        // Wire up peer connection delegate and store peer connection
+        let task = Task { @MainActor in
+            // WebRTC API is apparently main actor isolated
+            peerConnection.delegate = _rtcDelegateAdapter
+        }
+        await task.value
+        _peerConnection = peerConnection
+
+        // Create a data channel
+        if let dataChannel = peerConnection.dataChannel(forLabel: "chat", configuration: RTCDataChannelConfiguration()) {
+            let task = Task { @MainActor in
+                dataChannel.delegate = _rtcDelegateAdapter
+            }
+            await task.value
+            _dataChannel = dataChannel
+            await log("Created data channel")
+        }
+
+        // Create video track
+        let (videoCapturer, videoTrack) = createVideoCapturerAndTrack()
+        _videoCapturer = videoCapturer
+        _localVideoTrack = videoTrack
+        peerConnection.add(videoTrack, streamIds: [ "stream" ])
+        _remoteVideoTrack = peerConnection.transceivers.first { $0.mediaType == .video }?.receiver.track as? RTCVideoTrack
+    }
+
+    private func waitForSdp() async throws {
+        await log("Waiting for remote SDP")
+
+        let sdpStream: AsyncStream<RTCSessionDescription> = AsyncStream { continuation in
+            _sdpReceivedContinuation = continuation
+        }
+
+        for await sdp in sdpStream {
+            try await _peerConnection?.setRemoteDescription(sdp)
+            await log("Received remote SDP")
+            break
+        }
+
+        _sdpReceivedContinuation = nil
+        try Task.checkCancellation()
+    }
+
+    private func createAndSendAnswer() async throws {
+        guard let sdp = try await _peerConnection?.answer(for: _mediaConstraints) else {
+            throw InternalError.failedToCreateAnswerSdp
+        }
+        try await _peerConnection?.setLocalDescription(sdp)
+        guard let sdpString = _peerConnection?.localDescription?.sdp else {
+            throw InternalError.failedToCreateLocalSdpString
+        }
+        let container = String(data: try! JSONEncoder().encode(Answer(sdp: sdpString)), encoding: .utf8)!
+        _answerToSendContinuation?.yield(container)
+        await log("Sent answer")
+    }
+
+    private func createAndSendOffer() async throws {
+        guard let sdp = try await _peerConnection?.offer(for: _mediaConstraints) else {
+            throw InternalError.failedToCreateOfferSdp
+        }
+        try await _peerConnection?.setLocalDescription(sdp)
+        guard let sdpString = _peerConnection?.localDescription?.sdp else {
+            throw InternalError.failedToCreateLocalSdpString
+        }
+        let container = String(data: try! JSONEncoder().encode(Offer(sdp: sdpString)), encoding: .utf8)!
+        _offerToSendContinuation?.yield(container)
+        await log("Sent offer")
+    }
+
+    private func startConnectionProcessAndWaitForRole() async throws -> Role? {
+        let roleStream: AsyncStream<Role> = AsyncStream { continuation in
+            _roleContinuation = continuation
+        }
+
+        // Indicate to signaling server that we are ready to begin connecting. Server will respond
+        // with role.
+        _readyToConnectEventContinuation?.yield()
+        await log("Ready to start connection process")
+
+        // Await role. This waits indefinitely unless the entire task is canceled by a disconnect
+        for await role in roleStream {
+            _roleContinuation = nil
+            await log("Received role: \(role == .initiator ? "initiator" : "responder")")
+            return role
+        }
+
+        _roleContinuation = nil
+        try Task.checkCancellation()
+        return nil
+    }
+
+    private func processIceCandidates() async throws {
+        let iceCandidateStream: AsyncStream<RTCIceCandidate> = AsyncStream { continuation in
+            _iceCandidateReceivedContinuation = continuation
+        }
+
+        // First process any enqueued candidates
+        let iceCandidateQueue = _iceCandidateQueue
+        _iceCandidateQueue = []
+        for candidate in iceCandidateQueue {
+            await log("Adding ICE candidate...")
+            try await _peerConnection?.add(candidate)
+        }
+        await log("Processed \(iceCandidateQueue.count) enqueued ICE candidates")
+
+        // Process any ICE candidates coming in from this point onwards using stream
+        for await candidate in iceCandidateStream {
+            try await _peerConnection?.add(candidate)
+            await log("Processed ICE candidate")
+        }
+
+        _iceCandidateReceivedContinuation = nil
+        try Task.checkCancellation()
+    }
+
+    private func createConnectionConfiguration() -> (RTCConfiguration, RTCMediaConstraints) {
+        let config = RTCConfiguration()
+        config.bundlePolicy = .maxCompat                        // ?
+        config.continualGatheringPolicy = .gatherContinually    // ?
+        config.rtcpMuxPolicy = .require                         // ?
+        config.iceTransportPolicy = .all
+        config.tcpCandidatePolicy = .enabled
+        config.keyType = .ECDSA
+
+        config.iceServers = _iceServers
+
+        let constraints = RTCMediaConstraints(
+            mandatoryConstraints: [
+                // Allegedly required for sharing streams with browswers
+                "DtlsSrtpKeyAgreement": kRTCMediaConstraintsValueTrue
+            ],
+            optionalConstraints: nil
+        )
+
+        return (config, constraints)
+    }
+
+    private func closeConnection() {
+        _peerConnection?.close()
+    }
+
+    private func createVideoCapturerAndTrack() -> (RTCVideoCapturer, RTCVideoTrack) {
+        let videoSource = _factory.videoSource()
+        let videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
+        let videoTrack = _factory.videoTrack(with: videoSource, trackId: "video0")
+        return (videoCapturer, videoTrack)
+    }
+
+    private func startCapture() {
+        // Start capturing immediately
+        guard let capturer = self._videoCapturer as? RTCCameraVideoCapturer else { return }
+        guard let frontCamera = (RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }),
+              let format = (RTCCameraVideoCapturer.supportedFormats(for: frontCamera).sorted { (fmt1, fmt2) -> Bool in
+                  let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
+                  let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
+                  return width1 < width2
+              }).last,
+              // Choose highest FPS
+              let fps = (format.videoSupportedFrameRateRanges.sorted { return $0.maxFrameRate < $1.maxFrameRate }.last) else {
+            return
+        }
+
+        // NOTE: Never use the async version of the below function. This enclosing method must be
+        // declared synchronous in order to use the synchronous version below. I am not sure why,
+        // but it will quickly degrade the connection and result in disconnects.
+        capturer.startCapture(with: frontCamera, format: format, fps: Int(fps.maxFrameRate))
+        Task { @MainActor in log("Started video capture: \(format.formatDescription)") }
+    }
+
+    private func setDataChannel(_ dataChannel: RTCDataChannel) {
+        _dataChannel = dataChannel
+    }
+}
+
+extension AsyncWebRtcClient.RtcDelegateAdapeter: RTCPeerConnectionDelegate {
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
+        let stateToString: [RTCIceConnectionState: String] = [
+            .checking: "checking",
+            .connected: "connected",
+            .disconnected: "disconnected",
+            .closed: "closed",
+            .completed: "completed",
+            .count: "count",
+            .failed: "failed",
+            .new: "new",
+        ]
+        let stateName = stateToString[newState] ?? "unknown (\(newState.rawValue))"
+        log("ICE connection state: \(stateName)")
+    }
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
+        let iceCandidate = ICECandidate(candidate: candidate.sdp, sdpMLineIndex: candidate.sdpMLineIndex, sdpMid: candidate.sdpMid)
+        let serialized = String(data: try! JSONEncoder().encode(iceCandidate), encoding: .utf8)!
+        log("Generated ICE candidate: \(serialized)")
+        Task { await client?._iceCandidateToSendContinuation?.yield(serialized) }
+    }
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {}
+    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove candidates: [RTCIceCandidate]) {}
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {
+        log("Data channel opened: \(dataChannel.description)")
+    }
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove rtpReceiver: RTCRtpReceiver) {}
+    func peerConnection(_ peerConnection: RTCPeerConnection, didStartReceivingOn transceiver: RTCRtpTransceiver) {}
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCPeerConnectionState) {
+        let stateToString: [RTCPeerConnectionState: String] = [
+            .closed: "closed",
+            .connected: "connected",
+            .connecting: "connecting",
+            .disconnected: "disconnected",
+            .failed: "failed",
+            .new: "new"
+        ]
+        let stateName = stateToString[newState] ?? "unknown (\(newState.rawValue))"
+        log("Peer connection state: \(stateName)")
+
+        Task {
+            await client?._peerConnectionStateContinuation?.yield(newState)
+            await client?._isConnectedContinuation?.yield(newState == .connected)
+        }
+    }
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd rtpReceiver: RTCRtpReceiver, streams mediaStreams: [RTCMediaStream]) {}
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {}
+    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {}
+    func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {}
+    func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {}
+}
+
+extension AsyncWebRtcClient.RtcDelegateAdapeter: RTCDataChannelDelegate {
+    func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
+        let stateToString: [RTCDataChannelState: String] = [
+            .closed: "closed",
+            .closing: "closing",
+            .connecting: "connecting",
+            .open: "open"
+        ]
+        let state = dataChannel.readyState
+        let stateName = stateToString[state] ?? "unknown (\(state.rawValue))"
+        log("Data channel state: \(stateName)")
+    }
+
+    func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
+        guard let textData = String(data: Data(buffer.data), encoding: .utf8) else { return }
+        Task { await client?._textDataReceivedContinuation?.yield(textData) }
+    }
+}
+
+extension AsyncWebRtcClient.InternalError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .failedToCreatePeerConnection:
+            return "Failed to create peer connection object"
+        case .roleAssignmentFailed:
+            return "Role assignment from signaling server failed"
+        case .sdpExchangeTimedOut:
+            return "SDP exchange process timed out"
+        case .failedToCreateAnswerSdp:
+            return "Failed to create answer SDP"
+        case .failedToCreateOfferSdp:
+            return "Failed to create offer SDP"
+        case .failedToCreateLocalSdpString:
+            return "Failed to obtain local SDP and serialize it to a string"
+        case .peerConnectionTimedOut:
+            return "Connection to peer timed out and could not be established"
+        case .peerDisconnected:
+            return "Peer disconnected"
+        }
+    }
+}
+
+fileprivate func log(_ message: String) {
+    print("[AsyncWebRtcClient] \(message)")
+}
+
+fileprivate func logError(_ message: String) {
+    print("[AsyncWebRtcClient] Error: \(message)")
+}

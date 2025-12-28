@@ -102,7 +102,7 @@
 //   https://github.com/ynagatomo/microbit-swift-controller
 //
 
-import CoreBluetooth
+@preconcurrency import CoreBluetooth
 
 class AsyncBluetoothManager: NSObject {
     // MARK: Internal state
