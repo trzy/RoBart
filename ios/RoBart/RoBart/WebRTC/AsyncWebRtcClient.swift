@@ -612,27 +612,6 @@ actor AsyncWebRtcClient: ObservableObject {
         return (videoCapturer, videoTrack)
     }
 
-//    private func startCapture() {
-//        // Start capturing immediately
-//        guard let capturer = self._videoCapturer as? RTCCameraVideoCapturer else { return }
-//        guard let frontCamera = (RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }),
-//              let format = (RTCCameraVideoCapturer.supportedFormats(for: frontCamera).sorted { (fmt1, fmt2) -> Bool in
-//                  let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
-//                  let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
-//                  return width1 < width2
-//              }).last,
-//              // Choose highest FPS
-//              let fps = (format.videoSupportedFrameRateRanges.sorted { return $0.maxFrameRate < $1.maxFrameRate }.last) else {
-//            return
-//        }
-//
-//        // NOTE: Never use the async version of the below function. This enclosing method must be
-//        // declared synchronous in order to use the synchronous version below. I am not sure why,
-//        // but it will quickly degrade the connection and result in disconnects.
-//        capturer.startCapture(with: frontCamera, format: format, fps: Int(fps.maxFrameRate))
-//        Task { @MainActor in log("Started video capture: \(format.formatDescription)") }
-//    }
-
     private func startCapture() {
         guard let capturer = _videoCapturer as? RTCCameraVideoCapturer else { return }
         guard let camera = findCamera() else { return }
