@@ -47,6 +47,35 @@ struct RoBartApp: App {
                     await HoverboardController.shared.runTask()
                 }
                 .task {
+                    for await text in _asyncWebRtcClient.textDataReceived {
+                        print("[RoBartApp] Control: \(text)")
+
+                        let throttle: Float = 0.02
+                        let inputToCommand: [String: HoverboardCommand] = [
+                            "f": .drive(leftThrottle: throttle, rightThrottle: throttle),
+                            "b": .drive(leftThrottle: -throttle, rightThrottle: -throttle),
+                            "l": .drive(leftThrottle: -throttle, rightThrottle: throttle),
+                            "r": .drive(leftThrottle: throttle, rightThrottle: -throttle),
+                            "s": .drive(leftThrottle: 0, rightThrottle: 0)
+                        ]
+
+                        if let command = inputToCommand[text] {
+                            HoverboardController.shared.send(command)
+                        }
+                    }
+                }
+                .task {
+                    // Really hacky, but every second, send over watchdog settings
+                    while true {
+                        if HoverboardController.shared.isConnected {
+                            // Aggressive watchdog setting
+                            let msg = HoverboardWatchdogMessage(watchdogEnabled: true, watchdogSeconds: 0.5)
+                            HoverboardController.shared.send(.message(msg))
+                        }
+                        try? await Task.sleep(for: .seconds(1))
+                    }
+                }
+                .task {
                     // Run WebRTC on connection to signaling server
                     for await isConnected in _transport.$isConnected.values {
                         if isConnected {
