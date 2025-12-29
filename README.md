@@ -14,6 +14,7 @@ Finally, launch the iOS app, which will automatically try to connect via the sig
 
 ### TODO
 
-- Audio.
-- Improve signaling server and overall signaling flow (sometimes re-connects fail).
+- Improve signaling server and overall signaling flow (sometimes re-connects fail). The iOS side may need to explicitly disconnect from the 
+  signaling server when retrying and we should implement the concept of session or "room" IDs to match clients. 
+- Detection of connection failures in iOS is brittle and the culprit is likely to be the task that monitors connection state after SDP exchange.
 - Try to simplify the `AsyncWebRtcClient`, which feels a bit brittle. I think making it an actor and using async is not worth the trouble here. 
