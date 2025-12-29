@@ -130,8 +130,7 @@ actor AsyncWebRtcClient: ObservableObject {
 
     private let _mediaConstraints = RTCMediaConstraints(
         mandatoryConstraints: [
-            //TODO: verify that this really does inhibit receiving of video (which should reduce bandwidth)
-            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueFalse
+            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue
         ],
         optionalConstraints: nil
     )
@@ -262,6 +261,14 @@ actor AsyncWebRtcClient: ObservableObject {
             stopCapture()
             startCapture()
         }
+    }
+
+    func addRemoteVideoView(_ renderer: RTCVideoRenderer) async {
+        _remoteVideoTrack?.add(renderer)
+    }
+
+    func removeRemoteVideoView(_ renderer: RTCVideoRenderer) async {
+        _remoteVideoTrack?.remove(renderer)
     }
 
     func stop() async {
@@ -486,8 +493,6 @@ actor AsyncWebRtcClient: ObservableObject {
         _localVideoTrack = videoTrack
         peerConnection.add(videoTrack, streamIds: [ "stream" ])
         _remoteVideoTrack = peerConnection.transceivers.first { $0.mediaType == .video }?.receiver.track as? RTCVideoTrack
-
-        // 
     }
 
     private func waitForSdp() async throws {
@@ -603,6 +608,11 @@ actor AsyncWebRtcClient: ObservableObject {
 
     private func closeConnection() {
         _peerConnection?.close()
+        _peerConnection = nil
+        _dataChannel = nil
+        _videoCapturer = nil
+        _localVideoTrack = nil
+        _remoteVideoTrack = nil
     }
 
     private func createVideoCapturerAndTrack() -> (RTCVideoCapturer, RTCVideoTrack) {

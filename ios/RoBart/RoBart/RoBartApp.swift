@@ -23,7 +23,6 @@
 //
 // TODO:
 // -----
-// - Configurable settings page for IP address to server
 // - Second connect indicator for signal server
 // - Render web cam on iOS
 // - Audio!
@@ -65,6 +64,7 @@ struct RoBartApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(isConnected: $isConnected)
+                .environmentObject(_asyncWebRtcClient)
                 .task {
                     await HoverboardController.shared.runTask()
                 }

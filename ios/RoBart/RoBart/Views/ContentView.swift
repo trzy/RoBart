@@ -27,34 +27,42 @@ struct ContentView: View {
     @Binding var isConnected: Bool
 
     @State private var _subscription: Cancellable?
+    @EnvironmentObject private var _asyncWebRtcClient: AsyncWebRtcClient
 
     var body: some View {
-        NavigationView {
-            VStack {
-                Text("RoBart")
-            }
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Image(systemName: isConnected ? "network" : "network.slash")
-                        .foregroundStyle(isConnected ? .primary : Color.red)
-                    Spacer()
-                    NavigationLink {
-                        HoverboardControlView()
-                    } label: {
-                        Image(systemName: "car.front.waves.down")
-                            .imageScale(.large)
+        GeometryReader { reader in
+            NavigationView {
+                ZStack {
+                    if isConnected {
+                        // We use isConnected to detect a change in connection state that
+                        // implies a new connection and video track. We build a new video view each
+                        // time by instantiating the view below.
+                        RemoteVideoView(size: reader.size, client: _asyncWebRtcClient)
                     }
-                    NavigationLink {
-                        SettingsView()
-                    } label: {
-                        Image(systemName: "gear")
-                            .imageScale(.large)
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        Image(systemName: isConnected ? "network" : "network.slash")
+                            .foregroundStyle(isConnected ? .primary : Color.red)
+                        Spacer()
+                        NavigationLink {
+                            HoverboardControlView()
+                        } label: {
+                            Image(systemName: "car.front.waves.down")
+                                .imageScale(.large)
+                        }
+                        NavigationLink {
+                            SettingsView()
+                        } label: {
+                            Image(systemName: "gear")
+                                .imageScale(.large)
+                        }
                     }
                 }
             }
-        }
-        .navigationViewStyle(.stack)    // prevent landscape mode column behavior
-        .onAppear {
+            .navigationViewStyle(.stack)    // prevent landscape mode column behavior
+            .onAppear {
+            }
         }
     }
 }

@@ -14,6 +14,7 @@
 		CC2AA5E02C7C010800A8DE67 /* Interpolator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */; };
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
+		CC52F4DE2F021B30007149CB /* RemoteVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */; };
 		CC66808C2F01C7030029C49A /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808B2F01C7000029C49A /* Settings.swift */; };
 		CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808D2F01C7CC0029C49A /* SettingsView.swift */; };
 		CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808F2F01D8D40029C49A /* CameraType.swift */; };
@@ -85,6 +86,7 @@
 		CC2AA5DF2C7C010800A8DE67 /* Interpolator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolator.swift; sourceTree = "<group>"; };
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
+		CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteVideoView.swift; sourceTree = "<group>"; };
 		CC66808B2F01C7000029C49A /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		CC66808D2F01C7CC0029C49A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CC66808F2F01D8D40029C49A /* CameraType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraType.swift; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 			children = (
 				CCA9A1212C62DADF00B0401C /* Hoverboard */,
 				CCA9A0FD2C62D35E00B0401C /* ContentView.swift */,
+				CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */,
 				CC66808D2F01C7CC0029C49A /* SettingsView.swift */,
 			);
 			path = Views;
@@ -398,6 +401,7 @@
 				CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */,
 				CCA9A1372C62E1CE00B0401C /* SimpleBinaryDecoder.swift in Sources */,
 				CCA9A12F2C62E0B300B0401C /* AsyncBluetoothManager.swift in Sources */,
+				CC52F4DE2F021B30007149CB /* RemoteVideoView.swift in Sources */,
 				CCA3B9352C8EA2D300F15F9F /* Calibration.swift in Sources */,
 				CCB01A352F010FE200B00AEA /* Messages.swift in Sources */,
 				CCA9A1232C62DB4600B0401C /* OnTouch.swift in Sources */,
