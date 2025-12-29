@@ -411,14 +411,22 @@ function animationLoop(timestamp) {
 requestAnimationFrame(animationLoop);
 
 /***************************************************************************************************
- Video
+ Video and Audio
 ***************************************************************************************************/
 
 function setVideoTransmissionEnabled(enable) {
-    if (localStream && localStream.getVideoTracks().length > 0) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        videoTrack.enabled = enable;
-        transmitVideoBtn.textContent = enable ? "Stop" : "Transmit";
+    if (localStream) {
+        if (localStream.getVideoTracks().length > 0) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            videoTrack.enabled = enable;
+            transmitVideoBtn.textContent = enable ? "Stop" : "Transmit";
+        }
+
+        if (localStream.getAudioTracks().length > 0) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            audioTrack.enabled = enable;
+            transmitVideoBtn.textContent = enable ? "Stop" : "Transmit";
+        }
     }
 }
 
@@ -440,7 +448,7 @@ async function initVideoStream() {
 
     const constraints = {
         video: true,
-        audio: false
+        audio: true
     };
 
     try {
