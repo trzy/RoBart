@@ -17,12 +17,12 @@ const config = {
 };
 
 // UI Elements
+const serverAddress = document.getElementById('serverAddress');
 const connectBtn = document.getElementById('connectBtn');
 //const sendBtn = document.getElementById('sendBtn');
 const messageInput = document.getElementById('messageInput');
 const messagesDiv = document.getElementById('messages');
 const statusDiv = document.getElementById('status');
-const arrowsDiv = document.getElementById('arrows');
 
 function enqueueICECandidate(candidate) {
     iceCandidateQueue.push(candidate);
@@ -60,8 +60,9 @@ function createICECandidateMessage(candidate) {
 
 // Connect to signaling server
 connectBtn.onclick = () => {
-    ws = new WebSocket('ws://localhost:8000/ws');
-    
+    const endpoint = `ws://${serverAddress.value}/ws`;
+    ws = new WebSocket(endpoint);
+
     ws.onopen = () => {
         updateStatus('Connected to signaling server, waiting for role assignment...');
         connectBtn.disabled = true;
@@ -69,16 +70,16 @@ connectBtn.onclick = () => {
         // Indicate to server that we are ready to begin
         ws.send(createReadyToConnectMessage());
     };
-    
+
     ws.onmessage = async (event) => {
         const message = JSON.parse(event.data);
         console.log('Signaling message:', message.type);
-        
+
         if (message.type === 'RoleMessage') {
             // Server assigned us a role
             myRole = message.role;
             updateStatus(`Role: ${myRole}`);
-            
+
             if (myRole === 'initiator') {
                 // We're the first peer, wait for responder
                 updateStatus('Waiting for peer to connect...');
@@ -92,7 +93,7 @@ connectBtn.onclick = () => {
                 initPeerConnection();
                 createOffer();
             }
-            
+
         } else if (message.type === 'OfferMessage') {
             // Responder receives offer
             if (!pc) {
@@ -101,19 +102,19 @@ connectBtn.onclick = () => {
             const offer = JSON.parse(message.data);
             await pc.setRemoteDescription(offer);
             await processEnqueuedICECandidates();
-            
+
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             ws.send(createAnswerMessageFromLocalDescription());
             updateStatus('Sent answer, establishing connection...');
-            
+
         } else if (message.type === 'AnswerMessage') {
             // Initiator receives answer
             const answer = JSON.parse(message.data);
             await pc.setRemoteDescription(answer);
             await processEnqueuedICECandidates();
             updateStatus('Received answer, establishing connection...');
-            
+
         } else if (message.type === 'ICECandidateMessage' && message.data) {
             const candidate = JSON.parse(message.data);
             try {
@@ -129,12 +130,12 @@ connectBtn.onclick = () => {
             console.log('Peer said hello:', message.message);
         }
     };
-    
+
     ws.onerror = (err) => {
         updateStatus('WebSocket error - is server running?');
         console.error('WebSocket error:', err);
     };
-    
+
     ws.onclose = () => {
         updateStatus('Disconnected from signaling server');
         connectBtn.disabled = false;
@@ -146,7 +147,7 @@ function initPeerConnection() {
     pc = new RTCPeerConnection(config);
 
     pc.addStream(localStream);
-    
+
     // ICE candidate handling
     pc.onicecandidate = (e) => {
         if (e.candidate) {
@@ -154,7 +155,7 @@ function initPeerConnection() {
             ws.send(createICECandidateMessage(e.candidate));
         }
     };
-    
+
     // Connection state
     pc.onconnectionstatechange = () => {
         updateStatus('Connection: ' + pc.connectionState);
@@ -162,7 +163,7 @@ function initPeerConnection() {
             updateStatus('WebRTC Connected! You can now chat.');
         }
     };
-    
+
     // Data channel from remote peer
     pc.ondatachannel = (e) => {
         dataChannel = e.channel;
@@ -175,7 +176,7 @@ function initPeerConnection() {
         const remoteVideo = document.getElementById('remoteVideo');
         remoteVideo.srcObject = e.stream;
     };
-    
+
     // If we're initiator, create data channel
     if (myRole === 'initiator') {
         dataChannel = pc.createDataChannel('chat');
@@ -189,12 +190,12 @@ function setupDataChannel() {
         updateStatus('Data channel open! You can now chat.');
         //sendBtn.disabled = false;
     };
-    
+
     dataChannel.onclose = () => {
         updateStatus('Data channel closed');
         //sendBtn.disabled = true;
     };
-    
+
     dataChannel.onmessage = (e) => {
         addMessage('Peer: ' + e.data, 'received');
     };
@@ -276,7 +277,7 @@ function updateButtons() {
     for (let button of buttons) {
         button.classList.remove("active");
     }
-    
+
     switch (inputDirection) {
     case MotionDirection.FORWARD:   dpadUp.classList.add("active"); break;
     case MotionDirection.BACKWARD:  dpadDown.classList.add("active"); break;
@@ -401,7 +402,7 @@ requestAnimationFrame(animationLoop);
 
 async function initVideoStream() {
     const localVideo = document.getElementById('localVideo');
-    
+
     const constraints = {
         video: true,
         audio: false
