@@ -11,3 +11,9 @@ python -m server
 Then, open [http://localhost:8000](http://localhost:8000) for the teleop interface. The WASD keys on the keyboard control the robot. 
 
 Finally, launch the iOS app, which will automatically try to connect via the signaling server. Ensure the IP address used by the iOS app matches where the server is running. It may take a while for the WebRTC stream to stabilize, even on a home LAN, but after 30 seconds to a minute, it should be perfectly usable.
+
+### TODO
+
+- Audio.
+- Improve signaling server and overall signaling flow (sometimes re-connects fail).
+- Try to simplify the `AsyncWebRtcClient`, which feels a bit brittle. I think making it an actor and using async is not worth the trouble here. 
