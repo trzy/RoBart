@@ -19,9 +19,10 @@ const config = {
 // UI Elements
 const serverAddress = document.getElementById('serverAddress');
 const connectBtn = document.getElementById('connectBtn');
+const transmitVideoBtn = document.getElementById('transmitVideoBtn');
 //const sendBtn = document.getElementById('sendBtn');
-const messageInput = document.getElementById('messageInput');
-const messagesDiv = document.getElementById('messages');
+//const messageInput = document.getElementById('messageInput');
+//const messagesDiv = document.getElementById('messages');
 const statusDiv = document.getElementById('status');
 
 function enqueueICECandidate(candidate) {
@@ -400,6 +401,27 @@ requestAnimationFrame(animationLoop);
  Video
 ***************************************************************************************************/
 
+function setVideoTransmissionEnabled(enable) {
+    if (localStream && localStream.getVideoTracks().length > 0) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        videoTrack.enabled = enable;
+        transmitVideoBtn.textContent = enable ? "Stop" : "Transmit";
+    }
+}
+
+function getVideoTransmissionEnabled() {
+    if (localStream && localStream.getVideoTracks().length > 0) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        return videoTrack.enabled;
+    }
+    return false;
+}
+
+transmitVideoBtn.onclick = () => {
+    const newState = !getVideoTransmissionEnabled();
+    setVideoTransmissionEnabled(newState);
+}
+
 async function initVideoStream() {
     const localVideo = document.getElementById('localVideo');
 
@@ -422,4 +444,5 @@ async function initVideoStream() {
 localStream = await initVideoStream();
 if (localStream && localStream.getVideoTracks().length > 0) {
     console.log(`Using video device: ${localStream.getVideoTracks()[0].label}`);
+    setVideoTransmissionEnabled(false);
 }
