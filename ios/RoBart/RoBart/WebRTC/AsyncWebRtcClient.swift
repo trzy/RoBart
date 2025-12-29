@@ -130,10 +130,14 @@ actor AsyncWebRtcClient: ObservableObject {
 
     private let _mediaConstraints = RTCMediaConstraints(
         mandatoryConstraints: [
-            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue
+            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue,
+            kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue,
         ],
         optionalConstraints: nil
     )
+
+    nonisolated private let _audioSession = RTCAudioSession.sharedInstance()
+    nonisolated private let _audioQueue = DispatchQueue(label: "audioSessionConfiguration")
 
     private var _desiredCamera = CameraType.backDefault
     private var _isCapturing = false
@@ -426,16 +430,22 @@ actor AsyncWebRtcClient: ObservableObject {
                     // Wait for connect
                     for await state in _peerConnectionState {
                         if state == .connected {
+                            log("Reached connected state")
                             break
+                        }
+                        if state == .failed {
+                            log("Connection never formed")
+                            throw InternalError.peerDisconnected
                         }
                     }
 
-                    // We are connected, start video capture
+                    // We are connected, start media capture
                     await startCapture()
 
                     // Wait for disconnect or fail
                     for await state in _peerConnectionState {
                         if state == .disconnected || state == .failed {
+                            logError("Disconnected!")
                             throw InternalError.peerDisconnected
                         }
                     }
@@ -486,6 +496,10 @@ actor AsyncWebRtcClient: ObservableObject {
             _dataChannel = dataChannel
             log("Created data channel")
         }
+
+        // Create audio track
+        let audioTrack = createAudioTrack()
+        peerConnection.add(audioTrack, streamIds: [ "stream" ])
 
         // Create video track
         let (videoCapturer, videoTrack) = createVideoCapturerAndTrack()
@@ -577,6 +591,7 @@ actor AsyncWebRtcClient: ObservableObject {
         // Process any ICE candidates coming in from this point onwards using stream
         for await candidate in iceCandidateStream {
             try await _peerConnection?.add(candidate)
+            try Task.checkCancellation()
             log("Processed ICE candidate")
         }
 
@@ -615,6 +630,31 @@ actor AsyncWebRtcClient: ObservableObject {
         _remoteVideoTrack = nil
     }
 
+    /// Use speaker output. This must be done after each new connection and audio track are created
+    /// and cannot be done once at initialization (unless, I suppose, those objects are reused?).
+    /// It seems only to work after video capture has started.
+    private func switchAudioToSpeakerphone() {
+        _audioQueue.async { [weak self] in
+            guard let self = self else { return }
+            _audioSession.lockForConfiguration()
+            do {
+                try _audioSession.setCategory(AVAudioSession.Category.playAndRecord)
+                try _audioSession.setMode(AVAudioSession.Mode.voiceChat)
+                try _audioSession.overrideOutputAudioPort(.speaker)
+            } catch let error {
+                logError("Unable to configure RTC audio session: \(error)")
+            }
+            _audioSession.unlockForConfiguration()
+        }
+    }
+
+    private func createAudioTrack() -> RTCAudioTrack {
+        let audioConstrains = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
+        let audioSource = _factory.audioSource(with: audioConstrains)
+        let audioTrack = _factory.audioTrack(with: audioSource, trackId: "audio0")
+        return audioTrack
+    }
+
     private func createVideoCapturerAndTrack() -> (RTCVideoCapturer, RTCVideoTrack) {
         let videoSource = _factory.videoSource()
         let videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
@@ -635,10 +675,11 @@ actor AsyncWebRtcClient: ObservableObject {
         }
 
         capturer.startCapture(with: camera, format: format, fps: Int(fps.maxFrameRate))
+        switchAudioToSpeakerphone() // must configure audio here
         _isCapturing = true
 
         Task { @MainActor in
-            print("Started video apture: \(format.formatDescription)")
+            print("Started video capture: \(format.formatDescription)")
         }
     }
 
