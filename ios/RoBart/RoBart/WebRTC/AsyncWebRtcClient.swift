@@ -111,21 +111,17 @@ actor AsyncWebRtcClient: ObservableObject {
     /// Connection object that is created per connection
     private var _peerConnection: RTCPeerConnection?
 
-    private let _iceServers = [
-        RTCIceServer(
-            urlStrings: [
-                "stun:stun.l.google.com:19302",
-                "stun:stun.l.google.com:5349",
-                "stun:stun1.l.google.com:3478",
-                "stun:stun1.l.google.com:5349",
-                "stun:stun2.l.google.com:19302",
-                "stun:stun2.l.google.com:5349",
-                "stun:stun3.l.google.com:3478",
-                "stun:stun3.l.google.com:5349",
-                "stun:stun4.l.google.com:19302",
-                "stun:stun4.l.google.com:5349"
-            ]
-        )
+    private let _stunServers = [
+        "stun:stun.l.google.com:19302",
+        "stun:stun.l.google.com:5349",
+        "stun:stun1.l.google.com:3478",
+        "stun:stun1.l.google.com:5349",
+        "stun:stun2.l.google.com:19302",
+        "stun:stun2.l.google.com:5349",
+        "stun:stun3.l.google.com:3478",
+        "stun:stun3.l.google.com:5349",
+        "stun:stun4.l.google.com:19302",
+        "stun:stun4.l.google.com:5349"
     ]
 
     private let _mediaConstraints = RTCMediaConstraints(
@@ -152,7 +148,7 @@ actor AsyncWebRtcClient: ObservableObject {
     private var _iceCandidateQueue: [RTCIceCandidate] = []
 
     private var _sdpReceivedContinuation: AsyncStream<RTCSessionDescription>.Continuation?
-    private var _roleContinuation: AsyncStream<Role>.Continuation?
+    private var _serverConfigContinuation: AsyncStream<ServerConfiguration>.Continuation?
     private var _iceCandidateReceivedContinuation: AsyncStream<RTCIceCandidate>.Continuation?
 
 
@@ -164,11 +160,18 @@ actor AsyncWebRtcClient: ObservableObject {
 
     private let _rtcDelegateAdapter: RtcDelegateAdapeter
 
-    // MARK: API - Roles
+    // MARK: API - Server Configuration
 
     enum Role {
         case initiator
         case responder
+    }
+
+    struct ServerConfiguration {
+        let role: Role
+        let turnServer: String?
+        let turnUser: String?
+        let turnPassword: String?
     }
 
     // MARK: API - Session state (for e.g. UI)
@@ -280,10 +283,11 @@ actor AsyncWebRtcClient: ObservableObject {
         _mainTask?.cancel()
     }
 
-    /// Sets role, which will govern which side will kick off the connection process by producing
-    /// an offer once the other side is present. This is assigned by our signaling server.
-    func onRoleAssigned(_ role: Role) async {
-        _roleContinuation?.yield(role)
+    /// Sets role and TURN server information, which will govern which side will kick off the
+    /// connection process by producing an offer once the other side is present. This is assigned
+    /// by our signaling server.
+    func onServerConfigurationReceived(_ config: ServerConfiguration) async {
+        _serverConfigContinuation?.yield(config)
     }
 
     /// Accept offer from a remote peer.
@@ -348,15 +352,20 @@ actor AsyncWebRtcClient: ObservableObject {
         do {
             try Task.checkCancellation()
 
+            // Notify signal server we are ready to begin connection process. Once the
+            // other peer signals the same, roles will be distributed and we may proceed.
+            guard let config = try await startConnectionProcessAndWaitForServerConfig() else {
+                throw InternalError.roleAssignmentFailed
+            }
+
             // Clear out ICE candidate queue. This may be populated even before SDP exchange,
             // and we must buffer them until after that completes.
             _iceCandidateQueue = []
-            try await createConnection()
+            try await createConnection(config)
 
             // Kick off connection process and wait for exchange of SDPs (offer and answer) to
             // occur before proceeding
             try await withThrowingTaskGroup(of: Void.self) { group in
-                var role: Role?
                 var gotSDP = false
 
                 // Wait for SDP (offer or answer) and respond with answer if we are responder.
@@ -365,21 +374,14 @@ actor AsyncWebRtcClient: ObservableObject {
                 group.addTask { [weak self] in
                     guard let self = self else { return }
                     try await waitForSdp()
-                    if role == .responder {
+                    if config.role == .responder {
                         try await createAndSendAnswer()
                     }
                     gotSDP = true
                 }
 
-                // Notify signal server we are ready to begin connection process. Once the
-                // other peer signals the same, roles will be distributed and we may proceed.
-                guard let assignedRole = try await startConnectionProcessAndWaitForRole() else {
-                    throw InternalError.roleAssignmentFailed
-                }
-                role = assignedRole
-
                 // If we are the initiator, create and send an offer
-                if role == .initiator {
+                if config.role == .initiator {
                     try await createAndSendOffer()
                 }
 
@@ -471,10 +473,10 @@ actor AsyncWebRtcClient: ObservableObject {
         return false
     }
 
-    private func createConnection() async throws {
+    private func createConnection(_ serverConfig: ServerConfiguration) async throws {
         log("Creating peer connection")
 
-        let (config, constraints) = createConnectionConfiguration()
+        let (config, constraints) = createConnectionConfiguration(serverConfig: serverConfig)
         guard let peerConnection = _factory.peerConnection(with: config, constraints: constraints, delegate: nil) else {
             throw InternalError.failedToCreatePeerConnection
         }
@@ -552,9 +554,9 @@ actor AsyncWebRtcClient: ObservableObject {
         log("Sent offer")
     }
 
-    private func startConnectionProcessAndWaitForRole() async throws -> Role? {
-        let roleStream: AsyncStream<Role> = AsyncStream { continuation in
-            _roleContinuation = continuation
+    private func startConnectionProcessAndWaitForServerConfig() async throws -> ServerConfiguration? {
+        let configStream: AsyncStream<ServerConfiguration> = AsyncStream { continuation in
+            _serverConfigContinuation = continuation
         }
 
         // Indicate to signaling server that we are ready to begin connecting. Server will respond
@@ -563,13 +565,13 @@ actor AsyncWebRtcClient: ObservableObject {
         log("Ready to start connection process")
 
         // Await role. This waits indefinitely unless the entire task is canceled by a disconnect
-        for await role in roleStream {
-            _roleContinuation = nil
-            log("Received role: \(role == .initiator ? "initiator" : "responder")")
-            return role
+        for await config in configStream {
+            _serverConfigContinuation = nil
+            log("Received server configuration: role=\(config.role == .initiator ? "initiator" : "responder"), TURN server=\(config.turnServer ?? "NONE")")
+            return config
         }
 
-        _roleContinuation = nil
+        _serverConfigContinuation = nil
         try Task.checkCancellation()
         return nil
     }
@@ -599,7 +601,7 @@ actor AsyncWebRtcClient: ObservableObject {
         try Task.checkCancellation()
     }
 
-    private func createConnectionConfiguration() -> (RTCConfiguration, RTCMediaConstraints) {
+    private func createConnectionConfiguration(serverConfig: ServerConfiguration) -> (RTCConfiguration, RTCMediaConstraints) {
         let config = RTCConfiguration()
         config.bundlePolicy = .maxCompat                        // ?
         config.continualGatheringPolicy = .gatherContinually    // ?
@@ -608,7 +610,18 @@ actor AsyncWebRtcClient: ObservableObject {
         config.tcpCandidatePolicy = .enabled
         config.keyType = .ECDSA
 
-        config.iceServers = _iceServers
+        // STUN servers
+        var iceServers = [
+            RTCIceServer(urlStrings: _stunServers)
+        ]
+
+        // TURN servers, if we have any
+        if let turnServer = serverConfig.turnServer {
+            var turnServer = RTCIceServer(urlStrings: [ "turn:\(turnServer)" ], username: serverConfig.turnUser, credential: serverConfig.turnPassword)
+            iceServers.append(turnServer)
+        }
+
+        config.iceServers = iceServers
 
         let constraints = RTCMediaConstraints(
             mandatoryConstraints: [
