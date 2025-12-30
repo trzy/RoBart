@@ -151,12 +151,12 @@ struct RoBartApp: App {
                 .task {
                     for await message in _transport.$message.values {
                         switch (message) {
-                        case .role(let message):
+                        case .serverConfiguration(let message):
                             let config = AsyncWebRtcClient.ServerConfiguration(
                                 role: message.role == "initiator" ? .initiator : .responder,
-                                turnServer: message.turnServer,
-                                turnUser: message.turnUser,
-                                turnPassword: message.turnPassword
+                                turnServers: message.turnServers,
+                                turnUsers: message.turnUsers,
+                                turnPasswords: message.turnPasswords
                             )
                             await _asyncWebRtcClient.onServerConfigurationReceived(config)
 

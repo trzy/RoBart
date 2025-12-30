@@ -77,32 +77,32 @@ struct ReadyToConnectMessage: Codable, JSONEncodable {
 }
 
 
-struct RoleMessage: Codable, JSONEncodable {
-    var type: String { return "RoleMessage" }
+struct ServerConfigurationMessage: Codable, JSONEncodable {
+    var type: String { return "ServerConfigurationMessage" }
     let role: String
-    let turnServer: String?
-    let turnUser: String?
-    let turnPassword: String?
+    let turnServers: [String]
+    let turnUsers: [String?]
+    let turnPasswords: [String?]
 
     enum CodingKeys: String, CodingKey {
-        case type, role, turnServer, turnUser, turnPassword
+        case type, role, turnServers, turnUsers, turnPasswords
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         role = try container.decode(String.self, forKey: .role)
-        turnServer = try container.decode(String.self, forKey: .turnServer)
-        turnUser = try container.decode(String.self, forKey: .turnUser)
-        turnPassword = try container.decode(String.self, forKey: .turnPassword)
+        turnServers = try container.decode([String].self, forKey: .turnServers)
+        turnUsers = try container.decode([String?].self, forKey: .turnUsers)
+        turnPasswords = try container.decode([String?].self, forKey: .turnPasswords)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(role, forKey: .role)
-        try container.encode(turnServer, forKey: .turnServer)
-        try container.encode(turnUser, forKey: .turnUser)
-        try container.encode(turnPassword, forKey: .turnPassword)
+        try container.encode(turnServers, forKey: .turnServers)
+        try container.encode(turnUsers, forKey: .turnUsers)
+        try container.encode(turnPasswords, forKey: .turnPasswords)
     }
 }
 
@@ -181,7 +181,7 @@ struct AnswerMessage: Codable, JSONEncodable {
 enum Message: Decodable {
     case hello(HelloMessage)
     case readyToConnect(ReadyToConnectMessage)
-    case role(RoleMessage)
+    case serverConfiguration(ServerConfigurationMessage)
     case iceCandidate(ICECandidateMessage)
     case offer(OfferMessage)
     case answer(AnswerMessage)
@@ -193,7 +193,7 @@ enum Message: Decodable {
     private enum ObjectType: String, Codable {
         case hello = "HelloMessage"
         case readyToConnect = "ReadyToConnect"
-        case role = "RoleMessage"
+        case serverConfiguration = "ServerConfigurationMessage"
         case iceCandidate = "ICECandidateMessage"
         case offer = "OfferMessage"
         case answer = "AnswerMessage"
@@ -209,9 +209,9 @@ enum Message: Decodable {
         case .readyToConnect:
             let msg = try ReadyToConnectMessage(from: decoder)
             self = .readyToConnect(msg)
-        case .role:
-            let msg = try RoleMessage(from: decoder)
-            self = .role(msg)
+        case .serverConfiguration:
+            let msg = try ServerConfigurationMessage(from: decoder)
+            self = .serverConfiguration(msg)
         case .iceCandidate:
             let msg = try ICECandidateMessage(from: decoder)
             self = .iceCandidate(msg)
