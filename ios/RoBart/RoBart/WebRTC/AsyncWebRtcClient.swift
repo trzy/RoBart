@@ -278,7 +278,9 @@ actor AsyncWebRtcClient: ObservableObject {
         _remoteVideoTrack?.remove(renderer)
     }
 
-    func stop() async {
+    /// Cancel current connection or connection attempt and try to reconnect. Required when
+    /// signaling layer disconnects.
+    func reconnect() async {
         log("Stopping...")
         _mainTask?.cancel()
     }
@@ -444,9 +446,9 @@ actor AsyncWebRtcClient: ObservableObject {
                     // We are connected, start media capture
                     await startCapture()
 
-                    // Wait for disconnect or fail
+                    // Wait for failure
                     for await state in _peerConnectionState {
-                        if state == .disconnected || state == .failed {
+                        if state == .failed {
                             logError("Disconnected!")
                             throw InternalError.peerDisconnected
                         }
@@ -617,7 +619,7 @@ actor AsyncWebRtcClient: ObservableObject {
 
         // TURN servers, if we have any
         if let turnServer = serverConfig.turnServer {
-            var turnServer = RTCIceServer(urlStrings: [ "turn:\(turnServer)" ], username: serverConfig.turnUser, credential: serverConfig.turnPassword)
+            let turnServer = RTCIceServer(urlStrings: [ "turn:\(turnServer)" ], username: serverConfig.turnUser, credential: serverConfig.turnPassword)
             iceServers.append(turnServer)
         }
 
@@ -753,7 +755,7 @@ extension AsyncWebRtcClient.RtcDelegateAdapeter: RTCPeerConnectionDelegate {
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         let iceCandidate = ICECandidate(candidate: candidate.sdp, sdpMLineIndex: candidate.sdpMLineIndex, sdpMid: candidate.sdpMid)
         let serialized = String(data: try! JSONEncoder().encode(iceCandidate), encoding: .utf8)!
-        log("Generated ICE candidate: \(serialized)")
+        log("Generated ICE candidate")
         Task { await client?._iceCandidateToSendContinuation?.yield(serialized) }
     }
 

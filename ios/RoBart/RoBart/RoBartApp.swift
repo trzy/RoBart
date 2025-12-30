@@ -117,7 +117,7 @@ struct RoBartApp: App {
                     for await isConnected in _transport.$isConnected.values {
                         if !isConnected {
                             print("Disconnected")
-                            await _asyncWebRtcClient.stop()
+                            await _asyncWebRtcClient.reconnect()
                         }
                     }
                 }

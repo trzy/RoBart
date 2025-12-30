@@ -81,8 +81,6 @@ extension SignalTransport: WebSocketDelegate {
             isConnected = true
 
         case .text(let string):
-            log("Received message: \(string)")
-
             if let message = Message.decode(from: string) {
                 switch (message) {
                 case .hello(let message):
