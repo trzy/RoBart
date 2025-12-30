@@ -68,23 +68,31 @@ function createICECandidateMessage(candidate) {
     return JSON.stringify(message);
 }
 
-function createConnectionConfiguration(roleMessage) {
+function createConnectionConfiguration(serverConfigMessage) {
     let config = {
         iceServers: [
             { urls: stunServers }
         ]
     };
 
-    // Add TURN server if one was provided
-    if (roleMessage.turnServer) {
-        let server = { urls: "turn:" + roleMessage.turnServer };
-        if (roleMessage.turnUser) {
-            server.username = roleMessage.turnUser;
+    // Add TURN servers if provided
+    const numServers = serverConfigMessage.turnServers.length;
+    const numUsers = serverConfigMessage.turnUsers.length;
+    const numPasswords = serverConfigMessage.turnPasswords.length;
+    if (numServers != numUsers  ||
+        numUsers != numPasswords) {
+        console.error(`Number of TURN servers (${numServers}), usernames (${numUsers}), and passwords (${numPasswords}) do not match! Ignoring.`);
+    } else {
+        for (let i = 0; i < numServers; i++) {
+            let server = { urls: "turn:" + serverConfigMessage.turnServers[i] };
+            if (serverConfigMessage.turnUsers[i]) {
+                server.username = serverConfigMessage.turnUsers[i];
+            }
+            if (serverConfigMessage.turnPasswords[i]) {
+                server.credential = serverConfigMessage.turnPasswords[i];
+            }
+            config.iceServers.push(server);
         }
-        if (roleMessage.turnPassword) {
-            server.credential = roleMessage.turnPassword;
-        }
-        config.iceServers.push(server);
     }
 
     return config;
@@ -107,7 +115,7 @@ connectBtn.onclick = () => {
         const message = JSON.parse(event.data);
         console.log('Signaling message:', message.type);
 
-        if (message.type === 'RoleMessage') {
+        if (message.type === 'ServerConfigurationMessage') {
             // Server assigned us a role
             myRole = message.role;
             updateStatus(`Role: ${myRole}`);
@@ -133,7 +141,7 @@ connectBtn.onclick = () => {
             // Responder receives offer
             if (!pc) {
                 if (!config) {
-                    console.error("RoleMessage was not received before offer!");
+                    console.error("ServerConfigurationMessage was not received before offer!");
                 }
                 initPeerConnection();
             }

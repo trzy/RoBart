@@ -169,9 +169,9 @@ actor AsyncWebRtcClient: ObservableObject {
 
     struct ServerConfiguration {
         let role: Role
-        let turnServer: String?
-        let turnUser: String?
-        let turnPassword: String?
+        let turnServers: [String]
+        let turnUsers: [String?]
+        let turnPasswords: [String?]
     }
 
     // MARK: API - Session state (for e.g. UI)
@@ -569,7 +569,8 @@ actor AsyncWebRtcClient: ObservableObject {
         // Await role. This waits indefinitely unless the entire task is canceled by a disconnect
         for await config in configStream {
             _serverConfigContinuation = nil
-            log("Received server configuration: role=\(config.role == .initiator ? "initiator" : "responder"), TURN server=\(config.turnServer ?? "NONE")")
+            let servers = config.turnServers.count == 0 ? "none" : (config.turnServers.joined(separator: ", "))
+            log("Received server configuration: role=\(config.role == .initiator ? "initiator" : "responder"), TURN server=\(servers)")
             return config
         }
 
@@ -618,9 +619,17 @@ actor AsyncWebRtcClient: ObservableObject {
         ]
 
         // TURN servers, if we have any
-        if let turnServer = serverConfig.turnServer {
-            let turnServer = RTCIceServer(urlStrings: [ "turn:\(turnServer)" ], username: serverConfig.turnUser, credential: serverConfig.turnPassword)
-            iceServers.append(turnServer)
+        if serverConfig.turnServers.count != serverConfig.turnUsers.count || serverConfig.turnUsers.count != serverConfig.turnPasswords.count {
+            logError("Ignoring TURN servers because server \(serverConfig.turnServers.count), username \(serverConfig.turnUsers.count), and password (\(serverConfig.turnPasswords.count)) counts do not match")
+        } else {
+            for i in 0..<serverConfig.turnServers.count {
+                let turnServer = RTCIceServer(
+                    urlStrings: [ "turn:\(serverConfig.turnServers[i])" ],
+                    username: serverConfig.turnUsers[i],
+                    credential: serverConfig.turnPasswords[i]
+                )
+                iceServers.append(turnServer)
+            }
         }
 
         config.iceServers = iceServers

@@ -1,8 +1,9 @@
+import argparse
+import json
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles 
-
-import json
 
 app = FastAPI()
 
@@ -15,13 +16,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+turn_servers = []
+turn_users = []
+turn_passwords = []
+
 def createServerConfigMessage(role: str) -> str:
     return json.dumps({
-        "type": "RoleMessage",
+        "type": "ServerConfigurationMessage",
         "role": role,
-        "turnServer": "192.168.0.128:3478", #"71.92.165.74:3478",
-        "turnUser": "bart",
-        "turnPassword": "bart"
+        "turnServers": turn_servers,
+        "turnUsers": turn_users,
+        "turnPasswords": turn_passwords,
     })
 
 # We store only up to two clients who have signaled readiness and been assigned a role.
@@ -117,5 +122,32 @@ async def websocket_endpoint(websocket: WebSocket):
 app.mount("/", StaticFiles(directory="server/static", html=True), name="static")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser("server")
+    parser.add_argument("--port", metavar="number", action="store", type=int, default=8000, help="Port to listen on")
+    parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.128:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
+    parser.add_argument("--turn-users", metavar="usernames", action="store", type=str, default="bart", help="Comma-delimited list of usernames. If single username, applies to all servers.")
+    parser.add_argument("--turn-passwords", metavar="passwords", action="store", type=str, default="bart", help="Comma-delimited list of passwords. Must match number of usernames.")
+    options = parser.parse_args()
+
+    turn_servers = options.turn_servers.strip().split(",")
+    turn_users = options.turn_users.strip().split(",")
+    turn_passwords = options.turn_passwords.strip().split(",")
+
+    if len(turn_users) != len(turn_passwords):
+        parser.error("Number of TURN usernames (--turn-users) and passwords (--turn-passwords) must match")
+    if len(turn_users) == 1:
+        turn_users = [ turn_users[0] ] * len(turn_servers)
+    if len(turn_passwords) == 1:
+        turn_passwords = [ turn_passwords[0] ] * len(turn_servers)
+    if len(turn_users) != len(turn_servers):
+        parser.error("Number of TURN usernames (--turn-users) and passwords (--turn-passwords) must match the number of TURN servers or both be one")
+
+    if len(turn_servers) > 0:
+        print("TURN servers:")
+        for i in range(len(turn_servers)):
+            print(f"  {turn_servers[i]}, user={turn_users[i]}")
+    else:
+        print("No TURN servers")
+
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
