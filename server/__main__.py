@@ -15,6 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def createServerConfigMessage(role: str) -> str:
+    return json.dumps({
+        "type": "RoleMessage",
+        "role": role,
+        "turnServer": "192.168.0.128:3478", #"71.92.165.74:3478",
+        "turnUser": "bart",
+        "turnPassword": "bart"
+    })
+
 # We store only up to two clients who have signaled readiness and been assigned a role.
 # TODO: need to support arbitrary number of clients and match two at a time according to a "room ID"
 client_initiator: WebSocket | None = None
@@ -37,14 +46,8 @@ async def handle_role_assignment(client: WebSocket, data: str) -> bool:
             # kick off connection process between them
             if client_initiator is not None and client_responder is not None:
                 print("SENDING ROLE ASSIGNMENT...")
-                await client_initiator.send_text(json.dumps({
-                    "type": "RoleMessage",
-                    "role": "initiator"
-                }))
-                await client_responder.send_text(json.dumps({
-                    "type": "RoleMessage",
-                    "role": "responder"
-                }))
+                await client_initiator.send_text(createServerConfigMessage(role="initiator"))
+                await client_responder.send_text(createServerConfigMessage(role="responder"))
                 return True
             
     except Exception as e:

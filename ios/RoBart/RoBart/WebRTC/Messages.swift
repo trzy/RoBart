@@ -80,24 +80,29 @@ struct ReadyToConnectMessage: Codable, JSONEncodable {
 struct RoleMessage: Codable, JSONEncodable {
     var type: String { return "RoleMessage" }
     let role: String
+    let turnServer: String?
+    let turnUser: String?
+    let turnPassword: String?
 
     enum CodingKeys: String, CodingKey {
-        case type, role
-    }
-
-    init(role: String) {
-        self.role = role
+        case type, role, turnServer, turnUser, turnPassword
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         role = try container.decode(String.self, forKey: .role)
+        turnServer = try container.decode(String.self, forKey: .turnServer)
+        turnUser = try container.decode(String.self, forKey: .turnUser)
+        turnPassword = try container.decode(String.self, forKey: .turnPassword)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(role, forKey: .role)
+        try container.encode(turnServer, forKey: .turnServer)
+        try container.encode(turnUser, forKey: .turnUser)
+        try container.encode(turnPassword, forKey: .turnPassword)
     }
 }
 

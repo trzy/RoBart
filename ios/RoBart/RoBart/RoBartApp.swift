@@ -152,7 +152,13 @@ struct RoBartApp: App {
                     for await message in _transport.$message.values {
                         switch (message) {
                         case .role(let message):
-                            await _asyncWebRtcClient.onRoleAssigned(message.role == "initiator" ? .initiator : .responder)
+                            let config = AsyncWebRtcClient.ServerConfiguration(
+                                role: message.role == "initiator" ? .initiator : .responder,
+                                turnServer: message.turnServer,
+                                turnUser: message.turnUser,
+                                turnPassword: message.turnPassword
+                            )
+                            await _asyncWebRtcClient.onServerConfigurationReceived(config)
 
                         case .iceCandidate(let message):
                             await _asyncWebRtcClient.onIceCandidateReceived(jsonString: message.data)

@@ -10,24 +10,20 @@ let iceCandidateQueue = [];
 let localStream = null;
 
 // ICE servers for NAT traversal
-const config = {
-    iceServers: [
-        {
-            urls: [
-                "stun:stun.l.google.com:19302",
-                "stun:stun.l.google.com:5349",
-                "stun:stun1.l.google.com:3478",
-                "stun:stun1.l.google.com:5349",
-                "stun:stun2.l.google.com:19302",
-                "stun:stun2.l.google.com:5349",
-                "stun:stun3.l.google.com:3478",
-                "stun:stun3.l.google.com:5349",
-                "stun:stun4.l.google.com:19302",
-                "stun:stun4.l.google.com:5349",
-            ]
-        }
-    ]
-};
+const stunServers = [
+    "stun:stun.l.google.com:19302",
+    "stun:stun.l.google.com:5349",
+    "stun:stun1.l.google.com:3478",
+    "stun:stun1.l.google.com:5349",
+    "stun:stun2.l.google.com:19302",
+    "stun:stun2.l.google.com:5349",
+    "stun:stun3.l.google.com:3478",
+    "stun:stun3.l.google.com:5349",
+    "stun:stun4.l.google.com:19302",
+    "stun:stun4.l.google.com:5349",
+];
+
+let config = null;
 
 // UI Elements
 const serverAddress = document.getElementById('serverAddress');
@@ -72,6 +68,28 @@ function createICECandidateMessage(candidate) {
     return JSON.stringify(message);
 }
 
+function createConnectionConfiguration(roleMessage) {
+    let config = {
+        iceServers: [
+            { urls: stunServers }
+        ]
+    };
+
+    // Add TURN server if one was provided
+    if (roleMessage.turnServer) {
+        let server = { urls: "turn:" + roleMessage.turnServer };
+        if (roleMessage.turnUser) {
+            server.username = roleMessage.turnUser;
+        }
+        if (roleMessage.turnPassword) {
+            server.credential = roleMessage.turnPassword;
+        }
+        config.iceServers.push(server);
+    }
+
+    return config;
+}
+
 // Connect to signaling server
 connectBtn.onclick = () => {
     const endpoint = `ws://${serverAddress.value}/ws`;
@@ -94,6 +112,9 @@ connectBtn.onclick = () => {
             myRole = message.role;
             updateStatus(`Role: ${myRole}`);
 
+            // Create connection configuration
+            config = createConnectionConfiguration(message)
+
             if (myRole === 'initiator') {
                 // We're the first peer, wait for responder
                 updateStatus('Waiting for peer to connect...');
@@ -111,6 +132,9 @@ connectBtn.onclick = () => {
         } else if (message.type === 'OfferMessage') {
             // Responder receives offer
             if (!pc) {
+                if (!config) {
+                    console.error("RoleMessage was not received before offer!");
+                }
                 initPeerConnection();
             }
             const offer = JSON.parse(message.data);
