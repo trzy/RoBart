@@ -72,8 +72,11 @@ function createConnectionConfiguration(serverConfigMessage) {
     let config = {
         iceServers: [
             { urls: stunServers }
-        ]
+        ],
+        iceTransportPolicy: serverConfigMessage.relayOnly ? "relay" : "all"
     };
+
+    console.log(`ICE transport policy: ${config.iceTransportPolicy}`);
 
     // Add TURN servers if provided
     const numServers = serverConfigMessage.turnServers.length;

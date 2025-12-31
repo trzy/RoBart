@@ -170,6 +170,7 @@ actor AsyncWebRtcClient: ObservableObject {
         let turnServers: [String]
         let turnUsers: [String?]
         let turnPasswords: [String?]
+        let relayOnly: Bool
     }
 
     // MARK: API - Session state (for e.g. UI)
@@ -635,6 +636,11 @@ actor AsyncWebRtcClient: ObservableObject {
         }
 
         config.iceServers = iceServers
+
+        config.iceTransportPolicy = serverConfig.relayOnly ? .relay : .all
+        if serverConfig.relayOnly {
+            log("Using relay-only ICE transport policy")
+        }
 
         let constraints = RTCMediaConstraints(
             mandatoryConstraints: [

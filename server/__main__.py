@@ -17,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+force_relay = False
 turn_servers = []
 turn_users = []
 turn_passwords = []
@@ -28,6 +29,7 @@ def createServerConfigMessage(role: str) -> str:
         "turnServers": turn_servers,
         "turnUsers": turn_users,
         "turnPasswords": turn_passwords,
+        "relayOnly": force_relay,
     })
 
 # We store only up to two clients who have signaled readiness and been assigned a role.
@@ -125,6 +127,7 @@ app.mount("/", StaticFiles(directory="server/static", html=True), name="static")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("server")
     parser.add_argument("--port", metavar="number", action="store", type=int, default=8000, help="Port to listen on")
+    parser.add_argument("--relay", action="store_true", help="Force clients to use a TURN relay, avoiding peer-to-peer connections")
     parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.128:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
     parser.add_argument("--turn-users", metavar="usernames", action="store", type=str, default="bart", help="Comma-delimited list of usernames. If single username, applies to all servers.")
     parser.add_argument("--turn-passwords", metavar="passwords", action="store", type=str, default="bart", help="Comma-delimited list of passwords. Must match number of usernames.")
@@ -168,6 +171,10 @@ if __name__ == "__main__":
             print(f"  {turn_servers[i]}, user={turn_users[i]}")
     else:
         print("No TURN servers")
+
+    force_relay = options.relay
+    if force_relay:
+        print("Clients will be directed to use TURN relay")
 
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile)
