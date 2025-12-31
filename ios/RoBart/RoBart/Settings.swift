@@ -44,8 +44,16 @@ class Settings: ObservableObject {
         return UInt16(webRtcServerPort)
     }
 
+    @Published var webRtcServerUseSsl: Bool = false {
+        didSet {
+            UserDefaults.standard.set(webRtcServerUseSsl, forKey: Self.k_webRtcServerUseSsl)
+            log("Set: \(Self.k_webRtcServerUseSsl) = \(webRtcServerUseSsl)")
+        }
+    }
+
     private static let k_webRtcServerHostname = "webrtc_server_hostname"
     private static let k_webRtcServerPort = "webrtc_server_port"
+    private static let k_webRtcServerUseSsl = "webrtc_server_use_ssl"
 
     fileprivate init() {
         if let value = UserDefaults.standard.string(forKey: Self.k_webRtcServerHostname) {
@@ -55,6 +63,8 @@ class Settings: ObservableObject {
         if let value = UserDefaults.standard.string(forKey: Self.k_webRtcServerPort) {
             self.webRtcServerPort = value
         }
+
+        self.webRtcServerUseSsl = UserDefaults.standard.bool(forKey: Self.k_webRtcServerUseSsl)
     }
 }
 

@@ -29,7 +29,6 @@ class SignalTransport: ObservableObject {
     @Published var message: Message?
 
     private var _ws: WebSocket?
-    private let _url = URL(string: "ws://192.168.0.128:8000/ws")!
 
     init() {
         if let url = Self.getUrl() {
@@ -49,7 +48,8 @@ class SignalTransport: ObservableObject {
 
     private static func getUrl() -> URL? {
         guard let port = Settings.shared.webRtcServerPortNumber else { return nil }
-        let address = "ws://\(Settings.shared.webRtcServerHostname):\(port)/ws"
+        let proto = Settings.shared.webRtcServerUseSsl ? "wss:" : "ws:"
+        let address = "\(proto)//\(Settings.shared.webRtcServerHostname):\(port)/ws"
         return URL(string: address)
     }
 

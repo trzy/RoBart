@@ -53,6 +53,7 @@ struct SettingsView: View {
                                 text: $_settings.webRtcServerPort
                             )
                         }
+                        Toggle("Use SSL", isOn: $_settings.webRtcServerUseSsl)
                     }
                 }
             }
