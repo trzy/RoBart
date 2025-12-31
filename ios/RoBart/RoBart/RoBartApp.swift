@@ -156,7 +156,8 @@ struct RoBartApp: App {
                                 role: message.role == "initiator" ? .initiator : .responder,
                                 turnServers: message.turnServers,
                                 turnUsers: message.turnUsers,
-                                turnPasswords: message.turnPasswords
+                                turnPasswords: message.turnPasswords,
+                                relayOnly: message.relayOnly
                             )
                             await _asyncWebRtcClient.onServerConfigurationReceived(config)
 

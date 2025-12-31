@@ -83,9 +83,10 @@ struct ServerConfigurationMessage: Codable, JSONEncodable {
     let turnServers: [String]
     let turnUsers: [String?]
     let turnPasswords: [String?]
+    let relayOnly: Bool
 
     enum CodingKeys: String, CodingKey {
-        case type, role, turnServers, turnUsers, turnPasswords
+        case type, role, turnServers, turnUsers, turnPasswords, relayOnly
     }
 
     init(from decoder: Decoder) throws {
@@ -94,6 +95,7 @@ struct ServerConfigurationMessage: Codable, JSONEncodable {
         turnServers = try container.decode([String].self, forKey: .turnServers)
         turnUsers = try container.decode([String?].self, forKey: .turnUsers)
         turnPasswords = try container.decode([String?].self, forKey: .turnPasswords)
+        relayOnly = try container.decode(Bool.self, forKey: .relayOnly)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -103,6 +105,7 @@ struct ServerConfigurationMessage: Codable, JSONEncodable {
         try container.encode(turnServers, forKey: .turnServers)
         try container.encode(turnUsers, forKey: .turnUsers)
         try container.encode(turnPasswords, forKey: .turnPasswords)
+        try container.encode(relayOnly, forKey: .relayOnly)
     }
 }
 
