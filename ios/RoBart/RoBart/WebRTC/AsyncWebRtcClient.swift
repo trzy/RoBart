@@ -143,8 +143,6 @@ actor AsyncWebRtcClient: ObservableObject {
     private var _localVideoTrack: RTCVideoTrack?
     private var _remoteVideoTrack: RTCVideoTrack?
 
-    private let _peerConnectionState: AsyncStream<RTCPeerConnectionState>
-
     private var _iceCandidateQueue: [RTCIceCandidate] = []
 
     private var _sdpReceivedContinuation: AsyncStream<RTCSessionDescription>.Continuation?
@@ -208,12 +206,6 @@ actor AsyncWebRtcClient: ObservableObject {
             boolContinuation = continuation
         }
         _isConnectedContinuation = boolContinuation
-
-        var peerConnectionStateContinuation: AsyncStream<RTCPeerConnectionState>.Continuation?
-        _peerConnectionState = AsyncStream { continuation in
-            peerConnectionStateContinuation = continuation
-        }
-        _peerConnectionStateContinuation = peerConnectionStateContinuation
 
         readyToConnectEvent = AsyncStream { continuation in
             voidContinuation = continuation
@@ -354,6 +346,14 @@ actor AsyncWebRtcClient: ObservableObject {
         do {
             try Task.checkCancellation()
 
+            // Create connection state monitoring stream. We need to do this each time because
+            // when the loop that awaits this later on is interrupted, the stream will close.
+            var peerConnectionStateContinuation: AsyncStream<RTCPeerConnectionState>.Continuation?
+            let peerConnectionState = AsyncStream { continuation in
+                peerConnectionStateContinuation = continuation
+            }
+            _peerConnectionStateContinuation = peerConnectionStateContinuation
+
             // Notify signal server we are ready to begin connection process. Once the
             // other peer signals the same, roles will be distributed and we may proceed.
             guard let config = try await startConnectionProcessAndWaitForServerConfig() else {
@@ -431,26 +431,28 @@ actor AsyncWebRtcClient: ObservableObject {
                 group.addTask { [weak self] in
                     guard let self = self else { return }
 
-                    // Wait for connect
-                    for await state in _peerConnectionState {
-                        if state == .connected {
-                            log("Reached connected state")
-                            break
-                        }
-                        if state == .failed {
-                            log("Connection never formed")
-                            throw InternalError.peerDisconnected
-                        }
-                    }
+                    // Wait for connect. We must be careful to iterate _peerConnectionState only
+                    // once. It is not possible to break and resume.
+                    var isConnected = false
+                    for await state in peerConnectionState {
+                        if !isConnected {
+                            if state == .connected {
+                                log("Reached connected state")
+                                isConnected = true
 
-                    // We are connected, start media capture
-                    await startCapture()
-
-                    // Wait for failure
-                    for await state in _peerConnectionState {
-                        if state == .failed {
-                            logError("Disconnected!")
-                            throw InternalError.peerDisconnected
+                                // Start media capture once connected
+                                await startCapture()
+                                log("Monitoring for connection failure...")
+                            } else if state == .failed {
+                                log("Connection never formed")
+                                throw InternalError.peerDisconnected
+                            }
+                        } else {
+                            // Already connected. Monitor for failure
+                            if state == .failed {
+                                logError("Disconnected!")
+                                throw InternalError.peerDisconnected
+                            }
                         }
                     }
                 }
