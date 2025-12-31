@@ -198,6 +198,11 @@ connectBtn.onclick = () => {
 
 // Initialize peer connection
 function initPeerConnection() {
+    if (pc) {
+        console.log("Closing old peer connection");
+        pc.close();
+        pc = null;
+    }
     pc = new RTCPeerConnection(config);
 
     pc.addStream(localStream);
