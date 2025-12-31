@@ -25,7 +25,7 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_robart._tcp</string>
-		<string>_robart.udp</string>
+		<string>_robart._udp</string>
 	</array>
 </dict>
 </plist>
