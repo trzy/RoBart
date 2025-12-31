@@ -26,7 +26,7 @@ const stunServers = [
 let config = null;
 
 // UI Elements
-const serverAddress = document.getElementById('serverAddress');
+const websocketEndpoint = document.getElementById('websocketEndpoint');
 const connectBtn = document.getElementById('connectBtn');
 const transmitVideoBtn = document.getElementById('transmitVideoBtn');
 //const sendBtn = document.getElementById('sendBtn');
@@ -98,10 +98,18 @@ function createConnectionConfiguration(serverConfigMessage) {
     return config;
 }
 
+function autoDetectWebSocketEndpoint() {
+    const protocol = window.location.protocol == "https:" ? "wss:" : "ws:";
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    websocketEndpoint.value = `${protocol}//${hostname}:${port}/ws`;
+}
+
+autoDetectWebSocketEndpoint();
+
 // Connect to signaling server
 connectBtn.onclick = () => {
-    const endpoint = `ws://${serverAddress.value}/ws`;
-    ws = new WebSocket(endpoint);
+    ws = new WebSocket(websocketEndpoint.value);
 
     ws.onopen = () => {
         updateStatus('Connected to signaling server, waiting for role assignment...');

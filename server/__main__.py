@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -127,7 +128,26 @@ if __name__ == "__main__":
     parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.128:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
     parser.add_argument("--turn-users", metavar="usernames", action="store", type=str, default="bart", help="Comma-delimited list of usernames. If single username, applies to all servers.")
     parser.add_argument("--turn-passwords", metavar="passwords", action="store", type=str, default="bart", help="Comma-delimited list of passwords. Must match number of usernames.")
+    parser.add_argument("--cert-dir", metavar="path", action="store", type=str, help="Directory containing SSL certificate files (privkey.pem and fullchain.pem)")
     options = parser.parse_args()
+
+    ssl_keyfile: str | None = None
+    ssl_certfile: str | None = None
+    if options.cert_dir:
+        ssl_keyfile = os.path.join(options.cert_dir, "privkey.pem")
+        ssl_certfile = os.path.join(options.cert_dir, "fullchain.pem")
+        files_found = True
+        if not os.path.exists(ssl_keyfile):
+            print(f"Error: privkey.pem does not exist. Make sure it is located at '{ssl_keyfile}'.")
+            files_found = False
+        if not os.path.exists(ssl_certfile):
+            print(f"Error: fullchain.pem does not exist. Make sure it is located at '{ssl_certfile}'.")
+            files_found = False
+        if not files_found:
+            exit(1)
+        print(f"SSL support enabled. Using certificates in '{options.cert_dir}'.")
+    else:
+        print("SSL support disabled.")
 
     turn_servers = options.turn_servers.strip().split(",")
     turn_users = options.turn_users.strip().split(",")
@@ -150,4 +170,4 @@ if __name__ == "__main__":
         print("No TURN servers")
 
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile)
