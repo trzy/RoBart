@@ -217,7 +217,7 @@ function initPeerConnection() {
     }
     pc = new RTCPeerConnection(config);
 
-    pc.addStream(localStream);
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
     // ICE candidate handling
     pc.onicecandidate = (e) => {
@@ -244,11 +244,15 @@ function initPeerConnection() {
         setupDataChannel();
     };
 
-    // Stream from remote peer
-    pc.onaddstream = (e) => {
-        console.log(`Got remote stream`);
-        const remoteVideo = document.getElementById('remoteVideo');
-        remoteVideo.srcObject = e.stream;
+    // Track from remote peer
+    pc.ontrack = (e) => {
+        if (e.streams.length > 0) {
+            console.log(`Got remote track (${e.streams.length} streams)`);
+            const remoteVideo = document.getElementById('remoteVideo');
+            remoteVideo.srcObject = e.streams[0];
+        } else {
+            console.log(`Got remote track with 0 streams. Ignoring!`);
+        }
     };
 
     // If we're initiator, create data channel
