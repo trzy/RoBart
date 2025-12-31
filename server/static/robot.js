@@ -101,6 +101,14 @@ function createConnectionConfiguration(serverConfigMessage) {
     return config;
 }
 
+function stop() {
+    if (pc) {
+        pc.close();
+    }
+    dataChannel = null;
+    iceCandidateQueue = [];
+}
+
 function autoDetectWebSocketEndpoint() {
     const protocol = window.location.protocol == "https:" ? "wss:" : "ws:";
     const hostname = window.location.hostname;
@@ -203,8 +211,7 @@ connectBtn.onclick = () => {
 function initPeerConnection() {
     if (pc) {
         console.log("Closing old peer connection");
-        pc.close();
-        pc = null;
+        stop();
     }
     pc = new RTCPeerConnection(config);
 
@@ -223,6 +230,9 @@ function initPeerConnection() {
         updateStatus('Connection: ' + pc.connectionState);
         if (pc.connectionState === 'connected') {
             updateStatus('WebRTC Connected! You can now chat.');
+        } else if (pc.connectionState == 'failed') {
+            updateStatus("Connection FAILED");
+            stop();
         }
     };
 
