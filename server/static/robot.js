@@ -104,9 +104,11 @@ function createConnectionConfiguration(serverConfigMessage) {
 function stop() {
     if (pc) {
         pc.close();
+        pc = null;
     }
     dataChannel = null;
     iceCandidateQueue = [];
+    console.log('Stopped connection: cleanup complete');
 }
 
 function autoDetectWebSocketEndpoint() {
@@ -310,6 +312,7 @@ function addMessage(text, className) {
 
 function updateStatus(text) {
     statusDiv.textContent = 'Status: ' + text;
+    console.log(`Status: ${text}`);
 }
 
 // Disable send initially
