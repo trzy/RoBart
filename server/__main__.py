@@ -1,3 +1,25 @@
+##
+##  __main__.py
+##  RoBart
+##
+##  Created by Bart Trzynadlowski on 12/28/25.
+##
+##  This file is part of RoBart.
+##
+##  RoBart is free software: you can redistribute it and/or modify it under the
+##  terms of the GNU General Public License as published by the Free Software
+##  Foundation, either version 3 of the License, or (at your option) any later
+##  version.
+##
+##  RoBart is distributed in the hope that it will be useful, but WITHOUT
+##  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+##  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+##  more details.
+##
+##  You should have received a copy of the GNU General Public License along
+##  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+##
+
 import argparse
 import json
 import os
@@ -128,7 +150,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("server")
     parser.add_argument("--port", metavar="number", action="store", type=int, default=8000, help="Port to listen on")
     parser.add_argument("--relay", action="store_true", help="Force clients to use a TURN relay, avoiding peer-to-peer connections")
-    parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.101:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
+    parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="turn:192.168.0.101:3478,turns:71.92.165.74:5349", help="Comma-delimited list of turn(s):host:port")
     parser.add_argument("--turn-users", metavar="usernames", action="store", type=str, default="bart", help="Comma-delimited list of usernames. If single username, applies to all servers.")
     parser.add_argument("--turn-passwords", metavar="passwords", action="store", type=str, default="bart", help="Comma-delimited list of passwords. Must match number of usernames.")
     parser.add_argument("--cert-dir", metavar="path", action="store", type=str, help="Directory containing SSL certificate files (privkey.pem and fullchain.pem)")

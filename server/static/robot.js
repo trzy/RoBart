@@ -89,7 +89,7 @@ function createConnectionConfiguration(serverConfigMessage) {
         console.error(`Number of TURN servers (${numServers}), usernames (${numUsers}), and passwords (${numPasswords}) do not match! Ignoring.`);
     } else {
         for (let i = 0; i < numServers; i++) {
-            let server = { urls: "turn:" + serverConfigMessage.turnServers[i] };
+            let server = { urls: serverConfigMessage.turnServers[i] };
             if (serverConfigMessage.turnUsers[i]) {
                 server.username = serverConfigMessage.turnUsers[i];
             }
