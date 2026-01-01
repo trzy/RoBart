@@ -4,7 +4,7 @@ import os
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles 
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -51,7 +51,7 @@ def log(message: str):
 async def handle_role_assignment(client: WebSocket, data: str) -> bool:
     global client_initiator
     global client_responder
-    
+
     try:
         msg = json.loads(data)
         if msg["type"] == "ReadyToConnectMessage":
@@ -65,7 +65,7 @@ async def handle_role_assignment(client: WebSocket, data: str) -> bool:
                     client_responder = client
 
             log("Role assignment")
-            
+
             # Next, when we have both peers with assigned roles, send role assignment message to
             # kick off connection process between them
             if client_initiator is not None and client_responder is not None:
@@ -73,7 +73,7 @@ async def handle_role_assignment(client: WebSocket, data: str) -> bool:
                 await client_initiator.send_text(createServerConfigMessage(role="initiator"))
                 await client_responder.send_text(createServerConfigMessage(role="responder"))
                 return True
-            
+
     except Exception as e:
         log(f"Error: Ignoring non-JSON message: {e}")
 
@@ -95,13 +95,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await websocket.accept()
     log(f"New connection from {endpoint(websocket)}")
-    
+
     try:
         while True:
             # Receive message from this client
             data = await websocket.receive_text()
             log_message(websocket, data)
-            
+
             # Handle role assignment
             if await handle_role_assignment(client=websocket, data=data):
                 continue
@@ -113,7 +113,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         await client.send_text(data)
                     except:
                         pass
-                        
+
     except WebSocketDisconnect:
         if client_initiator == websocket:
             client_initiator = None
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("server")
     parser.add_argument("--port", metavar="number", action="store", type=int, default=8000, help="Port to listen on")
     parser.add_argument("--relay", action="store_true", help="Force clients to use a TURN relay, avoiding peer-to-peer connections")
-    parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.128:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
+    parser.add_argument("--turn-servers", metavar="addresses", action="store", type=str, default="192.168.0.101:3478,71.92.165.74:3478", help="Comma-delimited list of host:port")
     parser.add_argument("--turn-users", metavar="usernames", action="store", type=str, default="bart", help="Comma-delimited list of usernames. If single username, applies to all servers.")
     parser.add_argument("--turn-passwords", metavar="passwords", action="store", type=str, default="bart", help="Comma-delimited list of passwords. Must match number of usernames.")
     parser.add_argument("--cert-dir", metavar="path", action="store", type=str, help="Directory containing SSL certificate files (privkey.pem and fullchain.pem)")
