@@ -42,7 +42,9 @@ async function processEnqueuedICECandidates() {
     for (const candidate of iceCandidateQueue) {
         await pc.addIceCandidate(candidate);
     }
+    console.log(`Processed ${iceCandidateQueue.length} enqueued ICE candidates`);
     iceCandidateQueue = [];
+
 }
 
 function createReadyToConnectMessage() {
@@ -186,8 +188,10 @@ connectBtn.onclick = () => {
             const candidate = JSON.parse(message.data);
             try {
                 if (pc && pc.remoteDescription) {
+                    console.log("Received and processed ICE candidate");
                     await pc.addIceCandidate(candidate);
                 } else {
+                    console.log("Enqueued ICE candidate")
                     enqueueICECandidate(candidate);
                 }
             } catch (err) {
