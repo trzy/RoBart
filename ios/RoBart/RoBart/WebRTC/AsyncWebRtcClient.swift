@@ -630,7 +630,7 @@ actor AsyncWebRtcClient: ObservableObject {
         } else {
             for i in 0..<serverConfig.turnServers.count {
                 let turnServer = RTCIceServer(
-                    urlStrings: [ "turn:\(serverConfig.turnServers[i])" ],
+                    urlStrings: [ serverConfig.turnServers[i] ],
                     username: serverConfig.turnUsers[i],
                     credential: serverConfig.turnPasswords[i]
                 )
