@@ -291,6 +291,9 @@ actor AsyncWebRtcClient: ObservableObject {
         guard let offer = Offer.decode(jsonString: jsonString) else { return }
         let sdp = RTCSessionDescription(type: .offer, sdp: offer.sdp)
         _sdpReceivedContinuation?.yield(sdp)
+
+        //TODO: we can get stuck here if this happens when the remote peer tries to reconnect and sends an offer
+        //that we did not expect. We should ingest the offer immediately.
     }
 
     /// Accept answer from a remote peer.
