@@ -85,30 +85,21 @@ struct ServerConfigurationMessage: Codable, JSONEncodable {
     }
 
     var type: String { return "ServerConfigurationMessage" }
-    let role: String
-    let stunServers: [Server]
-    let turnServers: [Server]
-    let relayOnly: Bool
+    let config: AsyncWebRtcClient.ServerConfiguration
 
     enum CodingKeys: String, CodingKey {
-        case type, role, stunServers, turnServers, relayOnly
+        case type, config
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        role = try container.decode(String.self, forKey: .role)
-        stunServers = try container.decode([Server].self, forKey: .stunServers)
-        turnServers = try container.decode([Server].self, forKey: .turnServers)
-        relayOnly = try container.decode(Bool.self, forKey: .relayOnly)
+        config = try container.decode(AsyncWebRtcClient.ServerConfiguration.self, forKey: .config)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
-        try container.encode(role, forKey: .role)
-        try container.encode(stunServers, forKey: .stunServers)
-        try container.encode(turnServers, forKey: .turnServers)
-        try container.encode(relayOnly, forKey: .relayOnly)
+        try container.encode(config, forKey: .config)
     }
 }
 
@@ -184,6 +175,30 @@ struct AnswerMessage: Codable, JSONEncodable {
     }
 }
 
+struct CameraParametersMessage: Codable, JSONEncodable {
+    var type: String { return "CameraParametersMessage" }
+    let params: AsyncWebRtcClient.CameraParameters
+
+    enum CodingKeys: String, CodingKey {
+        case type, params
+    }
+
+    init(params: AsyncWebRtcClient.CameraParameters) {
+        self.params = params
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        params = try container.decode(AsyncWebRtcClient.CameraParameters.self, forKey: .params)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(params, forKey: .params)
+    }
+}
+
 enum Message: Decodable {
     case hello(HelloMessage)
     case readyToConnect(ReadyToConnectMessage)
@@ -191,6 +206,7 @@ enum Message: Decodable {
     case iceCandidate(ICECandidateMessage)
     case offer(OfferMessage)
     case answer(AnswerMessage)
+    case cameraParams(CameraParametersMessage)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -203,6 +219,7 @@ enum Message: Decodable {
         case iceCandidate = "ICECandidateMessage"
         case offer = "OfferMessage"
         case answer = "AnswerMessage"
+        case cameraParams = "CameraParametersMessage"
     }
 
     init(from decoder: Decoder) throws {
@@ -227,6 +244,9 @@ enum Message: Decodable {
         case .answer:
             let msg = try AnswerMessage(from: decoder)
             self = .answer(msg)
+        case .cameraParams:
+            let msg = try CameraParametersMessage(from: decoder)
+            self = .cameraParams(msg)
         }
     }
 

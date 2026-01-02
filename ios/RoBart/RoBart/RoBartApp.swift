@@ -136,6 +136,11 @@ struct RoBartApp: App {
                     }
                 }
                 .task {
+                    for await cameraParams in _asyncWebRtcClient.cameraParamsToSend {
+                        _transport.send(CameraParametersMessage(params: cameraParams).toJSON())
+                    }
+                }
+                .task {
                     for await candidate in _asyncWebRtcClient.iceCandidateToSend {
                         _transport.send(ICECandidateMessage(data: candidate).toJSON())
                     }
@@ -144,19 +149,7 @@ struct RoBartApp: App {
                     for await message in _transport.$message.values {
                         switch (message) {
                         case .serverConfiguration(let message):
-                            let stunServers = message.stunServers.map {
-                                return AsyncWebRtcClient.ServerConfiguration.Server(url: $0.url, user: $0.user, credential: $0.credential)
-                            }
-                            let turnServers = message.turnServers.map {
-                                return AsyncWebRtcClient.ServerConfiguration.Server(url: $0.url, user: $0.user, credential: $0.credential)
-                            }
-                            let config = AsyncWebRtcClient.ServerConfiguration(
-                                role: message.role == "initiator" ? .initiator : .responder,
-                                stunServers: stunServers,
-                                turnServers: turnServers,
-                                relayOnly: message.relayOnly
-                            )
-                            await _asyncWebRtcClient.onServerConfigurationReceived(config)
+                            await _asyncWebRtcClient.onServerConfigurationReceived(message.config)
 
                         case .iceCandidate(let message):
                             await _asyncWebRtcClient.onIceCandidateReceived(jsonString: message.data)

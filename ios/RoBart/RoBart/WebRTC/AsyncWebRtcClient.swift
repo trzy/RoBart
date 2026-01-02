@@ -130,6 +130,7 @@ actor AsyncWebRtcClient: ObservableObject {
     private let _offerToSendContinuation: AsyncStream<String>.Continuation
     private let _iceCandidateToSendContinuation: AsyncStream<String>.Continuation
     private let _answerToSendContinuation: AsyncStream<String>.Continuation
+    private let _cameraParamsToSendContinuation: AsyncStream<CameraParameters>.Continuation
     private let _textDataReceivedContinuation: AsyncStream<String>.Continuation
 
     fileprivate class RtcDelegateAdapter: NSObject {
@@ -155,13 +156,13 @@ actor AsyncWebRtcClient: ObservableObject {
 
     // MARK: API
 
-    enum Role {
-        case initiator
-        case responder
+    enum Role: String, Codable {
+        case initiator = "initiator"
+        case responder = "responder"
     }
 
-    struct ServerConfiguration {
-        struct Server {
+    struct ServerConfiguration: Codable {
+        struct Server: Codable {
             let url: String
             let user: String?
             let credential: String?
@@ -198,11 +199,28 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    struct CameraParameters: Codable, CustomStringConvertible {
+        let name: String
+        let minZoom: Float
+        let maxZoom: Float
+
+        init(_ device: AVCaptureDevice) {
+            name = device.localizedName
+            minZoom = Float(device.minAvailableVideoZoomFactor)
+            maxZoom = Float(device.maxAvailableVideoZoomFactor)
+        }
+
+        var description: String {
+            return "\(name) zoom=[\(minZoom),\(maxZoom)]"
+        }
+    }
+
     let isConnected: AsyncStream<Bool>
     let readyToConnectSignal: AsyncStream<Void>
     let offerToSend: AsyncStream<String>
     let iceCandidateToSend: AsyncStream<String>
     let answerToSend: AsyncStream<String>
+    let cameraParamsToSend: AsyncStream<CameraParameters>
     let textDataReceived: AsyncStream<String>
 
     init() {
@@ -212,6 +230,7 @@ actor AsyncWebRtcClient: ObservableObject {
         (offerToSend, _offerToSendContinuation) = Self.createStream()
         (iceCandidateToSend, _iceCandidateToSendContinuation) = Self.createStream()
         (answerToSend, _answerToSendContinuation) = Self.createStream()
+        (cameraParamsToSend, _cameraParamsToSendContinuation) = Self.createStream()
         (textDataReceived, _textDataReceivedContinuation) = Self.createStream()
 
         _eventStream = _eventStreamSource.share()
@@ -556,6 +575,7 @@ actor AsyncWebRtcClient: ObservableObject {
         guard !_isCapturing else { return }
         guard let capturer = _videoCapturer as? RTCCameraVideoCapturer else { return }
         guard let camera = findCamera() else { return }
+        let cameraParams = CameraParameters(camera)
         guard let format = (RTCCameraVideoCapturer.supportedFormats(for: camera).sorted { (fmt1, fmt2) -> Bool in
             let width1 = CMVideoFormatDescriptionGetDimensions(fmt1.formatDescription).width
             let width2 = CMVideoFormatDescriptionGetDimensions(fmt2.formatDescription).width
@@ -570,6 +590,10 @@ actor AsyncWebRtcClient: ObservableObject {
         _isCapturing = true
 
         log("Started video capture: \(format.formatDescription)")
+        log("Camera: \(cameraParams)")
+
+        // Send camera parameters to signal server in case the other client wants them
+        _cameraParamsToSendContinuation.yield(cameraParams)
     }
 
     /// Use speaker output. This must be done after each new connection and audio track are created
