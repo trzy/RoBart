@@ -120,7 +120,7 @@ class HoverboardController {
             // Set new motor throttle values and send immediately
             _leftMotorThrottle = leftThrottle
             _rightMotorThrottle = rightThrottle
-            log("Left=\(_leftMotorThrottle), Right=\(_rightMotorThrottle)")
+            //log("Left=\(_leftMotorThrottle), Right=\(_rightMotorThrottle)")
             sendUpdateToBoard()
 
 

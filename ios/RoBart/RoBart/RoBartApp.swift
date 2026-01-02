@@ -70,7 +70,7 @@ struct RoBartApp: App {
                 }
                 .task {
                     for await text in _asyncWebRtcClient.textDataReceived {
-                        print("[RoBartApp] Control: \(text)")
+                        //print("[RoBartApp] Control: \(text)")
 
                         if let command = parseMoveCommand(text) {
                             let direction = command.direction
