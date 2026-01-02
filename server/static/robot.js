@@ -9,20 +9,6 @@ let myRole = null;
 let iceCandidateQueue = [];
 let localStream = null;
 
-// ICE servers for NAT traversal
-const stunServers = [
-    "stun:stun.l.google.com:19302",
-    "stun:stun.l.google.com:5349",
-    "stun:stun1.l.google.com:3478",
-    "stun:stun1.l.google.com:5349",
-    "stun:stun2.l.google.com:19302",
-    "stun:stun2.l.google.com:5349",
-    "stun:stun3.l.google.com:3478",
-    "stun:stun3.l.google.com:5349",
-    "stun:stun4.l.google.com:19302",
-    "stun:stun4.l.google.com:5349",
-];
-
 let config = null;
 
 // UI Elements
@@ -72,32 +58,32 @@ function createICECandidateMessage(candidate) {
 
 function createConnectionConfiguration(serverConfigMessage) {
     let config = {
-        iceServers: [
-            { urls: stunServers }
-        ],
+        iceServers: [],
         iceTransportPolicy: serverConfigMessage.relayOnly ? "relay" : "all"
     };
 
     console.log(`ICE transport policy: ${config.iceTransportPolicy}`);
 
-    // Add TURN servers if provided
-    const numServers = serverConfigMessage.turnServers.length;
-    const numUsers = serverConfigMessage.turnUsers.length;
-    const numPasswords = serverConfigMessage.turnPasswords.length;
-    if (numServers != numUsers  ||
-        numUsers != numPasswords) {
-        console.error(`Number of TURN servers (${numServers}), usernames (${numUsers}), and passwords (${numPasswords}) do not match! Ignoring.`);
-    } else {
-        for (let i = 0; i < numServers; i++) {
-            let server = { urls: serverConfigMessage.turnServers[i] };
-            if (serverConfigMessage.turnUsers[i]) {
-                server.username = serverConfigMessage.turnUsers[i];
-            }
-            if (serverConfigMessage.turnPasswords[i]) {
-                server.credential = serverConfigMessage.turnPasswords[i];
-            }
-            config.iceServers.push(server);
+    for (let i = 0; i < serverConfigMessage.stunServers.length; i++) {
+        let iceServer = { urls: serverConfigMessage.stunServers[i].url };
+        if (serverConfigMessage.stunServers[i].user) {
+            iceServer.username = serverConfigMessage.stunServers[i].user;
         }
+        if (serverConfigMessage.stunServers[i].credential) {
+            iceServer.credential = serverConfigMessage.stunServers[i].credential;
+        }
+        config.iceServers.push(server);
+    }
+
+    for (let i = 0; i < serverConfigMessage.turnServers.length; i++) {
+        let iceServer = { urls: serverConfigMessage.turnServers[i].url };
+        if (serverConfigMessage.turnServers[i].user) {
+            iceServer.username = serverConfigMessage.turnServers[i].user;
+        }
+        if (serverConfigMessage.turnServers[i].credential) {
+            iceServer.credential = serverConfigMessage.turnServers[i].credential;
+        }
+        config.iceServers.push(server);
     }
 
     return config;

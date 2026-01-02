@@ -28,6 +28,19 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+stun_server_urls = [
+    "stun:stun.l.google.com:19302",
+    "stun:stun.l.google.com:5349",
+    "stun:stun1.l.google.com:3478",
+    "stun:stun1.l.google.com:5349",
+    "stun:stun2.l.google.com:19302",
+    "stun:stun2.l.google.com:5349",
+    "stun:stun3.l.google.com:3478",
+    "stun:stun3.l.google.com:5349",
+    "stun:stun4.l.google.com:19302",
+    "stun:stun4.l.google.com:5349"
+]
+
 app = FastAPI()
 
 # Enable CORS for local development
@@ -45,12 +58,15 @@ turn_users = []
 turn_passwords = []
 
 def createServerConfigMessage(role: str) -> str:
+    stun_ice_servers = [ { "url": url } for url in stun_server_urls ]
+    turn_ice_servers = []
+    for i in range(len(turn_servers)):
+        turn_ice_servers.append({ "url": turn_servers[i], "user": turn_users[i], "credential": turn_passwords[i] })
     return json.dumps({
         "type": "ServerConfigurationMessage",
         "role": role,
-        "turnServers": turn_servers,
-        "turnUsers": turn_users,
-        "turnPasswords": turn_passwords,
+        "stunServers": stun_ice_servers,
+        "turnServers": turn_ice_servers,
         "relayOnly": force_relay,
     })
 
