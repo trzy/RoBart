@@ -20,14 +20,6 @@
 //  with RoBart. If not, see <http://www.gnu.org/licenses/>.
 //
 
-//
-// TODO:
-// -----
-// - Second connect indicator for signal server
-// - Render web cam on iOS
-// - Audio!
-//
-
 import Combine
 import SwiftUI
 
@@ -44,18 +36,18 @@ fileprivate func parseMoveCommand(_ text: String) -> (direction: String, throttl
     return nil
 }
 
-fileprivate func parseCameraCommand(_ text: String) -> CameraType? {
+fileprivate func parseCameraCommand(_ text: String) -> AsyncWebRtcClient.CameraType? {
     guard text.count >= 2 else { return nil  }
     guard text.first == "c" else { return nil }
 
     let cameraString = String(text[text.index(after: text.startIndex)...])
 
-    return CameraType.fromString(cameraString)
+    return AsyncWebRtcClient.CameraType.fromString(cameraString)
 }
 
 @main
 struct RoBartApp: App {
-    @StateObject private var _asyncWebRtcClient = NewWebRtcClient()
+    @StateObject private var _asyncWebRtcClient = AsyncWebRtcClient()
     @State var isConnected: Bool = false
 
     private let _transport = SignalTransport()
