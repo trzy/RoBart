@@ -15,11 +15,10 @@
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
 		CC52F4DE2F021B30007149CB /* RemoteVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */; };
-		CC52F4E12F0730B4007149CB /* NewWebRtcClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */; };
+		CC52F4E12F0730B4007149CB /* AsyncWebRtcClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4E02F0730AF007149CB /* AsyncWebRtcClient.swift */; };
 		CC52F4E62F073393007149CB /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = CC52F4E52F073393007149CB /* AsyncAlgorithms */; };
 		CC66808C2F01C7030029C49A /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808B2F01C7000029C49A /* Settings.swift */; };
 		CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808D2F01C7CC0029C49A /* SettingsView.swift */; };
-		CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808F2F01D8D40029C49A /* CameraType.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
 		CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */; };
 		CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3B92E2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift */; };
@@ -54,7 +53,6 @@
 		CCB01A302F010F5800B00AEA /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB01A2F2F010F5500B00AEA /* SignalTransport.swift */; };
 		CCB01A332F010F6B00B00AEA /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = CCB01A322F010F6B00B00AEA /* Starscream */; };
 		CCB01A352F010FE200B00AEA /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB01A342F010FDF00B00AEA /* Messages.swift */; };
-		CCB01A372F01100400B00AEA /* AsyncWebRtcClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB01A362F010FFD00B00AEA /* AsyncWebRtcClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -89,10 +87,9 @@
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
 		CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteVideoView.swift; sourceTree = "<group>"; };
-		CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewWebRtcClient.swift; sourceTree = "<group>"; };
+		CC52F4E02F0730AF007149CB /* AsyncWebRtcClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncWebRtcClient.swift; sourceTree = "<group>"; };
 		CC66808B2F01C7000029C49A /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		CC66808D2F01C7CC0029C49A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		CC66808F2F01D8D40029C49A /* CameraType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraType.swift; sourceTree = "<group>"; };
 		CC7C1CB92C76F7B1003BFA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamMulticaster.swift; sourceTree = "<group>"; };
 		CCA3B92C2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+Extensions.swift"; sourceTree = "<group>"; };
@@ -127,7 +124,6 @@
 		CCA9A1452C62FD1300B0401C /* Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clamp.swift; sourceTree = "<group>"; };
 		CCB01A2F2F010F5500B00AEA /* SignalTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTransport.swift; sourceTree = "<group>"; };
 		CCB01A342F010FDF00B00AEA /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
-		CCB01A362F010FFD00B00AEA /* AsyncWebRtcClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncWebRtcClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,7 +160,6 @@
 		CC52F4DF2F072FBB007149CB /* NewWebRTC */ = {
 			isa = PBXGroup;
 			children = (
-				CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */,
 			);
 			path = NewWebRTC;
 			sourceTree = "<group>";
@@ -309,8 +304,7 @@
 		CCB01A2E2F010F4E00B00AEA /* WebRTC */ = {
 			isa = PBXGroup;
 			children = (
-				CC66808F2F01D8D40029C49A /* CameraType.swift */,
-				CCB01A362F010FFD00B00AEA /* AsyncWebRtcClient.swift */,
+				CC52F4E02F0730AF007149CB /* AsyncWebRtcClient.swift */,
 				CCB01A342F010FDF00B00AEA /* Messages.swift */,
 				CCB01A2F2F010F5500B00AEA /* SignalTransport.swift */,
 			);
@@ -407,7 +401,7 @@
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */,
-				CC52F4E12F0730B4007149CB /* NewWebRtcClient.swift in Sources */,
+				CC52F4E12F0730B4007149CB /* AsyncWebRtcClient.swift in Sources */,
 				CC1125352C93A9A5007AF247 /* Task+Extensions.swift in Sources */,
 				CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */,
 				CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */,
@@ -434,7 +428,6 @@
 				CCA9A1312C62E12400B0401C /* SimpleBinaryCodable.swift in Sources */,
 				CCA3B92F2C8CF7A800F15F9F /* simd_float3x3+Extensions.swift in Sources */,
 				CCA9A1332C62E18700B0401C /* SimpleBinaryEncoder.swift in Sources */,
-				CCB01A372F01100400B00AEA /* AsyncWebRtcClient.swift in Sources */,
 				CCA9A1252C62DBE900B0401C /* TriangleShape.swift in Sources */,
 				CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */,
 				CCA9A1162C62D8BA00B0401C /* simd_float3+Extensions.swift in Sources */,
@@ -442,7 +435,6 @@
 				CCA3B9312C8D00DF00F15F9F /* simd_float4+Extensions.swift in Sources */,
 				CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */,
 				CCB01A302F010F5800B00AEA /* SignalTransport.swift in Sources */,
-				CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
