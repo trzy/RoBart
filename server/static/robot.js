@@ -72,7 +72,7 @@ function createConnectionConfiguration(serverConfigMessage) {
         if (serverConfigMessage.stunServers[i].credential) {
             iceServer.credential = serverConfigMessage.stunServers[i].credential;
         }
-        config.iceServers.push(server);
+        config.iceServers.push(iceServer);
     }
 
     for (let i = 0; i < serverConfigMessage.turnServers.length; i++) {
@@ -83,7 +83,7 @@ function createConnectionConfiguration(serverConfigMessage) {
         if (serverConfigMessage.turnServers[i].credential) {
             iceServer.credential = serverConfigMessage.turnServers[i].credential;
         }
-        config.iceServers.push(server);
+        config.iceServers.push(iceServer);
     }
 
     return config;
