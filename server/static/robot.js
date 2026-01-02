@@ -265,7 +265,7 @@ function setupDataChannel() {
     };
 
     dataChannel.onmessage = (e) => {
-        addMessage('Peer: ' + e.data, 'received');
+        //addMessage('Peer: ' + e.data, 'received');
     };
 }
 
