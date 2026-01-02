@@ -27,7 +27,7 @@ struct ContentView: View {
     @Binding var isConnected: Bool
 
     @State private var _subscription: Cancellable?
-    @EnvironmentObject private var _asyncWebRtcClient: AsyncWebRtcClient
+    @EnvironmentObject private var _asyncWebRtcClient: NewWebRtcClient
 
     var body: some View {
         GeometryReader { reader in

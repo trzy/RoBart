@@ -55,7 +55,7 @@ fileprivate func parseCameraCommand(_ text: String) -> CameraType? {
 
 @main
 struct RoBartApp: App {
-    @StateObject private var _asyncWebRtcClient = AsyncWebRtcClient()
+    @StateObject private var _asyncWebRtcClient = NewWebRtcClient()
     @State var isConnected: Bool = false
 
     private let _transport = SignalTransport()
@@ -129,7 +129,7 @@ struct RoBartApp: App {
                 .task {
                     // When WebRTC is locally ready to establish a connection, let the signaling
                     // server know
-                    for await _ in _asyncWebRtcClient.readyToConnectEvent {
+                    for await _ in _asyncWebRtcClient.readyToConnectSignal {
                         _transport.send(ReadyToConnectMessage().toJSON())
                     }
                 }
@@ -152,11 +152,16 @@ struct RoBartApp: App {
                     for await message in _transport.$message.values {
                         switch (message) {
                         case .serverConfiguration(let message):
+                            let stunServers = message.stunServers.map {
+                                return AsyncWebRtcClient.ServerConfiguration.Server(url: $0.url, user: $0.user, credential: $0.credential)
+                            }
+                            let turnServers = message.turnServers.map {
+                                return AsyncWebRtcClient.ServerConfiguration.Server(url: $0.url, user: $0.user, credential: $0.credential)
+                            }
                             let config = AsyncWebRtcClient.ServerConfiguration(
                                 role: message.role == "initiator" ? .initiator : .responder,
-                                turnServers: message.turnServers,
-                                turnUsers: message.turnUsers,
-                                turnPasswords: message.turnPasswords,
+                                stunServers: stunServers,
+                                turnServers: turnServers,
                                 relayOnly: message.relayOnly
                             )
                             await _asyncWebRtcClient.onServerConfigurationReceived(config)

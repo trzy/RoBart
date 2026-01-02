@@ -15,6 +15,8 @@
 		CC2AA5E42C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt in Resources */ = {isa = PBXBuildFile; fileRef = CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
 		CC52F4DE2F021B30007149CB /* RemoteVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */; };
+		CC52F4E12F0730B4007149CB /* NewWebRtcClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */; };
+		CC52F4E62F073393007149CB /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = CC52F4E52F073393007149CB /* AsyncAlgorithms */; };
 		CC66808C2F01C7030029C49A /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808B2F01C7000029C49A /* Settings.swift */; };
 		CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808D2F01C7CC0029C49A /* SettingsView.swift */; };
 		CC6680902F01D8DD0029C49A /* CameraType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808F2F01D8D40029C49A /* CameraType.swift */; };
@@ -87,6 +89,7 @@
 		CC2AA5E32C7C070B00A8DE67 /* angular_velocity_kitchen_floor.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = angular_velocity_kitchen_floor.txt; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
 		CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteVideoView.swift; sourceTree = "<group>"; };
+		CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewWebRtcClient.swift; sourceTree = "<group>"; };
 		CC66808B2F01C7000029C49A /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		CC66808D2F01C7CC0029C49A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CC66808F2F01D8D40029C49A /* CameraType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraType.swift; sourceTree = "<group>"; };
@@ -134,6 +137,7 @@
 			files = (
 				CCB01A2D2F010F3D00B00AEA /* WebRTC in Frameworks */,
 				CCB01A332F010F6B00B00AEA /* Starscream in Frameworks */,
+				CC52F4E62F073393007149CB /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,6 +159,14 @@
 				CCA3B9342C8EA2D300F15F9F /* Calibration.swift */,
 			);
 			path = Calibration;
+			sourceTree = "<group>";
+		};
+		CC52F4DF2F072FBB007149CB /* NewWebRTC */ = {
+			isa = PBXGroup;
+			children = (
+				CC52F4E02F0730AF007149CB /* NewWebRtcClient.swift */,
+			);
+			path = NewWebRTC;
 			sourceTree = "<group>";
 		};
 		CC7C1CAE2C76F2D6003BFA0B /* Binary */ = {
@@ -190,6 +202,7 @@
 		CCA9A0FA2C62D35E00B0401C /* RoBart */ = {
 			isa = PBXGroup;
 			children = (
+				CC52F4DF2F072FBB007149CB /* NewWebRTC */,
 				CCB01A2E2F010F4E00B00AEA /* WebRTC */,
 				CC2AA5DE2C7BF3B000A8DE67 /* Calibration */,
 				CC7C1CB92C76F7B1003BFA0B /* Info.plist */,
@@ -325,6 +338,7 @@
 			packageProductDependencies = (
 				CCB01A2C2F010F3D00B00AEA /* WebRTC */,
 				CCB01A322F010F6B00B00AEA /* Starscream */,
+				CC52F4E52F073393007149CB /* AsyncAlgorithms */,
 			);
 			productName = Robart;
 			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
@@ -358,6 +372,7 @@
 			packageReferences = (
 				CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */,
 				CCB01A312F010F6B00B00AEA /* XCRemoteSwiftPackageReference "Starscream" */,
+				CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
 			projectDirPath = "";
@@ -392,6 +407,7 @@
 				CCA9A1142C62D8A200B0401C /* float+Extensions.swift in Sources */,
 				CCA3B93E2C8FB7C400F15F9F /* Stopwatch.swift in Sources */,
 				CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */,
+				CC52F4E12F0730B4007149CB /* NewWebRtcClient.swift in Sources */,
 				CC1125352C93A9A5007AF247 /* Task+Extensions.swift in Sources */,
 				CC26CF622C9B682400ACC82E /* UIImage+Extensions.swift in Sources */,
 				CCA3B92D2C8CE26E00F15F9F /* CVPixelBuffer+Extensions.swift in Sources */,
@@ -580,6 +596,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -620,6 +637,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -659,6 +677,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
 		CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stasel/WebRTC.git";
@@ -678,6 +704,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		CC52F4E52F073393007149CB /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
 		CCB01A2C2F010F3D00B00AEA /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */;
