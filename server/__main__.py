@@ -64,10 +64,12 @@ def createServerConfigMessage(role: str) -> str:
         turn_ice_servers.append({ "url": turn_servers[i], "user": turn_users[i], "credential": turn_passwords[i] })
     return json.dumps({
         "type": "ServerConfigurationMessage",
-        "role": role,
-        "stunServers": stun_ice_servers,
-        "turnServers": turn_ice_servers,
-        "relayOnly": force_relay,
+        "config": {
+            "role": role,
+            "stunServers": stun_ice_servers,
+            "turnServers": turn_ice_servers,
+            "relayOnly": force_relay
+        }
     })
 
 # We store only up to two clients who have signaled readiness and been assigned a role.

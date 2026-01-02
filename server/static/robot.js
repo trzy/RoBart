@@ -57,31 +57,34 @@ function createICECandidateMessage(candidate) {
 }
 
 function createConnectionConfiguration(serverConfigMessage) {
+    let receivedConfig = serverConfigMessage.config;
+
     let config = {
         iceServers: [],
-        iceTransportPolicy: serverConfigMessage.relayOnly ? "relay" : "all"
+        iceTransportPolicy: receivedConfig.relayOnly ? "relay" : "all"
     };
 
     console.log(`ICE transport policy: ${config.iceTransportPolicy}`);
 
-    for (let i = 0; i < serverConfigMessage.stunServers.length; i++) {
-        let iceServer = { urls: serverConfigMessage.stunServers[i].url };
-        if (serverConfigMessage.stunServers[i].user) {
-            iceServer.username = serverConfigMessage.stunServers[i].user;
+
+    for (let i = 0; i < receivedConfig.stunServers.length; i++) {
+        let iceServer = { urls: receivedConfig.stunServers[i].url };
+        if (receivedConfig.stunServers[i].user) {
+            iceServer.username = receivedConfig.stunServers[i].user;
         }
-        if (serverConfigMessage.stunServers[i].credential) {
-            iceServer.credential = serverConfigMessage.stunServers[i].credential;
+        if (receivedConfig.stunServers[i].credential) {
+            iceServer.credential = receivedConfig.stunServers[i].credential;
         }
         config.iceServers.push(iceServer);
     }
 
-    for (let i = 0; i < serverConfigMessage.turnServers.length; i++) {
-        let iceServer = { urls: serverConfigMessage.turnServers[i].url };
-        if (serverConfigMessage.turnServers[i].user) {
-            iceServer.username = serverConfigMessage.turnServers[i].user;
+    for (let i = 0; i < receivedConfig.turnServers.length; i++) {
+        let iceServer = { urls: receivedConfig.turnServers[i].url };
+        if (receivedConfig.turnServers[i].user) {
+            iceServer.username = receivedConfig.turnServers[i].user;
         }
-        if (serverConfigMessage.turnServers[i].credential) {
-            iceServer.credential = serverConfigMessage.turnServers[i].credential;
+        if (receivedConfig.turnServers[i].credential) {
+            iceServer.credential = receivedConfig.turnServers[i].credential;
         }
         config.iceServers.push(iceServer);
     }
@@ -126,7 +129,7 @@ connectBtn.onclick = () => {
 
         if (message.type === 'ServerConfigurationMessage') {
             // Server assigned us a role
-            myRole = message.role;
+            myRole = message.config.role;
             updateStatus(`Role: ${myRole}`);
 
             // Create connection configuration
