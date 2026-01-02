@@ -78,23 +78,27 @@ struct ReadyToConnectMessage: Codable, JSONEncodable {
 
 
 struct ServerConfigurationMessage: Codable, JSONEncodable {
+    struct Server: Codable {
+        let url: String
+        let user: String?
+        let credential: String?
+    }
+
     var type: String { return "ServerConfigurationMessage" }
     let role: String
-    let turnServers: [String]
-    let turnUsers: [String?]
-    let turnPasswords: [String?]
+    let stunServers: [Server]
+    let turnServers: [Server]
     let relayOnly: Bool
 
     enum CodingKeys: String, CodingKey {
-        case type, role, turnServers, turnUsers, turnPasswords, relayOnly
+        case type, role, stunServers, turnServers, relayOnly
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         role = try container.decode(String.self, forKey: .role)
-        turnServers = try container.decode([String].self, forKey: .turnServers)
-        turnUsers = try container.decode([String?].self, forKey: .turnUsers)
-        turnPasswords = try container.decode([String?].self, forKey: .turnPasswords)
+        stunServers = try container.decode([Server].self, forKey: .stunServers)
+        turnServers = try container.decode([Server].self, forKey: .turnServers)
         relayOnly = try container.decode(Bool.self, forKey: .relayOnly)
     }
 
@@ -102,9 +106,8 @@ struct ServerConfigurationMessage: Codable, JSONEncodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(role, forKey: .role)
+        try container.encode(stunServers, forKey: .stunServers)
         try container.encode(turnServers, forKey: .turnServers)
-        try container.encode(turnUsers, forKey: .turnUsers)
-        try container.encode(turnPasswords, forKey: .turnPasswords)
         try container.encode(relayOnly, forKey: .relayOnly)
     }
 }

@@ -26,10 +26,10 @@ import WebRTC
 
 struct RemoteVideoView: UIViewRepresentable {
     private let _size: CGSize
-    private weak var _client: AsyncWebRtcClient?
+    private weak var _client: NewWebRtcClient?
     private var _view: RTCMTLVideoView?
 
-    init(size: CGSize, client: AsyncWebRtcClient) {
+    init(size: CGSize, client: NewWebRtcClient) {
         _size = size
         _client = client
     }
@@ -55,8 +55,8 @@ struct RemoteVideoView: UIViewRepresentable {
     }
 
     class Coordinator {
-        weak var client: AsyncWebRtcClient?
-        init(client: AsyncWebRtcClient?) {
+        weak var client: NewWebRtcClient?
+        init(client: NewWebRtcClient?) {
             self.client = client
         }
     }

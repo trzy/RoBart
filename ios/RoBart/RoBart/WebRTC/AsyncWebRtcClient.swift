@@ -111,19 +111,6 @@ actor AsyncWebRtcClient: ObservableObject {
     /// Connection object that is created per connection
     private var _peerConnection: RTCPeerConnection?
 
-    private let _stunServers = [
-        "stun:stun.l.google.com:19302",
-        "stun:stun.l.google.com:5349",
-        "stun:stun1.l.google.com:3478",
-        "stun:stun1.l.google.com:5349",
-        "stun:stun2.l.google.com:19302",
-        "stun:stun2.l.google.com:5349",
-        "stun:stun3.l.google.com:3478",
-        "stun:stun3.l.google.com:5349",
-        "stun:stun4.l.google.com:19302",
-        "stun:stun4.l.google.com:5349"
-    ]
-
     private let _mediaConstraints = RTCMediaConstraints(
         mandatoryConstraints: [
             kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue,
@@ -166,10 +153,15 @@ actor AsyncWebRtcClient: ObservableObject {
     }
 
     struct ServerConfiguration {
+        struct Server {
+            let url: String
+            let user: String?
+            let credential: String?
+        }
+
         let role: Role
-        let turnServers: [String]
-        let turnUsers: [String?]
-        let turnPasswords: [String?]
+        let stunServers: [Server]
+        let turnServers: [Server]
         let relayOnly: Bool
     }
 
@@ -575,8 +567,6 @@ actor AsyncWebRtcClient: ObservableObject {
         // Await role. This waits indefinitely unless the entire task is canceled by a disconnect
         for await config in configStream {
             _serverConfigContinuation = nil
-            let servers = config.turnServers.count == 0 ? "none" : (config.turnServers.joined(separator: ", "))
-            log("Received server configuration: role=\(config.role == .initiator ? "initiator" : "responder"), TURN server=\(servers)")
             return config
         }
 
@@ -619,25 +609,10 @@ actor AsyncWebRtcClient: ObservableObject {
         config.tcpCandidatePolicy = .enabled
         config.keyType = .ECDSA
 
-        // STUN servers
-        var iceServers = [
-            RTCIceServer(urlStrings: _stunServers)
-        ]
-
-        // TURN servers, if we have any
-        if serverConfig.turnServers.count != serverConfig.turnUsers.count || serverConfig.turnUsers.count != serverConfig.turnPasswords.count {
-            logError("Ignoring TURN servers because server \(serverConfig.turnServers.count), username \(serverConfig.turnUsers.count), and password (\(serverConfig.turnPasswords.count)) counts do not match")
-        } else {
-            for i in 0..<serverConfig.turnServers.count {
-                let turnServer = RTCIceServer(
-                    urlStrings: [ serverConfig.turnServers[i] ],
-                    username: serverConfig.turnUsers[i],
-                    credential: serverConfig.turnPasswords[i]
-                )
-                iceServers.append(turnServer)
-            }
-        }
-
+        // ICE servers
+        var iceServers: [RTCIceServer] = []
+        addIceServers(to: &iceServers, from: serverConfig.stunServers)
+        addIceServers(to: &iceServers, from: serverConfig.turnServers)
         config.iceServers = iceServers
 
         config.iceTransportPolicy = serverConfig.relayOnly ? .relay : .all
@@ -654,6 +629,13 @@ actor AsyncWebRtcClient: ObservableObject {
         )
 
         return (config, constraints)
+    }
+
+    private func addIceServers(to iceServers: inout [RTCIceServer], from servers: [AsyncWebRtcClient.ServerConfiguration.Server]) {
+        for server in servers {
+            let iceServer = RTCIceServer(urlStrings: [server.url], username: server.user, credential: server.credential)
+            iceServers.append(iceServer)
+        }
     }
 
     private func closeConnection() {
