@@ -212,7 +212,9 @@ function initPeerConnection() {
     }
     pc = new RTCPeerConnection(config);
 
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    if (localStream) {
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    }
 
     // ICE candidate handling
     pc.onicecandidate = (e) => {
