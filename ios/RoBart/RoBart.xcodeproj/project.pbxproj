@@ -16,7 +16,6 @@
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
 		CC52F4DE2F021B30007149CB /* RemoteVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4DD2F021B2B007149CB /* RemoteVideoView.swift */; };
 		CC52F4E12F0730B4007149CB /* AsyncWebRtcClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC52F4E02F0730AF007149CB /* AsyncWebRtcClient.swift */; };
-		CC52F4E62F073393007149CB /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = CC52F4E52F073393007149CB /* AsyncAlgorithms */; };
 		CC66808C2F01C7030029C49A /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808B2F01C7000029C49A /* Settings.swift */; };
 		CC66808E2F01C7CE0029C49A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC66808D2F01C7CC0029C49A /* SettingsView.swift */; };
 		CC7C1CBB2C786DCD003BFA0B /* AsyncStreamMulticaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CBA2C786DCD003BFA0B /* AsyncStreamMulticaster.swift */; };
@@ -133,7 +132,6 @@
 			files = (
 				CCB01A2D2F010F3D00B00AEA /* WebRTC in Frameworks */,
 				CCB01A332F010F6B00B00AEA /* Starscream in Frameworks */,
-				CC52F4E62F073393007149CB /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,7 +330,6 @@
 			packageProductDependencies = (
 				CCB01A2C2F010F3D00B00AEA /* WebRTC */,
 				CCB01A322F010F6B00B00AEA /* Starscream */,
-				CC52F4E52F073393007149CB /* AsyncAlgorithms */,
 			);
 			productName = Robart;
 			productReference = CCA9A0F82C62D35E00B0401C /* RoBart.app */;
@@ -366,7 +363,6 @@
 			packageReferences = (
 				CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */,
 				CCB01A312F010F6B00B00AEA /* XCRemoteSwiftPackageReference "Starscream" */,
-				CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
 			projectDirPath = "";
@@ -669,14 +665,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.1;
-			};
-		};
 		CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stasel/WebRTC.git";
@@ -696,11 +684,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CC52F4E52F073393007149CB /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CC52F4E42F073393007149CB /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
 		CCB01A2C2F010F3D00B00AEA /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CCB01A2B2F010F3D00B00AEA /* XCRemoteSwiftPackageReference "WebRTC" */;
