@@ -147,12 +147,14 @@ actor AsyncWebRtcClient: ObservableObject {
     nonisolated private let _audioQueue = DispatchQueue(label: "audioSessionConfiguration")
 
     private var _desiredCamera = CameraType.backDefault
+    private var _desiredZoom: Float = 1.0
 
     private var _dataChannel: RTCDataChannel?
     private var _videoCapturer: RTCVideoCapturer?
     private var _localVideoTrack: RTCVideoTrack?
     private var _remoteVideoTrack: RTCVideoTrack?
     private var _isCapturing = false
+    private var _camera: AVCaptureDevice?
 
     // MARK: API
 
@@ -287,6 +289,12 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    func setZoom(_ zoom: Float) async {
+        _desiredZoom = zoom
+        log("Zoom \(zoom) requested")
+        setZoomFactor(for: _camera)
+    }
+
     func onServerConfigurationReceived(_ config: ServerConfiguration) async {
         _eventContinuation.yield(.serverConfigurationReceived(config))
     }
@@ -336,6 +344,7 @@ actor AsyncWebRtcClient: ObservableObject {
             _localVideoTrack = nil
             _remoteVideoTrack = nil
             _isCapturing = false
+            _camera = nil
         }
 
         defer {
@@ -585,15 +594,29 @@ actor AsyncWebRtcClient: ObservableObject {
             return
         }
 
+        setZoomFactor(for: camera)
         capturer.startCapture(with: camera, format: format, fps: Int(fps.maxFrameRate))
         switchAudioToSpeakerphone() // must configure audio here
         _isCapturing = true
+        _camera = camera
 
         log("Started video capture: \(format.formatDescription)")
         log("Camera: \(cameraParams)")
 
         // Send camera parameters to signal server in case the other client wants them
         _cameraParamsToSendContinuation.yield(cameraParams)
+    }
+
+    private func setZoomFactor(for camera: AVCaptureDevice?) {
+        guard let camera = camera else { return }
+        do {
+            try camera.lockForConfiguration()
+            let zoom = CGFloat(_desiredZoom)
+            camera.videoZoomFactor = max(min(zoom, camera.maxAvailableVideoZoomFactor), camera.minAvailableVideoZoomFactor)
+            camera.unlockForConfiguration()
+        } catch {
+            logError("Unable to change zoom factor: \(error)")
+        }
     }
 
     /// Use speaker output. This must be done after each new connection and audio track are created
