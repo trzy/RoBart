@@ -186,6 +186,8 @@ connectBtn.onclick = () => {
             } catch (err) {
                 console.error('Error adding ICE candidate:', err);
             }
+        } else if (message.type == 'CameraParametersMessage') {
+            updateCameraZoomSlider(message);
         } else if (message.type == 'HelloMessage') {
             console.log('Peer said hello:', message.message);
         }
@@ -427,6 +429,40 @@ throttleSlider.addEventListener('change', (e) => {
     console.log('Throttle changed to:', throttle);
 });
 
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomLabel = document.getElementById('zoomLabel');
+
+function updateCameraZoomSlider(message) {
+    const minZoom = message.params.minZoom;
+    const maxZoom = message.params.maxZoom;
+    const value = getZoomValue();
+    const range = maxZoom - minZoom;
+    const stepSize = range / 100;
+    zoomSlider.min = minZoom;
+    zoomSlider.max = maxZoom;
+    zoomSlider.step = stepSize;
+    zoomSlider.value = Math.min(Math.max(value, minZoom), maxZoom);
+    zoomLabel.textContent = `Zoom: ${value.toFixed(1)}x`;
+    zoomSlider.disabled = false;    // enable slider
+}
+
+function getZoomValue() {
+    return parseFloat(zoomSlider.value)
+}
+
+function sendZoomValueToPeer() {
+    const value = getZoomValue();
+    if (dataChannel && dataChannel.readyState == 'open') {
+        dataChannel.send(`z${value}`);
+    }
+}
+
+zoomSlider.addEventListener('input', (e) => {
+    const value = getZoomValue().toFixed(1);
+    zoomLabel.textContent = `Zoom: ${value}x`;
+    sendZoomValueToPeer();
+});
+
 window.addEventListener("blur", (event) => {
     // Window lost focus
     inputDirection = MotionDirection.STOP;
@@ -444,6 +480,7 @@ cameraSelectMenu.addEventListener("change", function(event) {
     if (dataChannel && dataChannel.readyState == 'open') {
         dataChannel.send(`c${selectedValue}`);
     }
+    sendZoomValueToPeer();
 });
 
 let lastTime = 0;
