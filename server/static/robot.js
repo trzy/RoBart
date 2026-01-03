@@ -1,6 +1,29 @@
-/*
- * RoBart control
- */
+//
+//  robot.js
+//  RoBart
+//
+//  Created by Bart Trzynadlowski on 12/28/25.
+//
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
+
+
+/***************************************************************************************************
+ Global State
+***************************************************************************************************/
 
 let pc = null;
 let dataChannel = null;
@@ -15,92 +38,12 @@ let config = null;
 const websocketEndpoint = document.getElementById('websocketEndpoint');
 const connectBtn = document.getElementById('connectBtn');
 const transmitVideoBtn = document.getElementById('transmitVideoBtn');
-//const sendBtn = document.getElementById('sendBtn');
-//const messageInput = document.getElementById('messageInput');
-//const messagesDiv = document.getElementById('messages');
 const statusDiv = document.getElementById('status');
 
-function enqueueICECandidate(candidate) {
-    iceCandidateQueue.push(candidate);
-}
 
-async function processEnqueuedICECandidates() {
-    for (const candidate of iceCandidateQueue) {
-        await pc.addIceCandidate(candidate);
-    }
-    console.log(`Processed ${iceCandidateQueue.length} enqueued ICE candidates`);
-    iceCandidateQueue = [];
-
-}
-
-function createReadyToConnectMessage() {
-    const message = { type: "ReadyToConnectMessage" }
-    return JSON.stringify(message)
-}
-
-function createOfferMessageFromLocalDescription() {
-    const offer = JSON.stringify(pc.localDescription);
-    const message = { type: "OfferMessage", data: offer };
-    return JSON.stringify(message);
-}
-
-function createAnswerMessageFromLocalDescription() {
-    const offer = JSON.stringify(pc.localDescription);
-    const message = { type: "AnswerMessage", data: offer };
-    return JSON.stringify(message);
-}
-
-function createICECandidateMessage(candidate) {
-    console.log("ICE JSON: " + JSON.stringify(candidate));
-    const message = { type: "ICECandidateMessage", data: JSON.stringify(candidate) };
-    return JSON.stringify(message);
-}
-
-function createConnectionConfiguration(serverConfigMessage) {
-    let receivedConfig = serverConfigMessage.config;
-
-    let config = {
-        iceServers: [],
-        iceTransportPolicy: receivedConfig.relayOnly ? "relay" : "all"
-    };
-
-    console.log(`ICE transport policy: ${config.iceTransportPolicy}`);
-
-
-    for (let i = 0; i < receivedConfig.stunServers.length; i++) {
-        let iceServer = { urls: receivedConfig.stunServers[i].url };
-        if (receivedConfig.stunServers[i].user) {
-            iceServer.username = receivedConfig.stunServers[i].user;
-        }
-        if (receivedConfig.stunServers[i].credential) {
-            iceServer.credential = receivedConfig.stunServers[i].credential;
-        }
-        config.iceServers.push(iceServer);
-    }
-
-    for (let i = 0; i < receivedConfig.turnServers.length; i++) {
-        let iceServer = { urls: receivedConfig.turnServers[i].url };
-        if (receivedConfig.turnServers[i].user) {
-            iceServer.username = receivedConfig.turnServers[i].user;
-        }
-        if (receivedConfig.turnServers[i].credential) {
-            iceServer.credential = receivedConfig.turnServers[i].credential;
-        }
-        config.iceServers.push(iceServer);
-    }
-
-    return config;
-}
-
-function stop() {
-    if (pc) {
-        pc.close();
-        pc = null;
-    }
-    dataChannel = null;
-    iceCandidateQueue = [];
-    console.log('Stopped connection: cleanup complete');
-}
+/***************************************************************************************************
+ Signal Server
+***************************************************************************************************/
 
 function autoDetectWebSocketEndpoint() {
     const protocol = window.location.protocol == "https:" ? "wss:" : "ws:";
@@ -204,6 +147,93 @@ connectBtn.onclick = () => {
     };
 };
 
+
+/***************************************************************************************************
+ WebRTC
+***************************************************************************************************/
+
+function enqueueICECandidate(candidate) {
+    iceCandidateQueue.push(candidate);
+}
+
+async function processEnqueuedICECandidates() {
+    for (const candidate of iceCandidateQueue) {
+        await pc.addIceCandidate(candidate);
+    }
+    console.log(`Processed ${iceCandidateQueue.length} enqueued ICE candidates`);
+    iceCandidateQueue = [];
+
+}
+
+function createReadyToConnectMessage() {
+    const message = { type: "ReadyToConnectMessage" }
+    return JSON.stringify(message)
+}
+
+function createOfferMessageFromLocalDescription() {
+    const offer = JSON.stringify(pc.localDescription);
+    const message = { type: "OfferMessage", data: offer };
+    return JSON.stringify(message);
+}
+
+function createAnswerMessageFromLocalDescription() {
+    const offer = JSON.stringify(pc.localDescription);
+    const message = { type: "AnswerMessage", data: offer };
+    return JSON.stringify(message);
+}
+
+function createICECandidateMessage(candidate) {
+    console.log("ICE JSON: " + JSON.stringify(candidate));
+    const message = { type: "ICECandidateMessage", data: JSON.stringify(candidate) };
+    return JSON.stringify(message);
+}
+
+function createConnectionConfiguration(serverConfigMessage) {
+    let receivedConfig = serverConfigMessage.config;
+
+    let config = {
+        iceServers: [],
+        iceTransportPolicy: receivedConfig.relayOnly ? "relay" : "all"
+    };
+
+    console.log(`ICE transport policy: ${config.iceTransportPolicy}`);
+
+
+    for (let i = 0; i < receivedConfig.stunServers.length; i++) {
+        let iceServer = { urls: receivedConfig.stunServers[i].url };
+        if (receivedConfig.stunServers[i].user) {
+            iceServer.username = receivedConfig.stunServers[i].user;
+        }
+        if (receivedConfig.stunServers[i].credential) {
+            iceServer.credential = receivedConfig.stunServers[i].credential;
+        }
+        config.iceServers.push(iceServer);
+    }
+
+    for (let i = 0; i < receivedConfig.turnServers.length; i++) {
+        let iceServer = { urls: receivedConfig.turnServers[i].url };
+        if (receivedConfig.turnServers[i].user) {
+            iceServer.username = receivedConfig.turnServers[i].user;
+        }
+        if (receivedConfig.turnServers[i].credential) {
+            iceServer.credential = receivedConfig.turnServers[i].credential;
+        }
+        config.iceServers.push(iceServer);
+    }
+
+    return config;
+}
+
+function stop() {
+    if (pc) {
+        pc.close();
+        pc = null;
+    }
+    dataChannel = null;
+    iceCandidateQueue = [];
+    console.log('Stopped connection: cleanup complete');
+}
+
 // Initialize peer connection
 function initPeerConnection() {
     if (pc) {
@@ -285,23 +315,6 @@ async function createOffer() {
     updateStatus('Sent offer, waiting for answer...');
 }
 
-// // Send message
-// sendBtn.onclick = () => {
-//     const msg = messageInput.value.trim();
-//     if (msg && dataChannel && dataChannel.readyState === 'open') {
-//         dataChannel.send(msg);
-//         addMessage('You: ' + msg, 'sent');
-//         messageInput.value = '';
-//     }
-// };
-
-// Send on Enter key
-// messageInput.onkeypress = (e) => {
-//     if (e.key === 'Enter') {
-//         sendBtn.onclick();
-//     }
-// };
-
 // UI helpers
 function addMessage(text, className) {
     const div = document.createElement('div');
@@ -315,9 +328,6 @@ function updateStatus(text) {
     statusDiv.textContent = 'Status: ' + text;
     console.log(`Status: ${text}`);
 }
-
-// Disable send initially
-// sendBtn.disabled = true;
 
 
 /***************************************************************************************************
@@ -506,6 +516,7 @@ function animationLoop(timestamp) {
 }
 
 requestAnimationFrame(animationLoop);
+
 
 /***************************************************************************************************
  Video and Audio
