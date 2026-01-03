@@ -3,6 +3,15 @@
 
 This is the `webrtc-teleop` branch of RoBart. Please [see here](https://github.com/trzy/RoBart) for the main branch containing VLM-controlled RoBart. This branch contains a simple implementation of WebRTC-based teleoperation for RoBart. All of the VLM and AR features have been removed.
 
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/shorts/HwhRln_GHCM"><img src="docs/Readme/Images/nye_cover.jpg" /></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://www.youtube.com/shorts/HwhRln_GHCM">Happy 2026 from teleoperated RoBart!</a></td>
+  </tr>
+</table>
+
 ## Usage
 
 ### Basic Usage
