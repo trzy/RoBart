@@ -43,13 +43,14 @@ actor AsyncWebRtcClient: ObservableObject {
     fileprivate enum InternalError: Error {
         case failedToCreatePeerConnection
         case failedToCreateLocalSdpString
-        case noPeerConnection(state: State)
+        case noPeerConnection(state: SdpExchangeState)
         case sdpExchangeTimedOut
         case peerConnectionTimedOut
         case peerDisconnected
+        case internalConsistencyViolation(message: String)
     }
 
-    fileprivate enum State {
+    fileprivate enum SdpExchangeState {
         case readyToStart
         case awaitingServerConfiguration
         case creatingPeerConnection
@@ -58,19 +59,23 @@ actor AsyncWebRtcClient: ObservableObject {
         case sdpExchangeComplete
     }
 
-    private var _state = State.readyToStart
+    private var _sdpExchangeState = SdpExchangeState.readyToStart
 
-    fileprivate enum Event {
-        case timeoutCheck
+    fileprivate enum SdpExchangeEvent {
         case serverConfigurationReceived(ServerConfiguration)
         case remoteSdpReceived(RTCSessionDescription)
-        case iceCandidateReceived(RTCIceCandidate)
-        case peerConnectionStateChanged(RTCPeerConnectionState)
     }
 
-    private let _eventStream: AsyncStream<Event>
-    private let _eventContinuation: AsyncStream<Event>.Continuation
+    // Internal state streams that must be created each connection session (when the task is
+    // canceled or an error thrown, these get shut down)
+    private var _sdpEventStream: AsyncStream<SdpExchangeEvent>?
+    private var _sdpEventContinuation: AsyncStream<SdpExchangeEvent>.Continuation?
+    private var _receivedIceCandidateStream: AsyncStream<RTCIceCandidate>?
+    private var _receivedIceCandidateContinuation: AsyncStream<RTCIceCandidate>.Continuation?
+    private var _peerConnectionStateStream: AsyncStream<RTCPeerConnectionState>?
+    private var _peerConnectionStateContinuation: AsyncStream<RTCPeerConnectionState>.Continuation?
 
+    // Outbound stream
     private let _isConnectedContinuation: AsyncStream<Bool>.Continuation
     private let _readyToConnectSignalContinuation: AsyncStream<Void>.Continuation
     private let _offerToSendContinuation: AsyncStream<String>.Continuation
@@ -186,7 +191,6 @@ actor AsyncWebRtcClient: ObservableObject {
     let textDataReceived: AsyncStream<String>
 
     init() {
-        (_eventStream, _eventContinuation) = Self.createStream()
         (isConnected, _isConnectedContinuation) = Self.createStream()
         (readyToConnectSignal, _readyToConnectSignalContinuation) = Self.createStream()
         (offerToSend, _offerToSendContinuation) = Self.createStream()
@@ -198,20 +202,12 @@ actor AsyncWebRtcClient: ObservableObject {
         // Delegate adapters -- needed to work around actor restrictions
         _rtcDelegateAdapter = RtcDelegateAdapter()
         _rtcDelegateAdapter.client = self
-
-        // Create a timeout check task that always runs
-        Task {
-            while true {
-                try? await Task.sleep(for: .seconds(1))
-                _eventContinuation.yield(.timeoutCheck)
-            }
-        }
     }
 
     /// Runs the client forever. Continously attempts to form a connection.
     func run() async {
         while true {
-            setState(.readyToStart)
+            setSdpExchangeState(.readyToStart)
             let task = Task { return await runOneSession() }
             _task = task
             let wasCanceled = await task.value
@@ -274,7 +270,7 @@ actor AsyncWebRtcClient: ObservableObject {
     /// etc.)
     /// - Parameter config: Configuration object received from signal server.
     func onServerConfigurationReceived(_ config: ServerConfiguration) async {
-        _eventContinuation.yield(.serverConfigurationReceived(config))
+        _sdpEventContinuation?.yield(.serverConfigurationReceived(config))
     }
 
     /// Notify client of offer received from peer via signal server.
@@ -283,7 +279,7 @@ actor AsyncWebRtcClient: ObservableObject {
         log("Received offer")
         guard let offer = Offer.decode(jsonString: jsonString) else { return }
         let sdp = RTCSessionDescription(type: .offer, sdp: offer.sdp)
-        _eventContinuation.yield(.remoteSdpReceived(sdp))
+        _sdpEventContinuation?.yield(.remoteSdpReceived(sdp))
     }
 
     /// Notify client of answer received from peer via signal server.
@@ -292,7 +288,7 @@ actor AsyncWebRtcClient: ObservableObject {
         log("Received answer")
         guard let answer = Answer.decode(jsonString: jsonString) else { return }
         let sdp = RTCSessionDescription(type: .answer, sdp: answer.sdp)
-        _eventContinuation.yield(.remoteSdpReceived(sdp))
+        _sdpEventContinuation?.yield(.remoteSdpReceived(sdp))
     }
 
     /// Notify client of ICE candidate received from peer via signal server.
@@ -304,7 +300,7 @@ actor AsyncWebRtcClient: ObservableObject {
             sdpMLineIndex: iceCandidate.sdpMLineIndex,
             sdpMid: iceCandidate.sdpMid
         )
-        _eventContinuation.yield(.iceCandidateReceived(candidate))
+        _receivedIceCandidateContinuation?.yield(candidate)
     }
 
     /// Send text message over the data channel to the remote peer, if it is connected.
@@ -323,143 +319,57 @@ actor AsyncWebRtcClient: ObservableObject {
     private func runOneSession() async -> Bool {
         var peerConnection: RTCPeerConnection?
 
-        func closeConnection() {
-            stopCapture()
-            peerConnection?.close()
-            peerConnection = nil
-            _dataChannel = nil
-            _videoCapturer = nil
-            _localVideoTrack = nil
-            _remoteVideoTrack = nil
-            _isCapturing = false
-            _camera = nil
+        defer {
+            closeConnection(&peerConnection)
         }
 
-        defer {
-            closeConnection()
-        }
+        // Once the task dies, these streams cannot be reused, so must be created here each time
+        (_sdpEventStream, _sdpEventContinuation) = Self.createStream()
+        (_receivedIceCandidateStream, _receivedIceCandidateContinuation) = Self.createStream()
+        (_peerConnectionStateStream, _peerConnectionStateContinuation) = Self.createStream()
 
         do {
-            sendReadyToConnectSignal()
-
+            // State variables used only within our child tasks
             var sdpExchangeDeadline: Date?
             var initialConnectionFormedDeadline: Date?
             var isConnected = false
 
-            // Note: do not mistake this AsyncStream for a queue :)
-            for await event in _eventStream {
-                switch event {
-                case .serverConfigurationReceived(let config):
-                    setState(.creatingPeerConnection)
-
-                    if peerConnection != nil {
-                        log("Unexpectedly received another server configuration. Restarting session state machine.")
-
-                        // Peer must be retrying its connection, we need to restart. Because we
-                        // received the server configuration, we cannot abort the process or we
-                        // will end up causing a "livelock" by causing the signal server to send
-                        // the configuration *again*, interrupting the peer and so forth.
-                        closeConnection()
-                        sdpExchangeDeadline = nil
-                        initialConnectionFormedDeadline = nil
-                        if isConnected {
-                            _isConnectedContinuation.yield(false)
-                        }
-                        isConnected = false
-                    }
-
-                    _pendingIceCandidates = []
-                    peerConnection = try await createConnection(with: config)
-
-                    if config.role == .initiator {
-                        try await createAndSendOffer(for: peerConnection!)
-                        setState(.awaitingAnswer)
-                    } else {
-                        setState(.awaitingOffer)
-                    }
-
-                    sdpExchangeDeadline = Date.now.advanced(by: 10)
-
-                case .remoteSdpReceived(let sdp):
-                    log("Handling remote SDP...")
-
-                    guard let peerConnection = peerConnection else {
-                        throw InternalError.noPeerConnection(state: _state)
-                    }
-
-                    try await peerConnection.setRemoteDescription(sdp)
-                    precondition(peerConnection.remoteDescription?.sdp != nil)
-
-                    // Once remote description is set, we can immediately process ICE candidates
-                    for candidate in _pendingIceCandidates {
-                        try await peerConnection.add(candidate)
-                    }
-                    log("Added \(_pendingIceCandidates.count) ICE candidates from pending queue")
-                    _pendingIceCandidates = []
-
-                    if _state == .awaitingOffer {
-                        try await createAndSendAnswer(for: peerConnection)
-                    }
-
-                    setState(.sdpExchangeComplete)
-
-                    // Once SDP exchanged, we expect connection to form
-                    sdpExchangeDeadline = nil
-                    initialConnectionFormedDeadline = Date.now.advanced(by: 10)
-
-                case .iceCandidateReceived(let candidate):
-                    if let peerConnection = peerConnection,
-                       _state == .sdpExchangeComplete {
-                        // SDP exchange must be complete, we can accept ICE candidates
-                        try await peerConnection.add(candidate)
-                        log("Added ICE candidate")
-                    } else {
-                        _pendingIceCandidates.append(candidate)
-                        log("Enqueued ICE candidate because state=\(_state)")
-                    }
-
-                case .peerConnectionStateChanged(let newState):
-                    if newState == .connected {
-                        // Connected in time, cancel timeout check
-                        if initialConnectionFormedDeadline != nil {
-                            log("Initial peer connection acknowledged")
-                            initialConnectionFormedDeadline = nil
-                        }
-
-                        // Start media capture once connected
-                        startCapture()
-                    }
-
-                    // Pass along to outside subscriber if connected status changed
-                    let wasConnected = isConnected
-                    isConnected = newState == .connected
-                    if wasConnected != isConnected {
-                        _isConnectedContinuation.yield(isConnected)
-                    }
-
-                    // Detect connection failures
-                    if newState == .failed {
-                        if initialConnectionFormedDeadline != nil {
-                            log("Connection never formed")
-                        } else {
-                            log("Disconnected")
-                        }
-                        throw InternalError.peerDisconnected
-                    }
-
-                case .timeoutCheck:
-                    if _state == .awaitingAnswer || _state == .awaitingOffer,
-                       let deadline = sdpExchangeDeadline {
-                        if Date.now >= deadline {
-                            throw InternalError.sdpExchangeTimedOut
-                        }
-                    } else if _state == .sdpExchangeComplete,
-                              let deadline = initialConnectionFormedDeadline {
-                        if Date.now >= deadline {
-                            throw InternalError.peerConnectionTimedOut
-                        }
-                    }
+            // SDP exchange is the main task. ICE candidates have to be handled in parallel because
+            // main task might be waiting while candidates trickle in. Anything driven by RTC state
+            // changes should also be handled in parallel so as not to be blocked by the main SDP
+            // task.
+            try await withThrowingTaskGroup{ group in
+                group.addTask { [weak self] in
+                    try await self?.runSdpExchange(
+                        for: &peerConnection,
+                        isConnected: &isConnected,
+                        sdpExchangeDeadline: &sdpExchangeDeadline,
+                        initialConnectionFormedDeadline: &initialConnectionFormedDeadline
+                    )
                 }
+
+                group.addTask { [weak self] in
+                    try await self?.runIceCandidateProcessing(for: &peerConnection)
+                }
+
+                group.addTask { [weak self] in
+                    try await self?.runConnectionMonitor(
+                        isConnected: &isConnected,
+                        initialConnectionFormedDeadline: &initialConnectionFormedDeadline
+                    )
+                }
+
+                group.addTask { [weak self] in
+                    try await self?.runTimeoutMonitor(
+                        sdpExchangeDeadline: &sdpExchangeDeadline,
+                        initialConnectionFormedDeadline: &initialConnectionFormedDeadline
+                    )
+                }
+
+                sendReadyToConnectSignal()
+
+                // Wait for all and rethrow any exceptions
+                for try await _ in group {}
             }
 
             // Can only fall through here if canceled
@@ -474,13 +384,173 @@ actor AsyncWebRtcClient: ObservableObject {
         return false
     }
 
-    private func setState(_ newState: State) {
+    private func setSdpExchangeState(_ newState: SdpExchangeState) {
         log("State: \(newState)")
-        _state = newState
+        _sdpExchangeState = newState
     }
 
     private func sendReadyToConnectSignal() {
         _readyToConnectSignalContinuation.yield()
+    }
+
+    private func closeConnection(_ peerConnection: inout RTCPeerConnection?) {
+        log("Closing peer connection")
+        stopCapture()
+        peerConnection?.close()
+        peerConnection = nil
+        _dataChannel = nil
+        _videoCapturer = nil
+        _localVideoTrack = nil
+        _remoteVideoTrack = nil
+        _isCapturing = false
+        _camera = nil
+    }
+
+    /// Manages the main SDP exchange flow that is the backbone of the WebRTC state machine.
+    private func runSdpExchange(for peerConnection: inout RTCPeerConnection?, isConnected: inout Bool, sdpExchangeDeadline: inout Date?, initialConnectionFormedDeadline: inout Date?) async throws {
+        guard let sdpEventStream = _sdpEventStream else {
+            throw InternalError.internalConsistencyViolation(message: "SDP event stream not available")
+        }
+
+        // Note: do not mistake this AsyncStream for a queue :)
+        for await event in sdpEventStream {
+            switch event {
+            case .serverConfigurationReceived(let config):
+                setSdpExchangeState(.creatingPeerConnection)
+
+                if peerConnection != nil {
+                    log("Unexpectedly received another server configuration. Restarting session state machine.")
+
+                    // Peer must be retrying its connection, we need to restart. Because we
+                    // received the server configuration, we cannot abort the process or we
+                    // will end up causing a "livelock" by causing the signal server to send
+                    // the configuration *again*, interrupting the peer and so forth.
+                    closeConnection(&peerConnection)
+                    sdpExchangeDeadline = nil
+                    initialConnectionFormedDeadline = nil
+                    if isConnected {
+                        _isConnectedContinuation.yield(false)
+                    }
+                    isConnected = false
+                }
+
+                _pendingIceCandidates = []
+                peerConnection = try await createConnection(with: config)
+
+                if config.role == .initiator {
+                    try await createAndSendOffer(for: peerConnection!)
+                    setSdpExchangeState(.awaitingAnswer)
+                } else {
+                    setSdpExchangeState(.awaitingOffer)
+                }
+
+                sdpExchangeDeadline = Date.now.advanced(by: 10)
+
+            case .remoteSdpReceived(let sdp):
+                log("Handling remote SDP...")
+
+                guard let peerConnection = peerConnection else {
+                    throw InternalError.noPeerConnection(state: _sdpExchangeState)
+                }
+
+                try await peerConnection.setRemoteDescription(sdp)
+                precondition(peerConnection.remoteDescription?.sdp != nil)
+
+                // Once remote description is set, we can immediately process ICE candidates
+                try await processPendingIceCandidates(for: peerConnection)
+
+                if _sdpExchangeState == .awaitingOffer {
+                    try await createAndSendAnswer(for: peerConnection)
+                }
+
+                setSdpExchangeState(.sdpExchangeComplete)
+
+                // Once SDP exchanged, we expect connection to form
+                sdpExchangeDeadline = nil
+                initialConnectionFormedDeadline = Date.now.advanced(by: 10)
+
+                // Process any other candidates that may have trickled in
+                try await processPendingIceCandidates(for: peerConnection)
+            }
+        }
+    }
+
+    /// ICE candidates ought to be processed as soon as the remote SDP has been set but may arrive
+    /// earlier and must be enqueued until it is possible to process them.
+    private func runIceCandidateProcessing(for peerConnection: inout RTCPeerConnection?) async throws {
+        guard let receivedIceCandidateStream = _receivedIceCandidateStream else {
+            throw InternalError.internalConsistencyViolation(message: "ICE candidate stream not available")
+        }
+
+        for await candidate in receivedIceCandidateStream {
+            if let peerConnection = peerConnection,
+               peerConnection.remoteDescription != nil {
+                // SDP exchange must be complete, we can accept ICE candidates
+                try await processPendingIceCandidates(for: peerConnection)
+                try await peerConnection.add(candidate)
+                log("Added ICE candidate")
+            } else {
+                _pendingIceCandidates.append(candidate)
+                log("Enqueued ICE candidate because state=\(_sdpExchangeState)")
+            }
+        }
+    }
+
+    /// We monitor the final peer connection state to decide when to begin transmitting media. We
+    /// also present a simplified binary connection state to the outside world.
+    private func runConnectionMonitor(isConnected: inout Bool, initialConnectionFormedDeadline: inout Date?) async throws {
+        guard let peerConnectionStateStream = _peerConnectionStateStream else {
+            throw InternalError.internalConsistencyViolation(message: "Peer connection state stream not available")
+        }
+
+        for await newState in peerConnectionStateStream {
+            if newState == .connected {
+                // Connected in time, cancel timeout check
+                if initialConnectionFormedDeadline != nil {
+                    log("Initial peer connection acknowledged")
+                    initialConnectionFormedDeadline = nil
+                }
+
+                // Start media capture once connected
+                startCapture()
+            }
+
+            // Pass along to outside subscriber if connected status changed
+            let wasConnected = isConnected
+            isConnected = newState == .connected
+            if wasConnected != isConnected {
+                _isConnectedContinuation.yield(isConnected)
+            }
+
+            // Detect connection failures
+            if newState == .failed {
+                if initialConnectionFormedDeadline != nil {
+                    log("Connection never formed")
+                } else {
+                    log("Disconnected")
+                }
+                throw InternalError.peerDisconnected
+            }
+        }
+    }
+
+    /// Check for timeouts: SDP exchange should happen within a reasonable amount of time and then,
+    /// an initial connection should be formed, too.
+    private func runTimeoutMonitor(sdpExchangeDeadline: inout Date?, initialConnectionFormedDeadline: inout Date?) async throws {
+        while true {
+            if _sdpExchangeState == .awaitingAnswer || _sdpExchangeState == .awaitingOffer,
+               let deadline = sdpExchangeDeadline {
+                if Date.now >= deadline {
+                    throw InternalError.sdpExchangeTimedOut
+                }
+            } else if _sdpExchangeState == .sdpExchangeComplete,
+                      let deadline = initialConnectionFormedDeadline {
+                if Date.now >= deadline {
+                    throw InternalError.peerConnectionTimedOut
+                }
+            }
+            try await Task.sleep(for: .seconds(1))
+        }
     }
 
     private func createConnection(with serverConfig: ServerConfiguration) async throws -> RTCPeerConnection {
@@ -554,6 +624,17 @@ actor AsyncWebRtcClient: ObservableObject {
             let iceServer = RTCIceServer(urlStrings: [server.url], username: server.user, credential: server.credential)
             iceServers.append(iceServer)
         }
+    }
+
+    private func processPendingIceCandidates(for peerConnection: RTCPeerConnection) async throws {
+        guard peerConnection.remoteDescription?.sdp != nil else { return }
+        var numProcessed = 0
+        while let candidate = _pendingIceCandidates.first {
+            try await peerConnection.add(candidate)
+            numProcessed += 1
+            _pendingIceCandidates.removeFirst()
+        }
+        log("Added \(numProcessed) ICE candidates from pending queue (state=\(_sdpExchangeState))")
     }
 
     private func createAudioTrack() -> RTCAudioTrack {
@@ -745,7 +826,7 @@ extension AsyncWebRtcClient.RtcDelegateAdapter: RTCPeerConnectionDelegate {
         ]
         let stateName = stateToString[newState] ?? "unknown (\(newState.rawValue))"
         log("Peer connection state: \(stateName)")
-        Task { client?._eventContinuation.yield(.peerConnectionStateChanged(newState)) }
+        Task { await client?._peerConnectionStateContinuation?.yield(newState) }
     }
 
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd rtpReceiver: RTCRtpReceiver, streams mediaStreams: [RTCMediaStream]) {}
@@ -791,6 +872,8 @@ extension AsyncWebRtcClient.InternalError: LocalizedError {
             return "Connection to peer timed out and could not be established"
         case .peerDisconnected:
             return "Peer disconnected"
+        case .internalConsistencyViolation(let message):
+            return "Internal consistency violated: \(message)"
         }
     }
 }
