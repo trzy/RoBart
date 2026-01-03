@@ -168,8 +168,8 @@ actor AsyncWebRtcClient: ObservableObject {
     /// Current peer connection status.
     let isConnected: AsyncStream<Bool>
 
-    /// Event indicating that client is ready to connect and want a `ReadyToConnectMessage` sent to
-    /// signal server.
+    /// Event indicating that client is ready to connect and wants a `ReadyToConnectMessage` sent
+    /// to signal server.
     let readyToConnectSignal: AsyncStream<Void>
 
     /// Offer SDP to send to remote peer via signal server.
