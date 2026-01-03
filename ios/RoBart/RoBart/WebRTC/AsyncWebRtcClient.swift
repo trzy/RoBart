@@ -20,7 +20,6 @@
 //  with RoBart. If not, see <http://www.gnu.org/licenses/>.
 //
 
-import AsyncAlgorithms
 import Foundation
 import WebRTC
 
@@ -69,8 +68,7 @@ actor AsyncWebRtcClient: ObservableObject {
         case peerConnectionStateChanged(RTCPeerConnectionState)
     }
 
-    private let _eventStreamSource: AsyncStream<Event>
-    private let _eventStream: any AsyncSequence<Event, Never>
+    private let _eventStream: AsyncStream<Event>
     private let _eventContinuation: AsyncStream<Event>.Continuation
 
     private let _isConnectedContinuation: AsyncStream<Bool>.Continuation
@@ -188,7 +186,7 @@ actor AsyncWebRtcClient: ObservableObject {
     let textDataReceived: AsyncStream<String>
 
     init() {
-        (_eventStreamSource, _eventContinuation) = Self.createStream()
+        (_eventStream, _eventContinuation) = Self.createStream()
         (isConnected, _isConnectedContinuation) = Self.createStream()
         (readyToConnectSignal, _readyToConnectSignalContinuation) = Self.createStream()
         (offerToSend, _offerToSendContinuation) = Self.createStream()
@@ -196,8 +194,6 @@ actor AsyncWebRtcClient: ObservableObject {
         (answerToSend, _answerToSendContinuation) = Self.createStream()
         (cameraParamsToSend, _cameraParamsToSendContinuation) = Self.createStream()
         (textDataReceived, _textDataReceivedContinuation) = Self.createStream()
-
-        _eventStream = _eventStreamSource.share()
 
         // Delegate adapters -- needed to work around actor restrictions
         _rtcDelegateAdapter = RtcDelegateAdapter()
@@ -350,6 +346,7 @@ actor AsyncWebRtcClient: ObservableObject {
             var initialConnectionFormedDeadline: Date?
             var isConnected = false
 
+            // Note: do not mistake this AsyncStream for a queue :)
             for await event in _eventStream {
                 switch event {
                 case .serverConfigurationReceived(let config):
@@ -397,6 +394,7 @@ actor AsyncWebRtcClient: ObservableObject {
                     for candidate in _pendingIceCandidates {
                         try await peerConnection.add(candidate)
                     }
+                    log("Added \(_pendingIceCandidates.count) ICE candidates from pending queue")
                     _pendingIceCandidates = []
 
                     if _state == .awaitingOffer {
