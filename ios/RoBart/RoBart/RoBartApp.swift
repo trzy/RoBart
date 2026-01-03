@@ -23,14 +23,14 @@
 import Combine
 import SwiftUI
 
-fileprivate func parseMoveCommand(_ text: String) -> (direction: String, throttle: Float)? {
+fileprivate func parseFloatCommand(_ text: String) -> (function: String, value: Float)? {
     guard text.count >= 2 else { return nil }
 
-    let direction = String(text.first!)
+    let function = String(text.first!)
 
     let floatString = text[text.index(after: text.startIndex)...]
     if let value = Float(floatString) {
-        return (direction: direction, throttle: value)
+        return (function: function, value: value)
     }
 
     return nil
@@ -64,20 +64,22 @@ struct RoBartApp: App {
                     for await text in _asyncWebRtcClient.textDataReceived {
                         //print("[RoBartApp] Control: \(text)")
 
-                        if let command = parseMoveCommand(text) {
-                            let direction = command.direction
-                            let throttle = command.throttle
+                        if let command = parseFloatCommand(text) {
+                            let function = command.function
+                            let value = command.value
 
                             let directionToHoverboard: [String: HoverboardCommand] = [
-                                "f": .drive(leftThrottle: throttle, rightThrottle: throttle),
-                                "b": .drive(leftThrottle: -throttle, rightThrottle: -throttle),
-                                "l": .drive(leftThrottle: -throttle, rightThrottle: throttle),
-                                "r": .drive(leftThrottle: throttle, rightThrottle: -throttle),
+                                "f": .drive(leftThrottle: value, rightThrottle: value),
+                                "b": .drive(leftThrottle: -value, rightThrottle: -value),
+                                "l": .drive(leftThrottle: -value, rightThrottle: value),
+                                "r": .drive(leftThrottle: value, rightThrottle: -value),
                                 "s": .drive(leftThrottle: 0, rightThrottle: 0)
                             ]
 
-                            if let hoverboardCommand = directionToHoverboard[direction] {
+                            if let hoverboardCommand = directionToHoverboard[function] {
                                 HoverboardController.shared.send(hoverboardCommand)
+                            } else if function == "z" {
+                                await _asyncWebRtcClient.setZoom(value)
                             }
                         } else if let camera = parseCameraCommand(text) {
                             await _asyncWebRtcClient.switchToCamera(camera)
