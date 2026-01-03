@@ -13,14 +13,33 @@ To use it, start the simple Python signaling server (after installing `requireme
 python -m server
 ```
 
-Then, open [http://localhost:8000](http://localhost:8000) for the teleop interface. The WASD keys on the keyboard control the robot. 
+Then, open [http://localhost:8000](http://localhost:8000) for the teleop interface. The WASD keys on the keyboard control the robot. If the remote peer is the iOS client (RoBart), the camera and zoom can be changed. The camera selections are currently hard-coded and the fallback, in case the selected camera does not exist on the iPhone model, is the back camera.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/web_ui.jpg" /></td>
+  </tr>
+  <tr>
+    <td align="center">Web client interface.</td>
+  </tr>
+</table>
 
 Finally, launch the iOS app, which will automatically try to connect via the signaling server. Ensure the IP address used by the iOS app matches where the server is running. It may take a while for the WebRTC stream to stabilize, even on a home LAN, but after 30 seconds to a minute, it should be perfectly usable.
+
+### TLS (HTTPS) Support
+
+Certificates can be loaded using `--cert-dir` to specify the directory they are located in. This is useful for access outside of a LAN.
+
+```
+python -m server --cert-dir=.
+```
+
+In this example, the server will look for `fullchain.pem` and `privkey.pem` in the current directory. These can be generated with [Certbot](https://github.com/certbot/certbot) or obtained elsewhere. When using this option, make sure to use the `https` form of the URL (e.g., [https://localhost:8000](https://localhost:8000)).
 
 ### TURN Servers
 
 ICE servers are provided to clients by the signaling server. STUN servers are hard-coded to public Google servers for now but TURN servers can be
-supplied using `--turn-servers`, which takes a comma-delimited list of server addresses along with the protocol prefix (`turn:` or `turns:`, depending on whether TLS is required) and port number. Optionally, credentials may be provided with `--turn-users` and `--turn-passwords`. 
+supplied using `--turn-servers`, which takes a comma-delimited list of server addresses along with the protocol prefix (`turn:` or `turns:`, depending on whether TLS is required) and port number. Optionally, credentials may be provided with `--turn-users` and `--turn-passwords`.
 
 ```
 python -m server --turn-servers=turn:192.168.0.101:3478,turns:myturnserver.domain.com:5349 --turn-users=user1,user2 --turn-passwords=pass1,pass2
@@ -32,6 +51,6 @@ To force the clients to use a TURN relay (ICE transport policy of `relay` rather
 
 - The connection flow can surely be made more robust. There are probably edge cases where a client (particularly the iOS one) can get stuck
   indefinitely. I am fairly confident these are fixable and that `AsyncWebRtcClient`'s state machine approach is sufficiently flexible.
-- The signal server can easily be improved to support more than a single client pair at a time using some sort of session or "room" ID to match  
+- The signal server can easily be improved to support more than a single client pair at a time using some sort of session or "room" ID to match
   them.
 - Reintroduce AR and spatial mapping. This will require learning how to construct the video stream at a lower level and manually inputting frames.
