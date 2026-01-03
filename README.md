@@ -1,5 +1,5 @@
 # RoBart: iPhone-based Robot with WebRTC Remote Teleoperation
-*Copyright 2024-2025 Bart Trzynadlowski*
+*Copyright 2024-2026 Bart Trzynadlowski*
 
 This is the `webrtc-teleop` branch of RoBart. Please [see here](https://github.com/trzy/RoBart) for the main branch containing VLM-controlled RoBart. This branch contains a simple implementation of WebRTC-based teleoperation for RoBart. All of the VLM and AR features have been removed.
 
@@ -28,13 +28,13 @@ Finally, launch the iOS app, which will automatically try to connect via the sig
 
 ### TLS (HTTPS) Support
 
-Certificates can be loaded using `--cert-dir` to specify the directory they are located in. This is useful for access outside of a LAN.
+Certificates can be loaded using `--cert-dir` to specify the directory they are located in. This is useful for access outside of a LAN via a domain name. A free domain name for home IP addresses can be obtained with [No-IP](https://no-ip.com), and [DuckDNS](https://duckdns.org), or similar services, and then [Certbot](https://github.com/certbot/certbot) can be used to generate a certificate.
 
 ```
 python -m server --cert-dir=.
 ```
 
-In this example, the server will look for `fullchain.pem` and `privkey.pem` in the current directory. These can be generated with [Certbot](https://github.com/certbot/certbot) or obtained elsewhere. When using this option, make sure to use the `https` form of the URL (e.g., [https://localhost:8000](https://localhost:8000)).
+In this example, the server will look for `fullchain.pem` and `privkey.pem` in the current directory. When using this option, make sure to use the `https` form of the URL with the domain name corresponding to the certificate (e.g., [https://mydomain.ddns.net:8000](https://mydomain.ddns.net:8000)).
 
 ### TURN Servers
 
