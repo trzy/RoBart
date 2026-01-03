@@ -133,6 +133,14 @@
             border-radius: 4px;
         }
 
+        .throttle-control:disabled {
+            background: #1a1d2e;
+            color: #4a5568;
+            border-color: #2d3548;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         .throttle-label {
             color: #4a9eff;
             margin-bottom: 8px;
@@ -149,6 +157,11 @@
             -webkit-appearance: none;
         }
 
+        input[type="range"]:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 18px;
@@ -158,6 +171,11 @@
             border-radius: 50%;
         }
 
+        input[type="range"]:disabled::-webkit-slider-thumb {
+            background: #4a5568;
+            cursor: not-allowed;
+        }
+
         input[type="range"]::-moz-range-thumb {
             width: 18px;
             height: 18px;
@@ -165,6 +183,11 @@
             cursor: pointer;
             border: none;
             border-radius: 50%;
+        }
+
+        input[type="range"]:disabled::-moz-range-thumb {
+            background: #4a5568;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -202,6 +225,11 @@
                 <option value="backultrawide">Back Ultra-Wide</option>
                 <option value="backtelephoto">Back Telephoto</option>
             </select>
+
+            <div class="throttle-control">
+                <div class="throttle-label" id="zoomLabel">Zoom: 1.0x</div>
+                <input type="range" id="zoomSlider" min="1" max="2" step="0.1" value="1" disabled="true">
+            </div>
 
             <label for="websocketEndpoint">Server:</label>
             <input type="text" id="websocketEndpoint" value="ws://localhost:8000/ws">
