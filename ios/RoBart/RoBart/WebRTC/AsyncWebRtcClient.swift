@@ -542,7 +542,7 @@ actor AsyncWebRtcClient: ObservableObject {
 
         let constraints = RTCMediaConstraints(
             mandatoryConstraints: [
-                // Allegedly required for sharing streams with browswers
+                // Allegedly required for sharing streams with browsers
                 "DtlsSrtpKeyAgreement": kRTCMediaConstraintsValueTrue
             ],
             optionalConstraints: nil
