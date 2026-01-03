@@ -23,28 +23,6 @@
 import Combine
 import SwiftUI
 
-fileprivate func parseFloatCommand(_ text: String) -> (function: String, value: Float)? {
-    guard text.count >= 2 else { return nil }
-
-    let function = String(text.first!)
-
-    let floatString = text[text.index(after: text.startIndex)...]
-    if let value = Float(floatString) {
-        return (function: function, value: value)
-    }
-
-    return nil
-}
-
-fileprivate func parseCameraCommand(_ text: String) -> AsyncWebRtcClient.CameraType? {
-    guard text.count >= 2 else { return nil  }
-    guard text.first == "c" else { return nil }
-
-    let cameraString = String(text[text.index(after: text.startIndex)...])
-
-    return AsyncWebRtcClient.CameraType.fromString(cameraString)
-}
-
 @main
 struct RoBartApp: App {
     @StateObject private var _asyncWebRtcClient = AsyncWebRtcClient()
@@ -90,7 +68,7 @@ struct RoBartApp: App {
                     // Really hacky, but every second, send over watchdog settings
                     while true {
                         if HoverboardController.shared.isConnected {
-                            // Aggressive watchdog setting
+                            // Aggressive watchdog setting to prevent runaway robot in case of disconnect
                             let msg = HoverboardWatchdogMessage(watchdogEnabled: true, watchdogSeconds: 0.5)
                             HoverboardController.shared.send(.message(msg))
                         }
@@ -169,4 +147,26 @@ struct RoBartApp: App {
                 }
         }
     }
+}
+
+fileprivate func parseFloatCommand(_ text: String) -> (function: String, value: Float)? {
+    guard text.count >= 2 else { return nil }
+
+    let function = String(text.first!)
+
+    let floatString = text[text.index(after: text.startIndex)...]
+    if let value = Float(floatString) {
+        return (function: function, value: value)
+    }
+
+    return nil
+}
+
+fileprivate func parseCameraCommand(_ text: String) -> AsyncWebRtcClient.CameraType? {
+    guard text.count >= 2 else { return nil  }
+    guard text.first == "c" else { return nil }
+
+    let cameraString = String(text[text.index(after: text.startIndex)...])
+
+    return AsyncWebRtcClient.CameraType.fromString(cameraString)
 }

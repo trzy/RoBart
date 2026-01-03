@@ -24,62 +24,10 @@ import AsyncAlgorithms
 import Foundation
 import WebRTC
 
-// Bundle offer SDP like this (on JavaScript side, this is the expected format)
-fileprivate struct Offer: nonisolated Codable {
-    var type = "offer"
-    var sdp: String
-
-    static func decode(jsonString: String) -> Offer? {
-        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
-        let decoder = JSONDecoder()
-        do {
-            let offer = try decoder.decode(Offer.self, from: jsonData)
-            return offer
-        } catch {
-            logError("Error decoding offer: \(error.localizedDescription)")
-        }
-        return nil
-    }
-}
-
-// Bundle answer SDP like this
-fileprivate struct Answer: nonisolated Codable {
-    var type = "answer"
-    var sdp: String
-
-    static func decode(jsonString: String) -> Answer? {
-        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
-        let decoder = JSONDecoder()
-        do {
-            let offer = try decoder.decode(Answer.self, from: jsonData)
-            return offer
-        } catch {
-            logError("Error decoding answer: \(error.localizedDescription)")
-        }
-        return nil
-    }
-}
-
-// Bundle ICE candidate like this
-fileprivate struct ICECandidate: nonisolated Codable {
-    let candidate: String
-    let sdpMLineIndex: Int32
-    let sdpMid: String?
-
-    static func decode(jsonString: String) -> ICECandidate? {
-        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
-        let decoder = JSONDecoder()
-        do {
-            let offer = try decoder.decode(ICECandidate.self, from: jsonData)
-            return offer
-        } catch {
-            logError("Error decoding ICE candidate: \(error.localizedDescription)")
-        }
-        return nil
-    }
-}
-
+/// WebRTC client that continuously attempts to connect and maintain a session.
 actor AsyncWebRtcClient: ObservableObject {
+    //MARK: Internal members
+
     private let _factory = RTCPeerConnectionFactory(
         encoderFactory: RTCDefaultVideoEncoderFactory(),
         decoderFactory: RTCDefaultVideoDecoderFactory()
@@ -217,12 +165,26 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    /// Current peer connection status.
     let isConnected: AsyncStream<Bool>
+
+    /// Event indicating that client is ready to connect and want a `ReadyToConnectMessage` sent to
+    /// signal server.
     let readyToConnectSignal: AsyncStream<Void>
+
+    /// Offer SDP to send to remote peer via signal server.
     let offerToSend: AsyncStream<String>
+
+    /// ICE candidates to send to remote peer via signal server.
     let iceCandidateToSend: AsyncStream<String>
+
+    /// Answer SDP to send to remote peer via signal server.
     let answerToSend: AsyncStream<String>
+
+    /// Parameters of camera being used to capture video. Published each time capture begins.
     let cameraParamsToSend: AsyncStream<CameraParameters>
+
+    /// Text strings received on the data channel.
     let textDataReceived: AsyncStream<String>
 
     init() {
@@ -250,6 +212,7 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    /// Runs the client forever. Continously attempts to form a connection.
     func run() async {
         while true {
             setState(.readyToStart)
@@ -266,19 +229,32 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    /// Cancel the current session, regardless of its state, and trigger another connection
+    /// attempt. This is recommended when the signal server disconnects.
     func reconnect() async {
         log("Stopping current session...")
         _task?.cancel()
     }
 
+    /// Add a renderer (e.g., created by the GUI layer), which WebRTC will use to render the remote
+    /// video stream.
+    /// - Parameter renderer: An RTC video renderer.
     func addRemoteVideoView(_ renderer: RTCVideoRenderer) async {
         _remoteVideoTrack?.add(renderer)
     }
 
+    /// Remove a renderer that was previously added and is no longer valid to use. This should be
+    /// safe to call even if the renderer was never added in the first place but this cannot be
+    /// guaranteed and should be avoided if possible.
+    /// - Parameter renderer: The RTC video renderer previously added.
     func removeRemoteVideoView(_ renderer: RTCVideoRenderer) async {
         _remoteVideoTrack?.remove(renderer)
     }
 
+    /// Sets the desired camera to use for video input. If currently streaming, takes effect
+    /// immediately.
+    /// - Parameter cameraType: The camera to use. If no such camera exists on this model of iPhone,
+    ///     will siliently fall back to the default (back) camera.
     func switchToCamera(_ cameraType: CameraType) async {
         _desiredCamera = cameraType
 
@@ -289,16 +265,24 @@ actor AsyncWebRtcClient: ObservableObject {
         }
     }
 
+    /// Sets the camera zoom factor. If currently streaming, takes effect immediately.
+    /// - Parameter zoom: Zoom factor. Will be clamped against the valid zoom range for the camera.
     func setZoom(_ zoom: Float) async {
         _desiredZoom = zoom
         log("Zoom \(zoom) requested")
         setZoomFactor(for: _camera)
     }
 
+    /// Notify client of configuration message received from signal server. This controls when the
+    /// connection process starts as well as its behavior (e.g. offer vs. answer, ICE servers,
+    /// etc.)
+    /// - Parameter config: Configuration object received from signal server.
     func onServerConfigurationReceived(_ config: ServerConfiguration) async {
         _eventContinuation.yield(.serverConfigurationReceived(config))
     }
 
+    /// Notify client of offer received from peer via signal server.
+    /// - Parameter jsonString: The offer JSON object.
     func onOfferReceived(jsonString: String) async {
         log("Received offer")
         guard let offer = Offer.decode(jsonString: jsonString) else { return }
@@ -306,6 +290,8 @@ actor AsyncWebRtcClient: ObservableObject {
         _eventContinuation.yield(.remoteSdpReceived(sdp))
     }
 
+    /// Notify client of answer received from peer via signal server.
+    /// - Parameter jsonString: The answer JSON object.
     func onAnswerReceived(jsonString: String) async {
         log("Received answer")
         guard let answer = Answer.decode(jsonString: jsonString) else { return }
@@ -313,6 +299,8 @@ actor AsyncWebRtcClient: ObservableObject {
         _eventContinuation.yield(.remoteSdpReceived(sdp))
     }
 
+    /// Notify client of ICE candidate received from peer via signal server.
+    /// - Parameter jsonString: The ICE candidate JSON object.
     func onIceCandidateReceived(jsonString: String) async {
         guard let iceCandidate = ICECandidate.decode(jsonString: jsonString) else { return }
         let candidate = RTCIceCandidate(
@@ -323,6 +311,8 @@ actor AsyncWebRtcClient: ObservableObject {
         _eventContinuation.yield(.iceCandidateReceived(candidate))
     }
 
+    /// Send text message over the data channel to the remote peer, if it is connected.
+    /// - Parameter text: String to send.
     func sendTextData(_ text: String) async {
         let buffer = RTCDataBuffer(data: text.data(using: .utf8)!, isBinary: false)
         guard let dataChannel = _dataChannel else {
@@ -331,6 +321,8 @@ actor AsyncWebRtcClient: ObservableObject {
         }
         dataChannel.sendData(buffer)
     }
+
+    // MARK: Internal methods
 
     private func runOneSession() async -> Bool {
         var peerConnection: RTCPeerConnection?
@@ -709,6 +701,8 @@ actor AsyncWebRtcClient: ObservableObject {
     }
 }
 
+// MARK: RTC connection delegate
+
 extension AsyncWebRtcClient.RtcDelegateAdapter: RTCPeerConnectionDelegate {
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
         let stateToString: [RTCIceConnectionState: String] = [
@@ -763,6 +757,8 @@ extension AsyncWebRtcClient.RtcDelegateAdapter: RTCPeerConnectionDelegate {
     func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {}
 }
 
+// MARK: Data channel delegate
+
 extension AsyncWebRtcClient.RtcDelegateAdapter: RTCDataChannelDelegate {
     func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
         let stateToString: [RTCDataChannelState: String] = [
@@ -800,6 +796,65 @@ extension AsyncWebRtcClient.InternalError: LocalizedError {
         }
     }
 }
+
+// MARK: WebRTC object serialization
+
+// Bundle offer SDP like this (on JavaScript side, this is the expected format)
+fileprivate struct Offer: nonisolated Codable {
+    var type = "offer"
+    var sdp: String
+
+    static func decode(jsonString: String) -> Offer? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(Offer.self, from: jsonData)
+            return offer
+        } catch {
+            logError("Error decoding offer: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+// Bundle answer SDP like this
+fileprivate struct Answer: nonisolated Codable {
+    var type = "answer"
+    var sdp: String
+
+    static func decode(jsonString: String) -> Answer? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(Answer.self, from: jsonData)
+            return offer
+        } catch {
+            logError("Error decoding answer: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+// Bundle ICE candidate like this
+fileprivate struct ICECandidate: nonisolated Codable {
+    let candidate: String
+    let sdpMLineIndex: Int32
+    let sdpMid: String?
+
+    static func decode(jsonString: String) -> ICECandidate? {
+        guard let jsonData = jsonString.data(using: .utf8) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let offer = try decoder.decode(ICECandidate.self, from: jsonData)
+            return offer
+        } catch {
+            logError("Error decoding ICE candidate: \(error.localizedDescription)")
+        }
+        return nil
+    }
+}
+
+// MARK: Logging
 
 fileprivate func log(_ message: String) {
     print("[AsyncWebRtcClient] \(message)")
