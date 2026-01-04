@@ -26,10 +26,10 @@ Then, open [http://localhost:8000](http://localhost:8000) for the teleop interfa
 
 <table align="center">
   <tr>
-    <td align="center"><img src="docs/Readme/Images/web_ui.jpg" /></td>
+    <td align="center"><a href="https://www.youtube.com/watch?v=qaFw_k8H3FY"><img src="docs/Readme/Images/web_ui.jpg" /></a></td>
   </tr>
   <tr>
-    <td align="center">Web client interface.</td>
+    <td align="center"><a href="https://www.youtube.com/watch?v=qaFw_k8H3FY">Teleoperating RoBart from a laptop.</a></td>
   </tr>
 </table>
 
