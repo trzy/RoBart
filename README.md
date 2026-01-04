@@ -1,5 +1,5 @@
 # RoBart: Autonomous LLM-controlled robot using iPhone
-*Copyright 2024 Bart Trzynadlowski*
+*Copyright 2024-2026 Bart Trzynadlowski*
 
 **What if you could put your brain in a robot body?** Okay, okay, that's not possible, but what if you could put Claude or GPT-4 in a robot body? And not just any robot body but a robot body based on a salvaged hoverboard and an iPhone Pro for compute and sensors? That's exactly what I did. Read on, human!
 
@@ -11,6 +11,19 @@
   </tr>
   <tr>
     <td align="center"><a href="https://www.youtube.com/watch?v=-iW3Vzzr3oU">Grocery shopping</a></td> <td align="center"><a href="https://www.youtube.com/shorts/hnw6pvyZSns">Hide and seek</a></td>
+  </tr>
+</table>
+
+## Update: January 2026
+
+A teleoperation system using WebRTC and a web client is available for RoBart in [the webrtc-teleop branch](https://github.com/trzy/RoBart/tree/webrtc-teleop).
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/Readme/Images/web_ui.jpg" /></td>
+  </tr>
+  <tr>
+    <td align="center">Teleoperation interface.</td>
   </tr>
 </table>
 
