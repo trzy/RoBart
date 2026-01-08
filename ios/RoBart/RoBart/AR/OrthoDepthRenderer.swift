@@ -4,6 +4,23 @@
 //
 //  Created by Bart Trzynadlowski on 9/6/24.
 //
+//  This file is part of RoBart.
+//
+//  RoBart is free software: you can redistribute it and/or modify it under the
+//  terms of the GNU General Public License as published by the Free Software
+//  Foundation, either version 3 of the License, or (at your option) any later
+//  version.
+//
+//  RoBart is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with RoBart. If not, see <http://www.gnu.org/licenses/>.
+//
+
+//
 //  Not yet working. Camera transform has been forced to an identity matrix. Setting up a viewport
 //  with texture dimensions helped, however still unclear why the test quad at z=1 is mapping to a
 //  negative Z value after projection. The Metal vertex shader forces depth to be within range of
