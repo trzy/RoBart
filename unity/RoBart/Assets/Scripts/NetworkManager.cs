@@ -122,6 +122,9 @@ public class NetworkManager : Net.JSONMessageSubscriber
     {
         HelloMessage msg = JsonUtility.FromJson<HelloMessage>(json);
         Debug.LogFormat("Got hello message: {0}", msg.message);
+
+        HelloMessage reply = new HelloMessage(message: "Hello from RoBart Unity simulator!");
+        session.Send(ref reply);
     }
 
     [Net.Handler(typeof(RequestOccupancyMapMessage))]
