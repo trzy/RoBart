@@ -99,7 +99,7 @@ class Session:
                     except Exception as e:
                         print("Terminating session due to exception from message handler: %s" % e)
                         break
-            except ConnectionError as e:
+            except (ConnectionError, asyncio.IncompleteReadError) as e:
                 print("Disconnected from %s: %s" % (self.remote_endpoint, e))
                 break
             except Exception as e:
