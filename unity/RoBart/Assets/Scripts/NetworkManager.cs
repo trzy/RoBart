@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Linq;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ public class NetworkManager : Net.JSONMessageSubscriber
     private float m_reconnectDelaySeconds = 1;
 
     private string m_clientID = Guid.NewGuid().ToString();
-    private BlockingRingBuffer<Action> m_networkQueue = new BlockingRingBuffer<Action>(1024 * 1024, true);
+    private ConcurrentQueue<Action> m_networkQueue = new ConcurrentQueue<Action>();
     private MessageReceivingBehavior[] m_receivers;
     private Net.Session m_session;
 
@@ -65,10 +66,7 @@ public class NetworkManager : Net.JSONMessageSubscriber
         }
     }
 
-    private void Enqueue(Action networkEvent)
-    {
-        m_networkQueue.Enqueue(networkEvent);
-    }
+    private void Enqueue(Action networkEvent) => m_networkQueue.Enqueue(networkEvent);
 
     private void TryConnect(float delaySeconds)
     {
@@ -135,7 +133,7 @@ public class NetworkManager : Net.JSONMessageSubscriber
             Debug.Log("RequestOccupancyMapMessage: received");
             foreach (var receiver in m_receivers)
             {
-                receiver.OnRequestOccupancyMap();
+                receiver.OnRequestOccupancyMap(session);
             }
         });
     }

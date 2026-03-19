@@ -319,41 +319,33 @@ namespace Net
 
     public class TCPClient
     {
-        public Session Connect(string hostname, int port, Action<Session, Exception> ConnectHandler, Action<Session, Exception> DisconnectHandler, IMessageHandler messageHandler)
+        public void Connect(string hostname, int port, Action<Session, Exception> ConnectHandler, Action<Session, Exception> DisconnectHandler, IMessageHandler messageHandler)
         {
-            bool failed = true;
-            Exception exception = null;
-            Session session = null;
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                bool failed = true;
+                Exception exception = null;
+                Session session = null;
 
-            try
-            {
-                TcpClient client = new TcpClient(hostname, port);
-                session = new Session(client, DisconnectHandler, messageHandler);
-                session.Start();
-                failed = false;
-            }
-            catch (ArgumentNullException e)
-            {
-                exception = e;
-            }
-            catch (SocketException e)
-            {
-                // Connections that are refused trigger this exception
-                exception = e;
-            }
+                try
+                {
+                    TcpClient client = new TcpClient(hostname, port);
+                    session = new Session(client, DisconnectHandler, messageHandler);
+                    session.Start();
+                    failed = false;
+                }
+                catch (ArgumentNullException e)
+                {
+                    exception = e;
+                }
+                catch (SocketException e)
+                {
+                    // Connections that are refused trigger this exception
+                    exception = e;
+                }
 
-            if (failed)
-            {
-                // We indicate connect failures by calling the ConnectHandler with a null session
-                ConnectHandler(null, exception);
-            }
-            else
-            {
-                // Connection must have succeeded
-                ConnectHandler(session, exception);
-            }
-
-            return session;
+                ConnectHandler(failed ? null : session, exception);
+            });
         }
     }
 
