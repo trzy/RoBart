@@ -109,3 +109,10 @@ class AIStepMessage(BaseModel):
     modelInput: str
     modelOutput: str
     imagesBase64: Dict[str, str]
+
+class ActionsMessage(BaseModel):
+    actions: List[str]  # each element is a JSON-formatted action object
+
+class ObservationsMessage(BaseModel):
+    description: str
+    images: List[str]  # base64-encoded image strings

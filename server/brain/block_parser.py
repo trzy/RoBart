@@ -5,7 +5,7 @@ from typing import List
 @dataclass
 class Block:
     tag: str
-    contents: str
+    content: str
 
 
 def parse_blocks(text: str) -> List[Block]:
@@ -54,7 +54,7 @@ def parse_blocks(text: str) -> List[Block]:
         elif inside_block:
             closing = f"</{current_tag}>"
             if text[i:i + len(closing)] == closing:
-                result.append(Block(tag=current_tag, contents=current_contents))
+                result.append(Block(tag=current_tag, content=current_contents))
                 inside_block = False
                 i += len(closing)
                 continue
@@ -65,6 +65,6 @@ def parse_blocks(text: str) -> List[Block]:
 
     # Unterminated block — include it anyway
     if inside_block:
-        result.append(Block(tag=current_tag, contents=current_contents))
+        result.append(Block(tag=current_tag, content=current_contents))
 
     return result

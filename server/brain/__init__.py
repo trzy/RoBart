@@ -1,2 +1,2 @@
-from .brain import run_brain
+from .brain import Brain
 from .claude import Image, Message, list_models

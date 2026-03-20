@@ -35,7 +35,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
 import numpy as np
 from pydantic import BaseModel
 
-from .brain import run_brain, list_models
+from .brain import Brain, list_models
 from .image_viewer import ImageViewer
 from .messages import *
 from .navigation import NavigationUI
@@ -49,12 +49,13 @@ from .networking import Server, Session, handler, MessageHandler
 ####################################################################################################
 
 class RoBartDebugServer(MessageHandler):
-    def __init__(self, port: int, navigation_ui: NavigationUI, image_viewer: ImageViewer):
+    def __init__(self, port: int, navigation_ui: NavigationUI, image_viewer: ImageViewer, brain: Brain):
         super().__init__()
         self.sessions = set()
         self._server = Server(port=port, message_handler=self)
         self._navigation_ui = navigation_ui
         self._image_viewer = image_viewer
+        self._brain = brain
 
     async def run(self):
         await self._server.run()
@@ -110,6 +111,10 @@ class RoBartDebugServer(MessageHandler):
     @handler(AnnotatedViewMessage)
     async def handle_AnnotatedViewMessage(self, session: Session, msg: AnnotatedViewMessage, timestamp: float):
         self._image_viewer.show(image=base64.b64decode(msg.imageBase64), name="Robot Annotated View")
+
+    @handler(ObservationsMessage)
+    async def handle_ObservationsMessage(self, session: Session, msg: ObservationsMessage, timestamp: float):
+        await self._brain.on_observations_message(session, msg, timestamp)
 
     @handler(AIStepMessage)
     async def handle_AIStepMessage(self, session: Session, msg: AIStepMessage, timestamp: float):
@@ -205,10 +210,11 @@ class CommandConsole:
         ]
     }
 
-    def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]], image_viewer: ImageViewer):
+    def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]], image_viewer: ImageViewer, brain: Brain):
         self._tasks = tasks
         self._send = send_message
         self._image_viewer = image_viewer
+        self._brain = brain
         self._models: List[str] = []
         self._model: str = "claude-sonnet-4-6"
 
@@ -307,7 +313,7 @@ class CommandConsole:
             elif command == "get_view":
                 await self._send(RequestAnnotatedViewMessage())
             elif command == "brain":
-                await run_brain(instructions=args["instructions"], model=self._model)
+                await self._brain.run(instructions=args["instructions"], model=self._model)
             elif command == "models":
                 if len(self._models) == 0:
                     print("Error: Failed to fetch model list")
@@ -427,8 +433,10 @@ if __name__ == "__main__":
     tasks = []
     navigation_ui = NavigationUI()
     image_viewer = ImageViewer()
-    server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui, image_viewer=image_viewer)
-    console = CommandConsole(tasks=tasks, send_message=server.send_to_clients, image_viewer=image_viewer)
+    brain = Brain()
+    server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui, image_viewer=image_viewer, brain=brain)
+    brain.set_send(server.send_to_clients)
+    console = CommandConsole(tasks=tasks, send_message=server.send_to_clients, image_viewer=image_viewer, brain=brain)
     loop = asyncio.new_event_loop()
     tasks.append(loop.create_task(server.run()))
     tasks.append(loop.create_task(console.run()))
