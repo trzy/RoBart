@@ -28,12 +28,14 @@ import base64
 from dataclasses import dataclass
 import os
 import platform
+import shlex
 import sys
 from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
 
 import numpy as np
 from pydantic import BaseModel
 
+from .brain import run_brain, list_models
 from .image_viewer import ImageViewer
 from .messages import *
 from .navigation import NavigationUI
@@ -193,13 +195,22 @@ class CommandConsole:
         "image": [
             Param(name="filepath", type=str)
         ],
-        "get_view": []
+        "get_view": [],
+        "brain": [
+            Param(name="instructions", type=str)
+        ],
+        "models": [],
+        "model": [
+            Param(name="model_id", type=str)
+        ]
     }
 
     def __init__(self, tasks: List[asyncio.Task], send_message: Callable[[BaseModel,], Awaitable[None]], image_viewer: ImageViewer):
         self._tasks = tasks
         self._send = send_message
         self._image_viewer = image_viewer
+        self._models: List[str] = []
+        self._model: str = "claude-sonnet-4-6"
 
         # Validate params have been defined correctly
         for command, params in self._commands.items():
@@ -218,6 +229,7 @@ class CommandConsole:
 
     async def run(self):
         await asyncio.sleep(1)
+        self._models = await list_models()
         while True:
             # Read command and parse arguments
             words = await self._get_line_as_words()
@@ -294,6 +306,22 @@ class CommandConsole:
                     self._image_viewer.hide()
             elif command == "get_view":
                 await self._send(RequestAnnotatedViewMessage())
+            elif command == "brain":
+                await run_brain(instructions=args["instructions"], model=self._model)
+            elif command == "models":
+                if len(self._models) == 0:
+                    print("Error: Failed to fetch model list")
+                else:
+                    for m in self._models:
+                        marker = "* " if m == self._model else "  "
+                        print(f"{marker}{m}")
+            elif command == "model":
+                model_id = args["model_id"]
+                if model_id not in self._models:
+                    print(f"Error: Unknown model \"{model_id}\". Use \"models\" to see available models.")
+                else:
+                    self._model = model_id
+                    print(f"Active model set to: {self._model}")
             else:
                 print("Invalid command. Use \"help\" for a list of commands.")
 
@@ -324,7 +352,7 @@ class CommandConsole:
             sys.stdout.flush()
         await asyncio.to_thread(print_prompt)
         line = (await asyncio.to_thread(sys.stdin.readline)).rstrip('\n').strip()
-        return line.split()
+        return shlex.split(line)
 
     def _parse_args(self, command: str, args: List[str]) -> Dict[str, Any] | None:
         parsed_args: Dict[str, Any] = {}
