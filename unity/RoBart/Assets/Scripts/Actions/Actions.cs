@@ -1,8 +1,6 @@
-using System;
-
 public struct ActionHeader
 {
-    public string action;
+    public string type;
 }
 
 public struct MoveAction
@@ -35,7 +33,7 @@ public struct Scan360Action
 }
 
 public struct TakePhotoAction
-{   
+{
 }
 
 public struct BackOutAction

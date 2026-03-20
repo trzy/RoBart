@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CascadedPIDController))]
 [RequireComponent(typeof(CascadedOrientationPIDController))]
-public class RoBartController : MonoBehaviour
+public class RoBartController : MessageReceivingBehavior, IActionHandler
 {
     [SerializeField]
     [Tooltip("Translation speed (m/sec)")]
@@ -171,5 +171,64 @@ public class RoBartController : MonoBehaviour
 
         // Raycast did not succeed, indicate goals not set
         return false;
+    }
+
+    public override void OnActionsMessage(Net.Session session, ActionsMessage msg)
+    {
+        object[] actions = new object[msg.actions.Length];
+        for (int i = 0; i < msg.actions.Length; i++)
+        {
+            actions[i] = ActionDecoder.DecodeAction(msg.actions[i]);
+        }
+        foreach (object action in actions)
+        {
+            if (action != null)
+            {
+                ActionDispatcher.Dispatch(action, this);
+            }
+        }
+    }
+
+    public void OnMoveAction(MoveAction action)
+    {
+        Debug.Log($"OnMoveAction: distance={action.distance}");
+
+        m_positionTarget.transform.position = transform.position + transform.forward.XZProject().normalized * action.distance;
+        m_positionPIDController.enabled = true;
+    }
+
+    public void OnMoveToAction(MoveToAction action)
+    {
+        Debug.Log($"OnMoveToAction: pointNumber={action.pointNumber}");
+    }
+
+    public void OnTurnInPlaceAction(TurnInPlaceAction action)
+    {
+        Debug.Log($"OnTurnInPlaceAction: degrees={action.degrees}");
+    }
+
+    public void OnFaceTowardAction(FaceTowardAction action)
+    {
+        Debug.Log($"OnFaceTowardAction: pointNumber={action.pointNumber}");
+    }
+
+    public void OnFaceTowardHeadingAction(FaceTowardHeadingAction action)
+    {
+        Debug.Log($"OnFaceTowardHeadingAction: headingDegrees={action.headingDegrees}");
+    }
+
+    public void OnScan360Action(Scan360Action action)
+    {
+        Debug.Log("OnScan360Action");
+    }
+
+    public void OnTakePhotoAction(TakePhotoAction action)
+    {
+        Debug.Log("OnTakePhotoAction");
+    }
+
+    public void OnBackOutAction(BackOutAction action)
+    {
+        Debug.Log("OnBackOutAction");
     }
 }

@@ -5,4 +5,8 @@ public class MessageReceivingBehavior : MonoBehaviour
     public virtual void OnRequestOccupancyMap(Net.Session session)
     {
     }
+
+    public virtual void OnActionsMessage(Net.Session session, ActionsMessage msg)
+    {
+    }
 }

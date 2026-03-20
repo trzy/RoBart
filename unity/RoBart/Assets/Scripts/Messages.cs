@@ -16,6 +16,19 @@ public struct RequestOccupancyMapMessage
 {
 }
 
+[Serializable]
+public struct ActionsMessage
+{
+    public string[] actions;
+}
+
+[Serializable]
+public struct ObservationsMessage
+{
+    public string description;
+    public string[] images;  // base64-encoded
+}
+
 // OccupancyMapMessage is serialized manually in OccupancyMapBuilder because JsonUtility does
 // not support jagged arrays (int[][]) required for pathCells.
 // Schema (must match server messages.py):

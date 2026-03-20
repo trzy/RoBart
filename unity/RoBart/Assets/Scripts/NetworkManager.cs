@@ -137,4 +137,17 @@ public class NetworkManager : Net.JSONMessageSubscriber
             }
         });
     }
+
+    [Net.Handler(typeof(ActionsMessage))]
+    private void OnActionsMessage(Net.Session session, string json)
+    {
+        ActionsMessage msg = JsonUtility.FromJson<ActionsMessage>(json);
+        Enqueue(() =>
+        {
+            foreach (var receiver in m_receivers)
+            {
+                receiver.OnActionsMessage(session, msg);
+            }
+        });
+    }
 }
