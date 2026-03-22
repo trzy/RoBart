@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c8d12adcee749c344b8117cf7c7eb912
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile SSD.shader
+  uploadId: 860064

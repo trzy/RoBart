@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a02a7d8c237544f1962732b55a9aebf1
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile Overlay.shader
+  uploadId: 860064

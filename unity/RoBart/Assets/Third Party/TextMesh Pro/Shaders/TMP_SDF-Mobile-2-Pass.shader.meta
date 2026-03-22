@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 0178fcb869bafef4690d177d31d17db8
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile-2-Pass.shader
+  uploadId: 860064

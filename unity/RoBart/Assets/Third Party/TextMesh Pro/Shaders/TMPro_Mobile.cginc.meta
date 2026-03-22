@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c334973cef89a9840b0b0c507e0377ab
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/TextMesh Pro/Shaders/TMPro_Mobile.cginc
+  uploadId: 860064
