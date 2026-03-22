@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ddb4411159c31ab4aa939f5cf29ff60f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Settings/assets/DefaultVolumeProfile.asset
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0cfccee0d5433cc47b22d8ea2d5beac8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Settings/assets/SampleSceneProfile.asset
+  uploadId: 860064
