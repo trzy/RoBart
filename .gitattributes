@@ -1,4 +1,4 @@
-Textures/concrete/concreteOld/smoothed_cast_concrete_normal.png filter=lfs diff=lfs merge=lfs -text
-../Scenes/urp_scene_with_training/Lightmap*.exr filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text
+unity/RoBart/Assets/Third[[:space:]]Party/Factory/Textures/concrete/concreteOld/smoothed_cast_concrete_normal.png filter=lfs diff=lfs merge=lfs -text
 unity/RoBart/Assets/Third[[:space:]]Party/Factory/Textures/detail/dirt/metal_01_Base_color.png filter=lfs diff=lfs merge=lfs -text
 unity/RoBart/Assets/Third[[:space:]]Party/Factory/Textures/detail/AO/wall_gate.png filter=lfs diff=lfs merge=lfs -text
