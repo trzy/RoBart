@@ -1,4 +1,7 @@
-using System.Runtime.InteropServices.WindowsRuntime;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,11 +18,24 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     [Tooltip("Rotational speed (deg/sec)")]
     private float m_rotationSpeed = 180.0f;
 
+    [SerializeField]
+    [Tooltip("Timeout (seconds) waiting for position goal to be reached")]
+    private float m_positionTimeoutSeconds = 30.0f;
+
+    [SerializeField]
+    [Tooltip("Timeout (seconds) waiting for orientation to settle after position is reached")]
+    private float m_orientationTimeoutSeconds = 5.0f;
+
     private Rigidbody m_rb;
+
     private GameObject m_positionTarget;
     private GameObject m_orientationTarget;
     private CascadedPIDController m_positionPIDController;
     private CascadedOrientationPIDController m_orientationPIDController;
+
+    private readonly Queue<(Net.Session session, ActionsMessage msg)> m_actionsQueue = new Queue<(Net.Session, ActionsMessage)>();
+    private bool m_isProcessingActions = false;
+    private ObservationsMessage m_pendingObservations;
 
     private struct KeyboardControls
     {
@@ -83,12 +99,12 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             m_orientationPIDController.enabled = false;
         }
 
-        // Check goal reached
-        if (m_positionPIDController.Error < 1e-2)
-        {
-            m_positionPIDController.enabled = false;
-            m_orientationPIDController.enabled = false;
-        }
+        // // Check goal reached
+        // if (m_positionPIDController.Error < 1e-2)
+        // {
+        //     m_positionPIDController.enabled = false;
+        //     m_orientationPIDController.enabled = false;
+        // }
     }
 
     private void Update()
@@ -102,6 +118,13 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
                 m_orientationPIDController.enabled = true;
             }
         }
+
+        // Process actions
+        if (!m_isProcessingActions)
+        {
+            StartCoroutine(ProcessActionsQueueCoroutine());
+        }
+
     }
 
     private void MoveDirectly(KeyboardControls keys)
@@ -175,60 +198,183 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
 
     public override void OnActionsMessage(Net.Session session, ActionsMessage msg)
     {
-        object[] actions = new object[msg.actions.Length];
-        for (int i = 0; i < msg.actions.Length; i++)
-        {
-            actions[i] = ActionDecoder.DecodeAction(msg.actions[i]);
-        }
-        foreach (object action in actions)
-        {
-            if (action != null)
-            {
-                ActionDispatcher.Dispatch(action, this);
-            }
-        }
+        m_actionsQueue.Enqueue((session, msg));
     }
 
-    public void OnMoveAction(MoveAction action)
+    private IEnumerator ProcessActionsQueueCoroutine()
+    {
+        m_isProcessingActions = true;
+        while (m_actionsQueue.Count > 0)
+        {
+            var (session, msg) = m_actionsQueue.Dequeue();
+
+            object[] actions = new object[msg.actions.Length];
+            for (int i = 0; i < msg.actions.Length; i++)
+            {
+                actions[i] = ActionDecoder.DecodeAction(msg.actions[i]);
+            }
+
+            m_pendingObservations = new ObservationsMessage();
+            foreach (object action in actions)
+            {
+                if (action != null)
+                {
+                    IEnumerator coroutine = ActionDispatcher.Dispatch(action, this);
+                    if (coroutine != null)
+                    {
+                        yield return StartCoroutine(coroutine);
+                    }
+                }
+            }
+            session.Send(ref m_pendingObservations);
+        }
+        m_isProcessingActions = false;
+    }
+
+    public IEnumerator OnMoveAction(MoveAction action)
     {
         Debug.Log($"OnMoveAction: distance={action.distance}");
 
-        m_positionTarget.transform.position = transform.position + transform.forward.XZProject().normalized * action.distance;
+        Vector3 startPosition = transform.position;
+
+        // Set position target along forward axis and place orientation target just beyond it
+        Vector3 goalPosition = (transform.position + transform.forward.XZProject().normalized * action.distance).XZProject();
+        m_positionTarget.transform.position = goalPosition;
+        m_orientationTarget.transform.position = goalPosition + (goalPosition - startPosition).XZProject().normalized * 0.1f;
         m_positionPIDController.enabled = true;
+        m_orientationPIDController.enabled = true;
+
+        // Wait for position to be reached or timeout
+        yield return new WaitUntilOrTimeout(() => m_positionPIDController.Error < 1e-2f, m_positionTimeoutSeconds);
+        m_positionPIDController.enabled = false;
+
+        // Wait for orientation to settle or timeout
+        yield return new WaitUntilOrTimeout(() => m_orientationPIDController.Error < 1e-2f, m_orientationTimeoutSeconds);
+        m_orientationPIDController.enabled = false;
+
+        float distanceMoved = Vector3.Distance(transform.position.XZProject(), startPosition.XZProject());
+        Debug.Log($"OnMoveAction: moved {distanceMoved:F3} m (requested {action.distance:F3} m)");
+        m_pendingObservations.description += $"Move: travelled {distanceMoved:F3} m (requested {action.distance:F3} m).\n";
     }
 
-    public void OnMoveToAction(MoveToAction action)
+    public IEnumerator OnMoveToAction(MoveToAction action)
     {
         Debug.Log($"OnMoveToAction: pointNumber={action.pointNumber}");
+        yield break;
     }
 
-    public void OnTurnInPlaceAction(TurnInPlaceAction action)
+    public IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action)
     {
         Debug.Log($"OnTurnInPlaceAction: degrees={action.degrees}");
+        yield break;
     }
 
-    public void OnFaceTowardAction(FaceTowardAction action)
+    public IEnumerator OnFaceTowardAction(FaceTowardAction action)
     {
         Debug.Log($"OnFaceTowardAction: pointNumber={action.pointNumber}");
+        yield break;
     }
 
-    public void OnFaceTowardHeadingAction(FaceTowardHeadingAction action)
+    public IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action)
     {
         Debug.Log($"OnFaceTowardHeadingAction: headingDegrees={action.headingDegrees}");
+        yield break;
     }
 
-    public void OnScan360Action(Scan360Action action)
+    public IEnumerator OnScan360Action(Scan360Action action)
     {
         Debug.Log("OnScan360Action");
+
+        Vector3 startForward = transform.forward.XZProject().normalized;
+
+        // Build target directions at 45-degree increments, returning to start on the last step
+        var steps = new List<Vector3>();
+        for (int i = 1; i <= 7; i++)
+            steps.Add(Quaternion.AngleAxis(45f * i, Vector3.up) * startForward);
+        steps.Add(startForward);
+
+        // Forward pass
+        int numSucceeded = 0;
+        bool wasSuccessful = true;
+        foreach (Vector3 targetForward in steps)
+        {
+            bool success = false;
+            Debug.Log($"Facing: {targetForward}");
+            yield return StartCoroutine(FaceForward(targetForward, v => success = v));
+            if (!success)
+            {
+                wasSuccessful = false;
+                break;
+            }
+            yield return StartCoroutine(CapturePhoto());
+            numSucceeded++;
+        }
+
+        // If the forward pass was blocked, return to start and sweep the other way to cover missed angles
+        if (!wasSuccessful)
+        {
+            bool ignored = false;
+            yield return StartCoroutine(FaceForward(startForward, v => ignored = v));
+
+            foreach (Vector3 targetForward in steps.AsEnumerable().Reverse().Take(steps.Count - numSucceeded))
+            {
+                bool success = false;
+                Debug.Log($"R Facing: {targetForward}");
+                yield return StartCoroutine(FaceForward(targetForward, v => success = v));
+                if (!success) break;
+                yield return StartCoroutine(CapturePhoto());
+            }
+        }
+
+        m_pendingObservations.description += "Completed 360 scan.\n";
     }
 
-    public void OnTakePhotoAction(TakePhotoAction action)
+    public IEnumerator OnTakePhotoAction(TakePhotoAction action)
     {
         Debug.Log("OnTakePhotoAction");
+        yield return StartCoroutine(CapturePhoto());
     }
 
-    public void OnBackOutAction(BackOutAction action)
+    private IEnumerator FaceForward(Vector3 targetForward, Action<bool> onResult)
+    {
+        Vector3 fromForward = transform.forward.XZProject().normalized;
+        float desiredDegrees = Vector3.Angle(fromForward, targetForward);
+
+        m_orientationTarget.transform.position = transform.position + targetForward.normalized;
+        m_orientationPIDController.enabled = true;
+
+        var wait = new WaitUntilOrTimeout(() => m_orientationPIDController.Error < 1e-2f, m_orientationTimeoutSeconds);
+        yield return wait;
+        m_orientationPIDController.enabled = false;
+
+        if (wait.TimedOut && desiredDegrees > 0f)
+        {
+            float actualDegrees = Vector3.Angle(fromForward, transform.forward.XZProject().normalized);
+            float pctError = Mathf.Abs(actualDegrees / desiredDegrees - 1f);
+            if (pctError > 0.2f)
+            {
+                Debug.LogWarning($"FaceForward: timed out with {pctError:P0} error (desired={desiredDegrees:F1} deg, actual={actualDegrees:F1} deg)");
+                onResult(false);
+                yield break;
+            }
+        }
+
+        onResult(true);
+    }
+
+    private IEnumerator CapturePhoto()
+    {
+        yield return new WaitForEndOfFrame();
+        Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+        byte[] jpegBytes = screenshot.EncodeToJPG();
+        Destroy(screenshot);
+        string base64 = Convert.ToBase64String(jpegBytes);
+        m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<string>()).Append(base64).ToArray();
+    }
+
+    public IEnumerator OnBackOutAction(BackOutAction action)
     {
         Debug.Log("OnBackOutAction");
+        yield break;
     }
 }

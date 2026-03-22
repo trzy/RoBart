@@ -1,22 +1,23 @@
+using System.Collections;
 using UnityEngine;
 
 public static class ActionDispatcher
 {
-    public static void Dispatch(object action, IActionHandler handler)
+    public static IEnumerator Dispatch(object action, IActionHandler handler)
     {
         switch (action)
         {
-            case MoveAction a:              handler.OnMoveAction(a); break;
-            case MoveToAction a:            handler.OnMoveToAction(a); break;
-            case TurnInPlaceAction a:       handler.OnTurnInPlaceAction(a); break;
-            case FaceTowardAction a:        handler.OnFaceTowardAction(a); break;
-            case FaceTowardHeadingAction a: handler.OnFaceTowardHeadingAction(a); break;
-            case Scan360Action a:           handler.OnScan360Action(a); break;
-            case TakePhotoAction a:         handler.OnTakePhotoAction(a); break;
-            case BackOutAction a:           handler.OnBackOutAction(a); break;
+            case MoveAction a:              return handler.OnMoveAction(a);
+            case MoveToAction a:            return handler.OnMoveToAction(a);
+            case TurnInPlaceAction a:       return handler.OnTurnInPlaceAction(a);
+            case FaceTowardAction a:        return handler.OnFaceTowardAction(a);
+            case FaceTowardHeadingAction a: return handler.OnFaceTowardHeadingAction(a);
+            case Scan360Action a:           return handler.OnScan360Action(a);
+            case TakePhotoAction a:         return handler.OnTakePhotoAction(a);
+            case BackOutAction a:           return handler.OnBackOutAction(a);
             default:
                 Debug.LogError($"ActionDispatcher: unhandled action type {action?.GetType().Name ?? "null"}");
-                break;
+                return null;
         }
     }
 }

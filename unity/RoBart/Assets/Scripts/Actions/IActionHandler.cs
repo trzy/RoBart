@@ -1,11 +1,13 @@
+using System.Collections;
+
 public interface IActionHandler
 {
-    void OnMoveAction(MoveAction action);
-    void OnMoveToAction(MoveToAction action);
-    void OnTurnInPlaceAction(TurnInPlaceAction action);
-    void OnFaceTowardAction(FaceTowardAction action);
-    void OnFaceTowardHeadingAction(FaceTowardHeadingAction action);
-    void OnScan360Action(Scan360Action action);
-    void OnTakePhotoAction(TakePhotoAction action);
-    void OnBackOutAction(BackOutAction action);
+    IEnumerator OnMoveAction(MoveAction action);
+    IEnumerator OnMoveToAction(MoveToAction action);
+    IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action);
+    IEnumerator OnFaceTowardAction(FaceTowardAction action);
+    IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action);
+    IEnumerator OnScan360Action(Scan360Action action);
+    IEnumerator OnTakePhotoAction(TakePhotoAction action);
+    IEnumerator OnBackOutAction(BackOutAction action);
 }
