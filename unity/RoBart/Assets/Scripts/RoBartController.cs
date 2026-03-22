@@ -266,7 +266,14 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     public IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action)
     {
         Debug.Log($"OnTurnInPlaceAction: degrees={action.degrees}");
-        yield break;
+        Vector3 startForward = transform.forward.XZProject().normalized;
+        // Positive degrees = left (counterclockwise); Unity positive-Y rotation = clockwise, so negate
+        Vector3 targetForward = Quaternion.AngleAxis(-action.degrees, Vector3.up) * startForward;
+        bool success = false;
+        yield return StartCoroutine(FaceForward(targetForward, v => success = v));
+        float actualDegrees = Vector3.SignedAngle(startForward, transform.forward.XZProject().normalized, Vector3.up);
+        string status = success ? "completed" : "timed out";
+        m_pendingObservations.description += $"Turn: {status}, rotated {actualDegrees:F1} deg (requested {action.degrees:F1} deg left).\n";
     }
 
     public IEnumerator OnFaceTowardAction(FaceTowardAction action)
@@ -278,7 +285,13 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     public IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action)
     {
         Debug.Log($"OnFaceTowardHeadingAction: headingDegrees={action.headingDegrees}");
-        yield break;
+        // Heading 0 = world +Z, increasing clockwise; matches Unity positive-Y rotation convention
+        Vector3 targetForward = Quaternion.AngleAxis(action.headingDegrees, Vector3.up) * Vector3.forward;
+        bool success = false;
+        yield return StartCoroutine(FaceForward(targetForward, v => success = v));
+        float actualHeading = Vector3.SignedAngle(Vector3.forward, transform.forward.XZProject().normalized, Vector3.up);
+        string status = success ? "completed" : "timed out";
+        m_pendingObservations.description += $"Face heading: {status}, now facing {actualHeading:F1} deg (requested {action.headingDegrees:F1} deg).\n";
     }
 
     public IEnumerator OnScan360Action(Scan360Action action)
