@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 993e4d2b864852e45acbbdbf91fab6d8
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_gliders.prefab
+  uploadId: 860064

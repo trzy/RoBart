@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0ca32b7e9b77f864cba4c429512337af
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/StateHandling/ActivatedByState.cs
+  uploadId: 860064

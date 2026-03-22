@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c932cb5d6f64d4f48a09c35040315548
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/box_wide_flat_prefab.prefab
+  uploadId: 860064

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 22a2f914da4448543b80990b8e74df25
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_body_front.prefab
+  uploadId: 860064

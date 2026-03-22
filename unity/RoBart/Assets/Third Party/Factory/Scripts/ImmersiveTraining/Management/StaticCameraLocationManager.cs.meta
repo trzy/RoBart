@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c4b697068ab2bb249b36e56df3b614a0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/Management/StaticCameraLocationManager.cs
+  uploadId: 860064

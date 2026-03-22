@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0e8d29f8c35cc3a4298748516bb98389
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/immersiveTraining_screen_prefab.prefab
+  uploadId: 860064

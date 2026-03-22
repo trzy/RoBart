@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3a1068422618e994ea9005a494a85ec1
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/plastic_container_prefab.prefab
+  uploadId: 860064

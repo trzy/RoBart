@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 84e76d445df3c00448f0d04a4b22f75d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/DistributionCenter/CameraSwitcher.cs
+  uploadId: 860064

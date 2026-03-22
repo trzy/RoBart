@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 06b881b58669f444199a2fd528348dd1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/TrainingInteractions/TrainingCompleteHandler.cs
+  uploadId: 860064

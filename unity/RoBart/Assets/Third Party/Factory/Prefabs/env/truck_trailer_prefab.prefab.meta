@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f35acf34b7fc1234db95af2722dfe111
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/truck_trailer_prefab.prefab
+  uploadId: 860064

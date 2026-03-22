@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4368c2ae47d79374b8d21d55ed59caff
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/wall_door_stair_GRP_prefab.prefab
+  uploadId: 860064

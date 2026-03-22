@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fe73a4be512f8f44ba8d820023ef1457
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/walkway_Fence_prefab.prefab
+  uploadId: 860064

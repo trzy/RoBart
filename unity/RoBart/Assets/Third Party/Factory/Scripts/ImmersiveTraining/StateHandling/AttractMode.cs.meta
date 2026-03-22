@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: fa0e6bb28f1ba904a99ce3b939ff0a5b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/StateHandling/AttractMode.cs
+  uploadId: 860064

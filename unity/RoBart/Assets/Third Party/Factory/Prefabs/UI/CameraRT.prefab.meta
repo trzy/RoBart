@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 385fa595f8cf8b9489f59b595a0dc8fe
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/UI/CameraRT.prefab
+  uploadId: 860064

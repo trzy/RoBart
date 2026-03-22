@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 1eaa5f5907ad63b4896bc0a07663ffbc
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/Management/TrainingTimeOutHandler.cs
+  uploadId: 860064

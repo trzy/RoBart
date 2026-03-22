@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ee0c049c547d42f418ebe3f280e2d701
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/inner_shaft.prefab
+  uploadId: 860064

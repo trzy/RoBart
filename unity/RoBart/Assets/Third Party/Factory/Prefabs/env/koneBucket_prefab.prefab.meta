@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0916a2d76ce58ea4eb3474a9c5b57bbe
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/koneBucket_prefab.prefab
+  uploadId: 860064

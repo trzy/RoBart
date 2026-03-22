@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4be43a4f5681c09418a7855f94b27e52
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_inner_shaft.prefab
+  uploadId: 860064

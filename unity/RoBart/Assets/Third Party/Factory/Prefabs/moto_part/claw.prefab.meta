@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: afe0ab7a23f2a804b83157d850fb077c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/claw.prefab
+  uploadId: 860064

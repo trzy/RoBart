@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: b73d7e27442319349803bfa0bfc0ccc8
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/DistributionCenter/RandomAgentMovement.cs
+  uploadId: 860064

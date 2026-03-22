@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: be812180114c6e749ad5604438278065
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/box_med_prefab.prefab
+  uploadId: 860064

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 99094652caa676440aefad355a1b71b8
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/gliders_right.prefab
+  uploadId: 860064

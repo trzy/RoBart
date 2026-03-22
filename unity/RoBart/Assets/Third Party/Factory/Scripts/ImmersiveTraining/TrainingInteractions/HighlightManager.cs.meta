@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5851f652bdf71ff4997c1e269b4f37ae
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/TrainingInteractions/HighlightManager.cs
+  uploadId: 860064

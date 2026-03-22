@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: cfc9f5c2cda692b4786ef53aabef34fc
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/TrainingInteractions/PlaySoundOnTrainingStepComplete.cs
+  uploadId: 860064

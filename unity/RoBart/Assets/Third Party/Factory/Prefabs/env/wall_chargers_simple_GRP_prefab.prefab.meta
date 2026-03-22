@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 280fa0a27a07a5e40ab499194cd700d6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/wall_chargers_simple_GRP_prefab.prefab
+  uploadId: 860064

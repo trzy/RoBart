@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4a305a3e42b81314d9d524d90211aec2
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/Rendering/Global Volume.prefab
+  uploadId: 860064

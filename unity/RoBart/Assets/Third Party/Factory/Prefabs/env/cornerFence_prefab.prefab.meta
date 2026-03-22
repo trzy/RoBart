@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 400cc4f8167506c46a974076bf4b363c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/cornerFence_prefab.prefab
+  uploadId: 860064

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: d6256dff6bc1b86428576b4de2b76c76
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/TrainingInteractions/FireAutoPlayEvent.cs
+  uploadId: 860064

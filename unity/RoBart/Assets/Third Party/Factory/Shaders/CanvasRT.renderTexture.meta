@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4c1b1e893dfe6bc49a54a6686a53a5d4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Shaders/CanvasRT.renderTexture
+  uploadId: 860064

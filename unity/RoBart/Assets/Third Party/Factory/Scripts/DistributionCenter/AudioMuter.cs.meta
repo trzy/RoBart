@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 976ae1c791d0b5e4b9f398a506c9735c
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/DistributionCenter/AudioMuter.cs
+  uploadId: 860064

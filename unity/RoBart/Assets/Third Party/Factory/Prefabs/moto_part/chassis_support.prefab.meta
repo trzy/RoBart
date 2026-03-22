@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1f78a9cb62cd53a4d924844a00a68d9d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/chassis_support.prefab
+  uploadId: 860064

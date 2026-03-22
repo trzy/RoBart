@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d5dcb6cb039e8ce49a4c66c35cdd51c0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/StateHandling/HideInsteadOfDeactivate.cs
+  uploadId: 860064

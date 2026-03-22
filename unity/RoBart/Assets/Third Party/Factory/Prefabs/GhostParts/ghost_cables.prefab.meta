@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 30925e9a25cdaa94d8aad1abc06cf0d9
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_cables.prefab
+  uploadId: 860064

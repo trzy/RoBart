@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8af6a0fcf489dd8408b4ee73b3e87a4b
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/TrainingPlatform_Prefab.prefab
+  uploadId: 860064

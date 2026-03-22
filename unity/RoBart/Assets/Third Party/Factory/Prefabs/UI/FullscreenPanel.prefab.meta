@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 776eb0262413ae644b3c569ee31ff146
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/UI/FullscreenPanel.prefab
+  uploadId: 860064

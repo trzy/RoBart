@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8de4b3bcb61d5324e9ef062da10d4cb9
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_frame_cover.prefab
+  uploadId: 860064

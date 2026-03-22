@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 575f42e0625ea6d4594f76ec8cb5197c
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/StateHandling/IUseTimer.cs
+  uploadId: 860064

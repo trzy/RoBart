@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 809e895d0ca2406488b52c2a3c16d4fd
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/bridge.prefab
+  uploadId: 860064

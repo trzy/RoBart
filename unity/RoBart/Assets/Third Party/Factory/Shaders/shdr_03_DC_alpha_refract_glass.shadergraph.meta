@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: b301066beb305cb4da6fd508b38df3fd
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Shaders/shdr_03_DC_alpha_refract_glass.shadergraph
+  uploadId: 860064

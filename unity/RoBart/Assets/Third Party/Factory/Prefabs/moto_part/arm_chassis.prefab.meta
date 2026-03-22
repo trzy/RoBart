@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 33aae20f82fcf004388d3a9fff6a309f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/arm_chassis.prefab
+  uploadId: 860064

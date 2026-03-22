@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 42452b5400244274a979846a2c06c144
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_outer_shaft.prefab
+  uploadId: 860064

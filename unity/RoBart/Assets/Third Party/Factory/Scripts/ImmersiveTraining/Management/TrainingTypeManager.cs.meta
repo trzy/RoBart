@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5f713668c92f8e443b55a8fe3b9c24c6
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/Management/TrainingTypeManager.cs
+  uploadId: 860064

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2fa60b4a9c2dce34e94a8c12af554a71
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/wall_empty_small_prefab.prefab
+  uploadId: 860064

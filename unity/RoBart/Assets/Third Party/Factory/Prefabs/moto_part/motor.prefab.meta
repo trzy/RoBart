@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7dd58d64518f10843ab19db357efbfc2
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/motor.prefab
+  uploadId: 860064

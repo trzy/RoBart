@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1e29f93b56052994e9a762bddf3e87e3
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_bot/moto_prefab.prefab
+  uploadId: 860064

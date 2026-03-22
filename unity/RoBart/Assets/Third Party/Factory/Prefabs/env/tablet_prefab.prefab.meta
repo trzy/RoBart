@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5ecdec7cdc8f30b4d9695e91b909bc1e
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/tablet_prefab.prefab
+  uploadId: 860064

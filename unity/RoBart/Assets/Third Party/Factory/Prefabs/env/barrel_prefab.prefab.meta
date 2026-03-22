@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2ff238d54d35f2c45bd5cecfe7ea88fd
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/barrel_prefab.prefab
+  uploadId: 860064

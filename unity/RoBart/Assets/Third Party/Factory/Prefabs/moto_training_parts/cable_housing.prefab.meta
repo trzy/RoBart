@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: dcc7a5b32477dec4ca925db93493baac
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/cable_housing.prefab
+  uploadId: 860064

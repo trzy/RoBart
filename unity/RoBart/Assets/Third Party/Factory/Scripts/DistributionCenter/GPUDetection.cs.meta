@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: a5c31c503cfe1224ca48a3afb89837fe
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/DistributionCenter/GPUDetection.cs
+  uploadId: 860064

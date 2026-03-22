@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2ca6df91020c62f4e888b8c9f85116f7
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_part/outer_shaft.prefab
+  uploadId: 860064

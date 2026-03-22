@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f535f8f563ad10549937883a9b6b20e1
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/cables.prefab
+  uploadId: 860064

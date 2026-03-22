@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: da39af93cb0975f43b80d6149f958f5f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_shelf_Gliders_GRP.prefab
+  uploadId: 860064

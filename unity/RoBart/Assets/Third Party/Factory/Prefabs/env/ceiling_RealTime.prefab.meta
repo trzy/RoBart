@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d1b3ccc1242a4ad45a421d84c1494979
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/ceiling_RealTime.prefab
+  uploadId: 860064

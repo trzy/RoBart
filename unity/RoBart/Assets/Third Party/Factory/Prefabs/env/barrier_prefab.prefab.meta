@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 46349bb69b880304aa027ad526f450ff
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/barrier_prefab.prefab
+  uploadId: 860064

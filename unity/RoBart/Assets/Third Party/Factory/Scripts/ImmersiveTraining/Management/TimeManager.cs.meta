@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 52baf60e39315c3468485898ae3296d6
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/Management/TimeManager.cs
+  uploadId: 860064

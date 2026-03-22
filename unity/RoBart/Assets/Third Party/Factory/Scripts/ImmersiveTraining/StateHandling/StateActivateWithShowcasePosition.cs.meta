@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 6775247cb7de78a40b6d7a2a90e0a7b4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/StateHandling/StateActivateWithShowcasePosition.cs
+  uploadId: 860064

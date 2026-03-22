@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ec7a5601b3c692e4eabec6a13cb69d4f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/GhostParts/ghost_chassis_support.prefab
+  uploadId: 860064

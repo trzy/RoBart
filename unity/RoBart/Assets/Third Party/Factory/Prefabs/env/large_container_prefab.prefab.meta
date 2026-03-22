@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 687c98e6cf5036940afb9a1d98664d73
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/large_container_prefab.prefab
+  uploadId: 860064

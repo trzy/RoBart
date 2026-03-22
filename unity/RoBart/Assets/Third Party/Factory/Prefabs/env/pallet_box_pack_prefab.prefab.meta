@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4d483123b75e06147b8e0b15d3490c34
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/pallet_box_pack_prefab.prefab
+  uploadId: 860064

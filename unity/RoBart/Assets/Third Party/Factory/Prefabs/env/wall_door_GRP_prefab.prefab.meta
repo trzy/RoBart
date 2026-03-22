@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 355591709c2484542981afc647e0b6ad
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/wall_door_GRP_prefab.prefab
+  uploadId: 860064

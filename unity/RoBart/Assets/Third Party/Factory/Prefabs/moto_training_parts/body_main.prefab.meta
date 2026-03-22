@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 082c5f5b29d90e54aa8d668d9c3bf335
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/body_main.prefab
+  uploadId: 860064

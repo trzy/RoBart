@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 57d0a64432785b24ba97dc7c6d21bddd
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/env/StepsTimePanel.prefab
+  uploadId: 860064

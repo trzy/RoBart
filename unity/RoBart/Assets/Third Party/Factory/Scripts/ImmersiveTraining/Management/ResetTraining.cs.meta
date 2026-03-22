@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ab0f0f5ffb09dcd4a8752c726c34a83b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/Management/ResetTraining.cs
+  uploadId: 860064

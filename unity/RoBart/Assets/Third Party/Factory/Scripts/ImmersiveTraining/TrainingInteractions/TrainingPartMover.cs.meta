@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 25ac6628f618d68429056389e4768d74
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scripts/ImmersiveTraining/TrainingInteractions/TrainingPartMover.cs
+  uploadId: 860064

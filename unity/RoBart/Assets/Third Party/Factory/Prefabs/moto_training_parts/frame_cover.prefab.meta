@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: be04546bc445a32489ef68f1bdc7c8c8
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Prefabs/moto_training_parts/frame_cover.prefab
+  uploadId: 860064
