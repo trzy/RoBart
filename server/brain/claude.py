@@ -20,10 +20,13 @@ class Message:
 
 
 async def list_models() -> List[str]:
-    client = anthropic.AsyncAnthropic()
-    response = await client.models.list()
-    return [m.id for m in response.data]
-
+    try:
+        client = anthropic.AsyncAnthropic()
+        response = await client.models.list()
+        return [m.id for m in response.data]
+    except Exception as e:
+        print(f"Error: {e}")
+    return []
 
 async def think(messages: List[Message], system: str, model: str = "claude-opus-4-6", stop_sequences: List[str] = []) -> str:
     client = anthropic.AsyncAnthropic()

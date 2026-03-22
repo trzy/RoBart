@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from .claude import Image, Message, think
 from .block_parser import parse_blocks
+from .logger import BrainLogger
 from .prompts import SYSTEM_PROMPT
 from ..messages import ActionsMessage, ObservationsMessage
 
@@ -32,8 +33,12 @@ class Brain:
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         try:
+            logger = BrainLogger()
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
+            prev_response = None
             while True:
+                logger.log_step(messages, prev_response)
+
                 response = await think(
                     messages=messages,
                     system=SYSTEM_PROMPT,
@@ -46,8 +51,10 @@ class Brain:
                 print(f"[Tags: {', '.join(tags) if tags else '(none)'}]")
 
                 messages.append(Message(role="assistant", content=[response]))
+                prev_response = response
 
                 if "FINAL_RESPONSE" in tags:
+                    logger.log_step([], prev_response)
                     break
 
                 actions = _extract_actions(blocks)
@@ -87,8 +94,11 @@ async def _wait_for_observations(queue: asyncio.Queue) -> ObservationsMessage:
 def _format_observations(msg: Optional[ObservationsMessage]) -> list:
     if msg is None:
         return ["<OBSERVATIONS>\nStep completed successfully.\n</OBSERVATIONS>"]
-    text = f"<OBSERVATIONS>\n{msg.description}\n</OBSERVATIONS>"
-    content = [text]
+    if not msg.images:
+        return [f"<OBSERVATIONS>\n{msg.description}\n</OBSERVATIONS>"]
+    label = "Image:" if len(msg.images) == 1 else "Images:"
+    content = [f"<OBSERVATIONS>\n{msg.description}\n{label}\n"]
     for img_b64 in msg.images:
         content.append(Image(data=img_b64, media_type="image/jpeg"))
+    content.append("</OBSERVATIONS>")
     return content
