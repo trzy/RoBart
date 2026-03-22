@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: afd77436983977f46b2e8e373d95e2e4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scenes/profiles/Global Volume Profile.asset
+  uploadId: 860064

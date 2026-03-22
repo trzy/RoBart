@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f1fb73bc5b0f5184483888e27f9f093a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 23800000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scenes/urp_scene_with_training/NavMesh-NavMesh_GO.asset
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3a49598c4c26f3a4bb91ef7a7fd0fedd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Scenes/urp_scene_with_training/LightingData.asset
+  uploadId: 860064
