@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ad8f4f41a3e6ce44e8affea1a6f20e12
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/charger_simple/smooth_plaster-wall_charger_simple.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4dfc588c2539a684c89b36e2c5716524
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/shelfLarge/shelfLarge_shelve.mat
+  uploadId: 860064

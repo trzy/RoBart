@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 55c46d945fe168647b1f1a5b5ae9d563
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/cornerFence/cornerFenceRubber.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 775be921273a65544b3053ee316f7060
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/pallet_box_pack/tape.mat
+  uploadId: 860064

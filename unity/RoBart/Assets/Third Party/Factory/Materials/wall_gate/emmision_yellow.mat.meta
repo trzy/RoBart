@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2595dd4d17b9df74c928f3998e9bafde
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_gate/emmision_yellow.mat
+  uploadId: 860064

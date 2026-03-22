@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7d4d7e911ebe82e4ba42acf60c495098
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/barrel/barrel_shdw.mat
+  uploadId: 860064

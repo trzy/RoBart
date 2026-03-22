@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0466305ef5aae564b9434fd236d526fa
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/pole/smooth_plaster-pole.mat
+  uploadId: 860064

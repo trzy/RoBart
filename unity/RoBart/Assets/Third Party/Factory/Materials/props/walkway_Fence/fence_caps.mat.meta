@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 55cd7108ee5d9d949a771b2db2665c3f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/walkway_Fence/fence_caps.mat
+  uploadId: 860064

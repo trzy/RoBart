@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d1234f8a326e76c4194e5a6f8dd73517
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_gate/painted_metal_scratched_beige_metal_type03-wall_gate.mat
+  uploadId: 860064

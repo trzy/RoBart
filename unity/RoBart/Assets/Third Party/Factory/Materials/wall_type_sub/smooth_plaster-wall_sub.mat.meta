@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6f509e428b4e8f446a966f56c6fcea58
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_type_sub/smooth_plaster-wall_sub.mat
+  uploadId: 860064

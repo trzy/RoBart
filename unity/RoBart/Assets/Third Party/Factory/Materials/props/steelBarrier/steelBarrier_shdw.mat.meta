@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fe0a442159181c542998db8a1662f9f7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/steelBarrier/steelBarrier_shdw.mat
+  uploadId: 860064

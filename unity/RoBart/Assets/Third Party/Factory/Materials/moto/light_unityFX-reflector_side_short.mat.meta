@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a41a56bc1aca6144198f9fbaa508a62a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/light_unityFX-reflector_side_short.mat
+  uploadId: 860064

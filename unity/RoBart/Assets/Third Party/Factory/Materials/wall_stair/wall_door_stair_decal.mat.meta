@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 950d42cfe7a3a9b40bd9234be54c0fe1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_stair/wall_door_stair_decal.mat
+  uploadId: 860064

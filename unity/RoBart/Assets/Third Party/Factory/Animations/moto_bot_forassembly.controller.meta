@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cb2af5a940e99e74b8d79a40774f2ec9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Animations/moto_bot_forassembly.controller
+  uploadId: 860064

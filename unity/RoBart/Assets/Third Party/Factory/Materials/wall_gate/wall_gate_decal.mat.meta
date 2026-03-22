@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 57e7b54c373e16f4fab87adfc430fdf9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_gate/wall_gate_decal.mat
+  uploadId: 860064

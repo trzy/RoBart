@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e218a179961b4da47ad95f6ba014ee92
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/barrier/barrier_decal.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1980603b8409a06429345c5042b57f07
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/cornerFence/cornerFence_01.mat
+  uploadId: 860064

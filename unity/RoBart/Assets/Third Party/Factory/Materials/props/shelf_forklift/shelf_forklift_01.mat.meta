@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ffede9ac613f08e40a80563af6442eef
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/shelf_forklift/shelf_forklift_01.mat
+  uploadId: 860064

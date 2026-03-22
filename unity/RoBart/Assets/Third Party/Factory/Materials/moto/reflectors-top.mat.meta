@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9fc1ac95493987f42a7c25f9e8f41c1c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/reflectors-top.mat
+  uploadId: 860064

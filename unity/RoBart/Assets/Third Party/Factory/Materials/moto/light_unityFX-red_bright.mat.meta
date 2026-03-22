@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 70c418746b31d6040a350f41e68fb58b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/light_unityFX-red_bright.mat
+  uploadId: 860064

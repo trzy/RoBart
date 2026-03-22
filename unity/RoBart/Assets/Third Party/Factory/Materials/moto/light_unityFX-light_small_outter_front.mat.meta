@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e17538ab626b60a42ad53abbeb7828e5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/light_unityFX-light_small_outter_front.mat
+  uploadId: 860064

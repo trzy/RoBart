@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ce7654b1e9b19ff43aa4f74615988b8c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/charger_simple/wall_chargers_simple_decal.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b5845807f9d11b445b59b14cc59a3305
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/box/box_long_flat/box_long_flat_02.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b7b93b1b88b8ff940b60869686aa2a54
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/plastic_container/plastic_container_body.mat
+  uploadId: 860064

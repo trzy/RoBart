@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 66f810332c3923c4eb83ceb83e501943
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_type_corner/smooth_plaster-wall_corner.mat
+  uploadId: 860064

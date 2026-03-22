@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d708e3d211b98154f8ff40dd708df34e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/charger_simple/painted_metal_chipped_blue-charger_simple.mat
+  uploadId: 860064

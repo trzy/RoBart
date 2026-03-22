@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 622b1a54048c20b4c94d9651bc73c53f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/platform_shadow.mat
+  uploadId: 860064

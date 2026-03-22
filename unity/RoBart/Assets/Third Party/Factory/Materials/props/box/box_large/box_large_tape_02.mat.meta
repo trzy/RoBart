@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 791cc481735edf646ba4baaa8dcbeb17
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/box/box_large/box_large_tape_02.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fba884e76efed1e4dbc4bfdd6848b0ef
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Animations/UI/IdleNotification.anim
+  uploadId: 860064

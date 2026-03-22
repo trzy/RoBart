@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 351cc460d3f407d409a72ff4cf775b1d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/charger_GRP/smooth_plaster-wall_charger_GRP.mat
+  uploadId: 860064

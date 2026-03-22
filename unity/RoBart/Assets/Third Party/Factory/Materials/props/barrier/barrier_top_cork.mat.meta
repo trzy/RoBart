@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5ce51bff512050e4d8c735b973ccacee
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/barrier/barrier_top_cork.mat
+  uploadId: 860064

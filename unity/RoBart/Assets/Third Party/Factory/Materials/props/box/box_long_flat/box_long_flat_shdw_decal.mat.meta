@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4f7b7618d309ad34691ff8c0c609369c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/box/box_long_flat/box_long_flat_shdw_decal.mat
+  uploadId: 860064

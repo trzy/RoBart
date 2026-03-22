@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 284e6736f4db0b448acdf18324e2c215
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/pole/smeared_cement_wall_pole.mat
+  uploadId: 860064

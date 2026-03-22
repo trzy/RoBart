@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2a26a9d274d5f3c438edce426ccd82aa
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/ceiling/aluminium_brushed_ceiling.mat
+  uploadId: 860064

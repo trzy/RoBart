@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c41deada0e04be540aa32a8acbae3d15
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/cornerFence/bolts.mat
+  uploadId: 860064

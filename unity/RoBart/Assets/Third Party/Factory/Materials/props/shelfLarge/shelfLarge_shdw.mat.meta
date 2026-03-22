@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b7b64ca6f8b5d23449dc51da2601f965
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/shelfLarge/shelfLarge_shdw.mat
+  uploadId: 860064

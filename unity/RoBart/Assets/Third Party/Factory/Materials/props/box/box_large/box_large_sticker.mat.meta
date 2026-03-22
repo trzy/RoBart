@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5285196eaff156e46a596e46722d62ba
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/box/box_large/box_large_sticker.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5badf6c34297ccb40a088885b3a004d1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Animations/UI/StepCompleteNotification.anim
+  uploadId: 860064

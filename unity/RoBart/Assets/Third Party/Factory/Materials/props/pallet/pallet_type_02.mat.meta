@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b2d69e8b7cdfea94091cd0212f90e9b6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/pallet/pallet_type_02.mat
+  uploadId: 860064

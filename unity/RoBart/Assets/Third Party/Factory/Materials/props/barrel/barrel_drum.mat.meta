@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0c75d097030e92247999658c9d637503
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/barrel/barrel_drum.mat
+  uploadId: 860064

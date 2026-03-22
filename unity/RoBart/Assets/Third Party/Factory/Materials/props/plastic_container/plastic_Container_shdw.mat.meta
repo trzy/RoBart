@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 045446065d0024443ae7eb02cb094b1f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/plastic_container/plastic_Container_shdw.mat
+  uploadId: 860064

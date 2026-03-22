@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f9e6bdc997aa49c4dbcc985c582fdece
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_door/smooth_plaster-wall_door.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fb5661ae6ad76d74e9b214e97eaad4e4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/reflector-reflector_side_short.mat
+  uploadId: 860064

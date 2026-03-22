@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f809342dabdb93048b36e745df538355
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/metal_01-black.mat
+  uploadId: 860064

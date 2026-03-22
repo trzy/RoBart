@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 109c893707dc1ee42b1ef98c9c56d9f1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/steelBarrier/steelBarrier_bolts.mat
+  uploadId: 860064

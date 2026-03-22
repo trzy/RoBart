@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 16ec14eb524d76743bf5782a812bebd5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/moto/motoSHDW.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8751389709b22174580ab41eb7f41b30
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/ceiling/ceiling_trailerTube_Light.mat
+  uploadId: 860064

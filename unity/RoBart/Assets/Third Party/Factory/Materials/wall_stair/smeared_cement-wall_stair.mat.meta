@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 66d22b2a9b88e0a4f9ea850f90cc2204
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_stair/smeared_cement-wall_stair.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a4cbb81595f3d5743afa8747e4238343
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/utility/M_outline.mat
+  uploadId: 860064

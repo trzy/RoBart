@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0a4624e2953f9a8449ee16671f7f2db7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/wall_plain/metal_flakes_filled_plastic_type_01-wall_plain.mat
+  uploadId: 860064

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7e1a6f4b6a366724080256e8fb1de7a2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/immersiveTraining_screen/immersiveTraining_screen.mat
+  uploadId: 860064

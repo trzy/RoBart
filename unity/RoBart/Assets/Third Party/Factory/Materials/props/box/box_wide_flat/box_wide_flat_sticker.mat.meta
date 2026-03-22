@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a101f70744e0f914c84c6852f5a4285c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 344832
+  packageName: Factory Training
+  packageVersion: 1.0
+  assetPath: Assets/Materials/props/box/box_wide_flat/box_wide_flat_sticker.mat
+  uploadId: 860064
