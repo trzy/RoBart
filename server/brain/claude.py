@@ -2,15 +2,7 @@ from typing import List, Literal
 
 import anthropic
 
-
-class Image:
-    _next_id: int = 1
-
-    def __init__(self, data: str, media_type: Literal["image/png", "image/jpeg"]):
-        self.id = Image._next_id
-        Image._next_id += 1
-        self.data = data
-        self.media_type = media_type
+from .image import Image
 
 
 class Message:

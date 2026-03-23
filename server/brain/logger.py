@@ -3,7 +3,8 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from .claude import Image, Message
+from .claude import Message
+from .image import Image
 
 
 ####################################################################################################
@@ -24,7 +25,8 @@ class BrainLogger:
         self._step = 0
 
     def log_step(self, messages: List[Message], prev_response: Optional[str]):
-        step_dir = os.path.join(self._run_dir, str(self._step))
+        step = self._step
+        step_dir = os.path.join(self._run_dir, str(step))
         os.makedirs(step_dir, exist_ok=True)
         self._step += 1
 
@@ -40,11 +42,19 @@ class BrainLogger:
         if prev_response is not None:
             with open(os.path.join(step_dir, "output.txt"), "w") as f:
                 f.write(prev_response)
+            self._print_section("OUTPUT", step - 1, prev_response)
 
         # input.txt — full message history going into this step (absent for the final output-only step)
         if messages:
+            formatted = self._format_messages(messages)
             with open(os.path.join(step_dir, "input.txt"), "w") as f:
-                f.write(self._format_messages(messages))
+                f.write(formatted)
+            self._print_section("INPUT", step, formatted)
+
+    @staticmethod
+    def _print_section(kind: str, step: int, content: str):
+        header = f"[ {kind} — step {step} ]"
+        print(f"\n{header}\n{'-' * len(header)}\n{content}")
 
     def _format_messages(self, messages: List[Message]) -> str:
         parts = []

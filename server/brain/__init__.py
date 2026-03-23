@@ -1,2 +1,3 @@
 from .brain import Brain
-from .claude import Image, Message, list_models
+from .claude import Message, list_models
+from .image import Image

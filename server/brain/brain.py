@@ -4,8 +4,9 @@ from typing import Awaitable, Callable, Optional
 
 from pydantic import BaseModel
 
-from .claude import Image, Message, think
+from .claude import Message, think
 from .block_parser import parse_blocks
+from .image import decode_annotated_image
 from .logger import BrainLogger
 from .prompts import SYSTEM_PROMPT
 from ..messages import ActionsMessage, ObservationsMessage
@@ -45,10 +46,8 @@ class Brain:
                     model=model,
                     stop_sequences=[STOP_TAG],
                 )
-                print(f"\n{response}")
                 blocks = parse_blocks(response)
                 tags = [b.tag for b in blocks]
-                print(f"[Tags: {', '.join(tags) if tags else '(none)'}]")
 
                 messages.append(Message(role="assistant", content=[response]))
                 prev_response = response
@@ -98,7 +97,7 @@ def _format_observations(msg: Optional[ObservationsMessage]) -> list:
         return [f"<OBSERVATIONS>\n{msg.description}\n</OBSERVATIONS>"]
     label = "Image:" if len(msg.images) == 1 else "Images:"
     content = [f"<OBSERVATIONS>\n{msg.description}\n{label}\n"]
-    for img_b64 in msg.images:
-        content.append(Image(data=img_b64, media_type="image/jpeg"))
+    for annotated_image in msg.images:
+        content.append(decode_annotated_image(annotated_image))
     content.append("</OBSERVATIONS>")
     return content
