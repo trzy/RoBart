@@ -27,6 +27,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     private float m_orientationTimeoutSeconds = 5.0f;
 
     private Rigidbody m_rb;
+    private OccupancyMapBuilder m_occupancyMapBuilder;
 
     private GameObject m_positionTarget;
     private GameObject m_orientationTarget;
@@ -36,6 +37,8 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     private readonly Queue<(Net.Session session, ActionsMessage msg)> m_actionsQueue = new Queue<(Net.Session, ActionsMessage)>();
     private bool m_isProcessingActions = false;
     private ObservationsMessage m_pendingObservations;
+
+    private int m_nextAnnotationId = 1;
 
     private struct KeyboardControls
     {
@@ -69,6 +72,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     private void Awake()
     {
         m_rb = GetComponent<Rigidbody>();
+        m_occupancyMapBuilder = GetComponentInChildren<OccupancyMapBuilder>();
         m_positionPIDController = GetComponent<CascadedPIDController>();
         m_orientationPIDController = GetComponent<CascadedOrientationPIDController>();
 
@@ -381,8 +385,22 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
         byte[] jpegBytes = screenshot.EncodeToJPG();
         Destroy(screenshot);
-        string base64 = Convert.ToBase64String(jpegBytes);
-        m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<string>()).Append(base64).ToArray();
+
+        AnnotatedPoint[] points = NavigablePointSampler.Sample(
+            m_occupancyMapBuilder.Map,
+            transform.position,
+            transform.forward,
+            Camera.main,
+            NavigablePointSampler.Parameters.Default,
+            firstId: m_nextAnnotationId);
+        m_nextAnnotationId += points.Length;
+
+        AnnotatedImage annotatedImage = new AnnotatedImage
+        {
+            imageJpegBase64 = Convert.ToBase64String(jpegBytes),
+            points = points
+        };
+        m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<AnnotatedImage>()).Append(annotatedImage).ToArray();
     }
 
     public IEnumerator OnBackOutAction(BackOutAction action)

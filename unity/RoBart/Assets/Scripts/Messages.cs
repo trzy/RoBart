@@ -23,10 +23,25 @@ public struct ActionsMessage
 }
 
 [Serializable]
+public struct AnnotatedPoint
+{
+    public int id;
+    public float x;
+    public float y;
+}
+
+[Serializable]
+public struct AnnotatedImage
+{
+    public string imageJpegBase64;
+    public AnnotatedPoint[] points;
+}
+
+[Serializable]
 public struct ObservationsMessage
 {
     public string description;
-    public string[] images;  // base64-encoded
+    public AnnotatedImage[] images;
 }
 
 // OccupancyMapMessage is serialized manually in OccupancyMapBuilder because JsonUtility does
