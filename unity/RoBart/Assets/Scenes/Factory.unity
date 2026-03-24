@@ -38588,7 +38588,15 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 2087130058276636699, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: _layers.m_Bits
+      value: 65
+      objectReference: {fileID: 0}
+    - target: {fileID: 2087130058276636699, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
       propertyPath: _scanRegionSize
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 2088086284798021061, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5231427285368890933, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
@@ -38634,6 +38642,30 @@ PrefabInstance:
     - target: {fileID: 5786740643531010686, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.ConeAngleDegrees
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.MaxDistanceMeters
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.MinDistanceMeters
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.PointSpacingCells
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.PointSpacingMeters
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6459093178737905002, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_navigablePointParameters.SearchRadiusMeters
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 8498764711866630939, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
       propertyPath: m_Name

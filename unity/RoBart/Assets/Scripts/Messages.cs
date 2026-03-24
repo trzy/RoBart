@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 [Serializable]
 public struct HelloMessage
@@ -26,8 +27,9 @@ public struct ActionsMessage
 public struct AnnotatedPoint
 {
     public int id;
-    public float x;
-    public float y;
+    public float screenX;
+    public float screenY;
+    public Vector3 worldPosition;
 }
 
 [Serializable]

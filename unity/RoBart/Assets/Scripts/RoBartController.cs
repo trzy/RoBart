@@ -26,6 +26,9 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     [Tooltip("Timeout (seconds) waiting for orientation to settle after position is reached")]
     private float m_orientationTimeoutSeconds = 5.0f;
 
+    [SerializeField]
+    private NavigablePointSampler.Parameters m_navigablePointParameters = NavigablePointSampler.Parameters.Default;
+
     private Rigidbody m_rb;
     private OccupancyMapBuilder m_occupancyMapBuilder;
 
@@ -38,7 +41,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     private bool m_isProcessingActions = false;
     private ObservationsMessage m_pendingObservations;
 
-    private int m_nextAnnotationId = 1;
+    private List<Vector3> m_landmarkWorldPoints = new List<Vector3>();
 
     private struct KeyboardControls
     {
@@ -379,6 +382,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         onResult(true);
     }
 
+    //TODO next: need to ensure we don't self collide in occupancy map with robot itself (need to set special layer for robot)
     private IEnumerator CapturePhoto()
     {
         yield return new WaitForEndOfFrame();
@@ -386,14 +390,19 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         byte[] jpegBytes = screenshot.EncodeToJPG();
         Destroy(screenshot);
 
+        // Landmark IDs are just their index in the global store (begin with 0)
+        int nextLandmarkId = m_landmarkWorldPoints.Count;
+
         AnnotatedPoint[] points = NavigablePointSampler.Sample(
             m_occupancyMapBuilder.Map,
             transform.position,
             transform.forward,
             Camera.main,
-            NavigablePointSampler.Parameters.Default,
-            firstId: m_nextAnnotationId);
-        m_nextAnnotationId += points.Length;
+            m_navigablePointParameters,
+            firstId: nextLandmarkId);
+        
+        // Store landmarks permanently (the global list maps ID -> world point)
+        m_landmarkWorldPoints.AddRange(points.Select(point => point.worldPosition));
 
         AnnotatedImage annotatedImage = new AnnotatedImage
         {

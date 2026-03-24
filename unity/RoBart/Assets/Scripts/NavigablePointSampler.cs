@@ -5,29 +5,28 @@ using UnityEngine;
 /// a camera image, matching the logic in the iOS AnnotatingCamera.
 public class NavigablePointSampler
 {
+    [System.Serializable]
     public struct Parameters
     {
         /// Half-angle of the forward cone in degrees. Only points within this angle of the
-        /// robot's forward direction are considered (iOS default: 25).
+        /// robot's forward direction are considered.
         public float ConeAngleDegrees;
 
-        /// Point sampling grid spacing expressed as a multiple of the occupancy map cell size
-        /// (iOS uses 0.75m spacing with 0.25m cells = 3).
-        public float PointSpacingCells;
+        /// Minimum distance from the robot in meters. Points closer than this are ignored.
+        public float MinDistanceMeters;
 
-        /// Radius around the robot to search for candidate points, in meters (iOS default: 4.0).
-        public float SearchRadiusMeters;
+        /// Maximum distance from the robot in meters. Points farther than this are ignored.
+        public float MaxDistanceMeters;
 
-        /// Maximum navigable point distance expressed as a multiple of the point spacing in
-        /// meters (iOS default: 5, giving 5 × 0.75 = 3.75 m).
-        public float MaxDistanceMultiplier;
+        /// Spacing between sampled grid points in meters. Smaller values produce more points.
+        public float PointSpacingMeters;
 
         public static Parameters Default => new Parameters
         {
-            ConeAngleDegrees      = 25f,
-            PointSpacingCells     = 3f,
-            SearchRadiusMeters    = 4f,
-            MaxDistanceMultiplier = 5f,
+            ConeAngleDegrees  = 25f,
+            MinDistanceMeters = 0f,
+            MaxDistanceMeters = 3.75f,
+            PointSpacingMeters = 0.75f,
         };
     }
 
@@ -46,23 +45,21 @@ public class NavigablePointSampler
         int firstId = 1)
     {
         // Work on the XZ plane only
-        robotPosition   = robotPosition.XZProject();
-        robotForward    = robotForward.XZProject().normalized;
+        robotPosition = robotPosition.XZProject();
+        robotForward  = robotForward.XZProject().normalized;
 
-        float cellSize            = map.CellSize;
-        float pointSpacingMeters  = parameters.PointSpacingCells * cellSize;
-        float maxDistance         = parameters.MaxDistanceMultiplier * pointSpacingMeters;
-        int   cellSpacing         = Mathf.Max(1, Mathf.RoundToInt(parameters.PointSpacingCells));
-        int   searchRadiusCells   = Mathf.RoundToInt(parameters.SearchRadiusMeters / cellSize);
+        float cellSize    = map.CellSize;
+        int   cellSpacing = Mathf.Max(1, Mathf.RoundToInt(parameters.PointSpacingMeters / cellSize));
+        int   radiusCells = Mathf.RoundToInt(parameters.MaxDistanceMeters / cellSize);
 
         OccupancyMap.CellIndices robotCell = map.PositionToCell(robotPosition);
 
-        int minCellX = robotCell.x - searchRadiusCells;
-        int maxCellX = robotCell.x + searchRadiusCells;
-        int minCellZ = robotCell.z - searchRadiusCells;
-        int maxCellZ = robotCell.z + searchRadiusCells;
+        int minCellX = robotCell.x - radiusCells;
+        int maxCellX = robotCell.x + radiusCells;
+        int minCellZ = robotCell.z - radiusCells;
+        int maxCellZ = robotCell.z + radiusCells;
 
-        var candidates = new List<Vector2>();
+        var candidates = new List<(Vector2 screen, Vector3 world)>();
 
         for (int cx = minCellX; cx <= maxCellX; cx += cellSpacing)
         {
@@ -88,8 +85,9 @@ public class NavigablePointSampler
                 // Must be within the cone angle
                 if (Vector3.Angle(toPointNorm, robotForward) > parameters.ConeAngleDegrees) continue;
 
-                // Must be within the maximum distance
-                if (distance > maxDistance) continue;
+                // Must be within the distance range
+                if (distance < parameters.MinDistanceMeters) continue;
+                if (distance > parameters.MaxDistanceMeters) continue;
 
                 // Must project onto the screen
                 Vector3 screenPoint = camera.WorldToScreenPoint(worldPoint);
@@ -100,9 +98,7 @@ public class NavigablePointSampler
                 // Must have an unobstructed line of sight through the occupancy grid
                 if (!IsLineUnobstructed(map, robotCell, cell)) continue;
 
-                float imageX = screenPoint.x;
-                float imageY = screenPoint.y;
-                candidates.Add(new Vector2(imageX, imageY));
+                candidates.Add((new Vector2(screenPoint.x, screenPoint.y), worldPoint));
             }
         }
 
@@ -110,7 +106,13 @@ public class NavigablePointSampler
         var result = new AnnotatedPoint[candidates.Count];
         for (int i = 0; i < candidates.Count; i++)
         {
-            result[i] = new AnnotatedPoint { id = firstId + i, x = candidates[i].x, y = candidates[i].y };
+            result[i] = new AnnotatedPoint
+            {
+                id = firstId + i,
+                screenX = candidates[i].screen.x,
+                screenY = candidates[i].screen.y,
+                worldPosition = candidates[i].world
+            };
         }
         return result;
     }
