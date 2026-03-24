@@ -62,8 +62,8 @@ def _annotate_jpeg(
         box_h = text_h + 2 * padding
 
         # Unity screen coordinates have origin at bottom-left; flip Y to image coordinates
-        x = point.x
-        y = img.height - point.y
+        x = point.screenX
+        y = img.height - point.screenY
 
         bx0 = x - box_w / 2
         by0 = y - box_h / 2

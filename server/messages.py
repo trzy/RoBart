@@ -113,10 +113,16 @@ class AIStepMessage(BaseModel):
 class ActionsMessage(BaseModel):
     actions: List[str]  # each element is a JSON-formatted action object
 
-class AnnotatedPoint(BaseModel):
-    id: int
+class Vector3(BaseModel):
     x: float
     y: float
+    z: float
+
+class AnnotatedPoint(BaseModel):
+    id: int
+    screenX: float
+    screenY: float
+    worldPosition: Vector3
 
 class AnnotatedImage(BaseModel):
     imageJpegBase64: str
