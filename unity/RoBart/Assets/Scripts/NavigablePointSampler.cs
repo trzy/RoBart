@@ -23,10 +23,10 @@ public class NavigablePointSampler
 
         public static Parameters Default => new Parameters
         {
-            ConeAngleDegrees  = 25f,
-            MinDistanceMeters = 0f,
-            MaxDistanceMeters = 3.75f,
-            PointSpacingMeters = 0.75f,
+            ConeAngleDegrees  = 50f,
+            MinDistanceMeters = 2f,
+            MaxDistanceMeters = 10f,
+            PointSpacingMeters = 3f,
         };
     }
 
