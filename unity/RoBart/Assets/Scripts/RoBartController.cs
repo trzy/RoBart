@@ -31,6 +31,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
 
     private Rigidbody m_rb;
     private OccupancyMapBuilder m_occupancyMapBuilder;
+    private float m_robotRadius;
 
     private GameObject m_positionTarget;
     private GameObject m_orientationTarget;
@@ -78,6 +79,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         m_occupancyMapBuilder = GetComponentInChildren<OccupancyMapBuilder>();
         m_positionPIDController = GetComponent<CascadedPIDController>();
         m_orientationPIDController = GetComponent<CascadedOrientationPIDController>();
+        m_robotRadius = Footprint.GetRadius(gameObject);
 
         // Create targets for PID controllers
         m_positionTarget = new GameObject(name: "Target - Position");
@@ -267,7 +269,54 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     public IEnumerator OnMoveToAction(MoveToAction action)
     {
         Debug.Log($"OnMoveToAction: pointNumber={action.pointNumber}");
-        yield break;
+
+        if (action.pointNumber < 0 || action.pointNumber >= m_landmarkWorldPoints.Count)
+        {
+            Debug.LogError($"OnMoveToAction: point {action.pointNumber} not found (have {m_landmarkWorldPoints.Count} landmarks)");
+            m_pendingObservations.description += $"Move to point {action.pointNumber}: failed (unknown point).\n";
+            yield break;
+        }
+
+        Vector3 goal = m_landmarkWorldPoints[action.pointNumber];
+        List<Vector3> path = PathFinder.FindPath(m_occupancyMapBuilder.Map, transform.position, goal, m_robotRadius);
+
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogWarning($"OnMoveToAction: no path found to point {action.pointNumber}");
+            m_pendingObservations.description += $"Move to point {action.pointNumber}: no path found.\n";
+            yield break;
+        }
+
+        Debug.Log($"OnMoveToAction: following {path.Count}-waypoint path to point {action.pointNumber}");
+        yield return StartCoroutine(FollowPath(path));
+
+        float distanceToGoal = Vector3.Distance(transform.position.XZProject(), goal.XZProject());
+        m_pendingObservations.description += $"Move to point {action.pointNumber}: arrived, {distanceToGoal:F2} m from goal.\n";
+    }
+
+    private IEnumerator FollowPath(List<Vector3> waypoints)
+    {
+        foreach (Vector3 waypoint in waypoints)
+        {
+            // Face toward the waypoint before driving to it
+            Vector3 toWaypoint = (waypoint - transform.position).XZProject();
+            if (toWaypoint.magnitude > 1e-3f)
+            {
+                bool ignored = false;
+                yield return StartCoroutine(FaceForward(toWaypoint.normalized, v => ignored = v));
+            }
+
+            // Drive to the waypoint
+            Vector3 waypointXZ = waypoint.XZProject();
+            m_positionTarget.transform.position = waypointXZ;
+            m_orientationTarget.transform.position = waypointXZ + (waypoint - transform.position).XZProject().normalized * 0.1f;
+            m_positionPIDController.enabled = true;
+            m_orientationPIDController.enabled = true;
+
+            yield return new WaitUntilOrTimeout(() => m_positionPIDController.Error < 1e-2f, m_positionTimeoutSeconds);
+            m_positionPIDController.enabled = false;
+            m_orientationPIDController.enabled = false;
+        }
     }
 
     public IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action)
@@ -286,7 +335,27 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     public IEnumerator OnFaceTowardAction(FaceTowardAction action)
     {
         Debug.Log($"OnFaceTowardAction: pointNumber={action.pointNumber}");
-        yield break;
+
+        if (action.pointNumber < 0 || action.pointNumber >= m_landmarkWorldPoints.Count)
+        {
+            Debug.LogError($"OnFaceTowardAction: point {action.pointNumber} not found (have {m_landmarkWorldPoints.Count} landmarks)");
+            m_pendingObservations.description += $"Face toward point {action.pointNumber}: failed (unknown point).\n";
+            yield break;
+        }
+
+        Vector3 toTarget = (m_landmarkWorldPoints[action.pointNumber] - transform.position).XZProject();
+        if (toTarget.magnitude < 1e-3f)
+        {
+            m_pendingObservations.description += $"Face toward point {action.pointNumber}: already at target position.\n";
+            yield break;
+        }
+
+        bool success = false;
+        yield return StartCoroutine(FaceForward(toTarget.normalized, v => success = v));
+
+        float actualHeading = Vector3.SignedAngle(Vector3.forward, transform.forward.XZProject().normalized, Vector3.up);
+        string status = success ? "completed" : "timed out";
+        m_pendingObservations.description += $"Face toward point {action.pointNumber}: {status}, now facing {actualHeading:F1} deg.\n";
     }
 
     public IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action)

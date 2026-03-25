@@ -46,6 +46,20 @@ public struct ObservationsMessage
     public AnnotatedImage[] images;
 }
 
+[Serializable]
+public struct VisualTraceSample
+{
+    public string imageJpegBase64;
+    public Vector3 worldPosition;
+    public float timestampSeconds;
+}
+
+[Serializable]
+public struct VisualTraceMessage
+{
+    public VisualTraceSample[] entries;
+}
+
 // OccupancyMapMessage is serialized manually in OccupancyMapBuilder because JsonUtility does
 // not support jagged arrays (int[][]) required for pathCells.
 // Schema (must match server messages.py):

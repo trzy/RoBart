@@ -10,7 +10,7 @@ public struct MoveAction
 
 public struct MoveToAction
 {
-    public float pointNumber;
+    public int pointNumber;
 }
 
 public struct TurnInPlaceAction
@@ -20,7 +20,7 @@ public struct TurnInPlaceAction
 
 public struct FaceTowardAction
 {
-    public float pointNumber;
+    public int pointNumber;
 }
 
 public struct FaceTowardHeadingAction

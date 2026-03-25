@@ -98,6 +98,10 @@ public class NetworkManager : Net.JSONMessageSubscriber
             }
 
             Debug.LogFormat("Successfully connected to {0}", session);
+            foreach (var receiver in m_receivers)
+            {
+                receiver.OnConnect(session);
+            }
         });
     }
 
@@ -105,6 +109,10 @@ public class NetworkManager : Net.JSONMessageSubscriber
     {
         Enqueue(() =>
         {
+            foreach (var receiver in m_receivers)
+            {
+                receiver.OnDisconnect(session);
+            }
             TryConnect(m_reconnectDelaySeconds);
         });
     }
