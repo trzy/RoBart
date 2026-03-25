@@ -131,3 +131,11 @@ class AnnotatedImage(BaseModel):
 class ObservationsMessage(BaseModel):
     description: str
     images: List[AnnotatedImage]
+
+class VisualTraceSample(BaseModel):
+    imageJpegBase64: str
+    worldPosition: Vector3
+    timestampSeconds: float
+
+class VisualTraceMessage(BaseModel):
+    entries: List[VisualTraceSample]

@@ -22,6 +22,40 @@ class Image:
         self.data = data
         self.media_type = media_type
 
+    @property
+    def size(self) -> tuple[int, int]:
+        """Return (width, height) in pixels."""
+        img = PILImage.open(io.BytesIO(base64.b64decode(self.data)))
+        return img.size
+
+    def resize(self, width: int = None, height: int = None, scale: float = None) -> "Image":
+        """Return a new Image at the requested size.
+
+        Provide scale to resize both axes proportionally, or width/height (either or both).
+        If only one of width/height is given, the other is derived from the aspect ratio.
+        """
+        img = PILImage.open(io.BytesIO(base64.b64decode(self.data))).convert("RGB")
+        orig_w, orig_h = img.size
+
+        if scale is not None:
+            new_w = round(orig_w * scale)
+            new_h = round(orig_h * scale)
+        elif width is not None and height is not None:
+            new_w, new_h = width, height
+        elif width is not None:
+            new_w = width
+            new_h = round(orig_h * width / orig_w)
+        elif height is not None:
+            new_w = round(orig_w * height / orig_h)
+            new_h = height
+        else:
+            return self
+
+        img = img.resize((new_w, new_h), PILImage.LANCZOS)
+        out = io.BytesIO()
+        img.save(out, format="JPEG")
+        return Image(data=base64.b64encode(out.getvalue()).decode("utf-8"), media_type="image/jpeg")
+
 
 ####################################################################################################
 # Annotation
@@ -83,3 +117,5 @@ def decode_annotated_image(annotated_image: AnnotatedImage) -> Image:
     jpeg_bytes = base64.b64decode(annotated_image.imageJpegBase64)
     annotated_bytes = _annotate_jpeg(jpeg_bytes, annotated_image.points)
     return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg")
+
+

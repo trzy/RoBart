@@ -116,6 +116,10 @@ class RoBartDebugServer(MessageHandler):
     async def handle_ObservationsMessage(self, session: Session, msg: ObservationsMessage, timestamp: float):
         await self._brain.on_observations_message(session, msg, timestamp)
 
+    @handler(VisualTraceMessage)
+    async def handle_VisualTraceMessage(self, session: Session, msg: VisualTraceMessage, timestamp: float):
+        await self._brain.on_visual_trace_message(session, msg, timestamp)
+
     @handler(AIStepMessage)
     async def handle_AIStepMessage(self, session: Session, msg: AIStepMessage, timestamp: float):
         dir = os.path.join("data", msg.timestamp, f"{msg.stepNumber}")

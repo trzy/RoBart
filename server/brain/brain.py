@@ -6,10 +6,10 @@ from pydantic import BaseModel
 
 from .claude import Message, think
 from .block_parser import parse_blocks
-from .image import decode_annotated_image
+from .image import decode_annotated_image, Image
 from .logger import BrainLogger
 from .prompts import SYSTEM_PROMPT
-from ..messages import ActionsMessage, ObservationsMessage
+from ..messages import ActionsMessage, ObservationsMessage, VisualTraceMessage
 
 STOP_TAG = "<OBSERVATIONS>"
 
@@ -31,6 +31,24 @@ class Brain:
 
     async def on_observations_message(self, session, msg: ObservationsMessage, timestamp: float):
         await self._observations_queue.put(msg)
+
+    async def on_visual_trace_message(self, session, msg: VisualTraceMessage, timestamp: float):
+        images = [Image(data=s.imageJpegBase64, media_type="image/jpeg") for s in msg.entries]
+
+        print(f"\nVisualTrace: received {len(images)} sample(s)")
+        for i, (sample, img) in enumerate(zip(msg.entries, images)):
+            w, h = img.size
+            print(f"  [{i}] t={sample.timestampSeconds:.2f}s  {w}x{h}")
+
+        system = "You are analyzing a sequence of images captured by a robot moving through an environment."
+        content = ["The following images were captured during a robot traversal. Describe what you observe.\n"]
+        for sample, img in zip(msg.entries, images):
+            p = sample.worldPosition
+            content.append(f"t={sample.timestampSeconds:.2f}s  pos=({p.x:.2f}, {p.y:.2f}, {p.z:.2f})\n")
+            content.append(img)
+        messages = [Message(role="user", content=content)]
+        response = await think(messages=messages, system=system, model="claude-sonnet-4-6")
+        print(f"\n{response}")
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         try:
