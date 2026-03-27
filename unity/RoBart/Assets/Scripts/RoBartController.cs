@@ -246,10 +246,21 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
 
         Vector3 startPosition = transform.position;
 
-        // Set position target along forward axis and place orientation target just beyond it
+        // Set position target along forward axis
         Vector3 goalPosition = (transform.position + transform.forward.XZProject().normalized * action.distance).XZProject();
         m_positionTarget.transform.position = goalPosition;
-        m_orientationTarget.transform.position = goalPosition + (goalPosition - startPosition).XZProject().normalized * 0.1f;
+        
+        // Orientation target depends on whether we are moving forwards or backwards (negative 
+        // distance implies moving facing backwards, such as backing out)
+        if (action.distance >= 0)
+        {
+            m_orientationTarget.transform.position = goalPosition + (goalPosition - startPosition).XZProject().normalized * 0.1f;
+        }
+        else
+        {
+            // Directly in front of us, so we don't turn while moving backwards
+            m_orientationTarget.transform.position = (transform.position + transform.forward.XZProject().normalized * 1.0f).XZProject();
+        }
         m_positionPIDController.enabled = true;
         m_orientationPIDController.enabled = true;
 
