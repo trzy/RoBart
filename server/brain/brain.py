@@ -33,22 +33,7 @@ class Brain:
         await self._observations_queue.put(msg)
 
     async def on_visual_trace_message(self, session, msg: VisualTraceMessage, timestamp: float):
-        images = [Image(data=s.imageJpegBase64, media_type="image/jpeg") for s in msg.entries]
-
-        print(f"\nVisualTrace: received {len(images)} sample(s)")
-        for i, (sample, img) in enumerate(zip(msg.entries, images)):
-            w, h = img.size
-            print(f"  [{i}] t={sample.timestampSeconds:.2f}s  {w}x{h}")
-
-        system = "You are analyzing a sequence of images captured by a robot moving through an environment."
-        content = ["The following images were captured during a robot traversal. Describe what you observe.\n"]
-        for sample, img in zip(msg.entries, images):
-            p = sample.worldPosition
-            content.append(f"t={sample.timestampSeconds:.2f}s  pos=({p.x:.2f}, {p.y:.2f}, {p.z:.2f})\n")
-            content.append(img)
-        messages = [Message(role="user", content=content)]
-        response = await think(messages=messages, system=system, model="claude-sonnet-4-6")
-        print(f"\n{response}")
+        await handle_visual_trace_message(msg=msg, send=self._send)
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         try:
@@ -85,6 +70,76 @@ class Brain:
                 messages.append(Message(role="user", content=obs_content))
         except Exception as e:
             print(f"Error: Exception caught: {e}")
+
+
+####################################################################################################
+# Visual Trace Test
+####################################################################################################
+
+async def handle_visual_trace_message(msg: VisualTraceMessage, send: Optional[Callable[[BaseModel], Awaitable[None]]]):
+    images = [Image(data=s.imageJpegBase64, media_type="image/jpeg") for s in msg.entries]
+
+    print(f"\nVisualTrace: received {len(images)} sample(s)")
+    for i, (sample, img) in enumerate(zip(msg.entries, images)):
+        w_original, h_original = img.size
+        scale = 0.25
+        images[i] = img.resize(scale=scale)
+        w, h = images[i].size
+        print(f"  [{i}] t={sample.timestampSeconds:.2f}s  {w_original}x{h_original} -> {w}x{h}")
+
+    system = """
+You are a specialized agent tasked with analyzing a robot movement trajectory. Your audience is the 
+navigation and control agent that produced the trajectory. 
+
+The following move commands are supported by the robot:
+
+    move: Moves the robot forward or backward in a straight line. Used only when the ground is visible in the current image or if stuck and needing to take corrective action using small distances.
+        Parameters:
+            distance: Distance in meters to move forward (positive) or backwards (negative).
+
+    moveTo: Moves in a straight line to a specific navigable point from the photos in the most recent <OBSERVATIONS> block. Use with caution, ensure point is recently visible and no floor obstructions or nearby furniture exist. RoBart's orientation may be unpredictable so if a photo is needed at the destination, it is a good idea to scan around after arrival.
+        Parameters:
+            pointNumber: Integer number of the navigable point to move to.
+
+    turnInPlace: Turns the robot in place by a relative amount.
+        Parameters:
+            degrees: Degrees to turn left (positive) or right (negative).
+
+    faceToward: Turn toward an annotated navigable point from the most recent <OBSERVATIONS> block.
+        Parameters:
+            pointNumber: Integer number of the navigable point to face.
+
+    Examples:
+        [ { "type": "turnInPlace", "degrees": 30 }, { "type": "move", "distance": -1.5 } ]
+        [ { "type": "move", "distance": 5 } ]
+
+For each query output:
+
+1. 1-3 sentences determining whether it succeeded or not and if not, why it failed.
+2. If the tajectory failed, 1-3 sentences thinking about how to maneuver successfully or to a more 
+   favorable location from which to proceed.
+3. If the trajectory failed, generate a trajectory that precisely backtracks. Place a list of JSON
+   actions between <ACTIONS></ACTIONS> tags.
+
+Keep your output concise and avoid extraneous formatting.
+"""
+    content = []
+    #content = ["The following images were captured during a robot traversal.\n"]
+    for sample, img in zip(msg.entries, images):
+        p = sample.worldPosition
+        content.append(f"t={sample.timestampSeconds:.2f}s  pos=({p.x:.2f}, {p.y:.2f}, {p.z:.2f})\n")
+        content.append(img)
+    messages = [Message(role="user", content=content)]
+    response = await think(messages=messages, system=system, model="claude-sonnet-4-6")
+    print(f"\n{response}")
+
+    # Extract and send actions, if any
+    blocks = parse_blocks(response)
+    actions = _extract_actions(blocks)
+    if actions and send:
+        await _send_actions(send, actions)
+        print("Sent actions")
+
 
 
 ####################################################################################################
