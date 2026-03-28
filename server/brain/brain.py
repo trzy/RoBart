@@ -1,6 +1,7 @@
 import asyncio
 import json
-from typing import Awaitable, Callable, Optional
+import traceback
+from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -11,7 +12,8 @@ from .logger import BrainLogger
 from .prompts import SYSTEM_PROMPT
 from ..messages import ActionsMessage, ObservationsMessage, VisualTraceMessage
 
-STOP_TAG = "<OBSERVATIONS>"
+RESULT_SECTION_NAME = "RESULTS" #"OBSERVATIONS"
+STOP_TAG = f"<{RESULT_SECTION_NAME}>"
 
 
 ####################################################################################################
@@ -25,6 +27,7 @@ class Brain:
     def __init__(self):
         self._send: Optional[Callable[[BaseModel], Awaitable[None]]] = None
         self._observations_queue: asyncio.Queue[ObservationsMessage] = asyncio.Queue()
+        self._image_by_id: Dict[int, Image] = {}
 
     def set_send(self, send: Callable[[BaseModel], Awaitable[None]]):
         self._send = send
@@ -35,13 +38,33 @@ class Brain:
     async def on_visual_trace_message(self, session, msg: VisualTraceMessage, timestamp: float):
         await handle_visual_trace_message(msg=msg, send=self._send)
 
+    def _store_images(self, images: List[Image]):
+        for image in images:
+            self._image_by_id[image.id] = image
+    
+    def _handle_server_actions(self, actions: List[str]) -> list:
+        content = []
+        for action_str in actions:
+            try:
+                action = json.loads(action_str)
+                if action["type"] == "viewImages":
+                    for id in action["imageNumbers"]:
+                        image = self._image_by_id.get(id)
+                        if image is not None:
+                            content.append(image)
+                        else:
+                            print(f"Error: Unable to lookup image id={id}")
+            except Exception as e:
+                print(f"Error: Unable to process action: {action_str}, reason: {e}")
+                traceback.print_exc()
+        return content
+
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         try:
             logger = BrainLogger()
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
-            prev_response = None
             while True:
-                logger.log_step(messages, prev_response)
+                logger.log_input(messages)
 
                 response = await think(
                     messages=messages,
@@ -49,27 +72,39 @@ class Brain:
                     model=model,
                     stop_sequences=[STOP_TAG],
                 )
+                logger.log_output(response)
+
                 blocks = parse_blocks(response)
                 tags = [b.tag for b in blocks]
 
                 messages.append(Message(role="assistant", content=[response]))
-                prev_response = response
 
                 if "FINAL_RESPONSE" in tags:
-                    logger.log_step([], prev_response)
                     break
 
                 actions = _extract_actions(blocks)
+
+                # Send actions to robot
                 if actions and self._send:
                     await _send_actions(self._send, actions)
                     obs_msg = await _wait_for_observations(self._observations_queue)
                 else:
                     obs_msg = None
 
-                obs_content = _format_observations(obs_msg)
-                messages.append(Message(role="user", content=obs_content))
+                # Handle any actions that are designed to be handled here
+                server_results_content = self._handle_server_actions(actions=actions)
+                
+                # Convert response from robot along with server action results to a single results
+                # section
+                results_content, images = _format_results(msg=obs_msg, extra_results_content=server_results_content)
+
+                # Images from the robot are stored
+                self._store_images(images=images)
+
+                messages.append(Message(role="user", content=results_content))
         except Exception as e:
             print(f"Error: Exception caught: {e}")
+            traceback.print_exc()
 
 
 ####################################################################################################
@@ -163,14 +198,21 @@ async def _send_actions(send, actions: list[str]):
 async def _wait_for_observations(queue: asyncio.Queue) -> ObservationsMessage:
     return await queue.get()
 
-def _format_observations(msg: Optional[ObservationsMessage]) -> list:
+def _format_results(msg: Optional[ObservationsMessage], extra_results_content: list) -> Tuple[list, list]:
+    open_tag = f"<{RESULT_SECTION_NAME}>"
+    close_tag = f"</{RESULT_SECTION_NAME}>"
+    images: List[Image] = []
     if msg is None:
-        return ["<OBSERVATIONS>\nStep completed successfully.\n</OBSERVATIONS>"]
+        return [f"{open_tag}\nStep completed successfully.\n{close_tag}"], []
     if not msg.images:
-        return [f"<OBSERVATIONS>\n{msg.description}\n</OBSERVATIONS>"]
+        return [f"{open_tag}\n{msg.description}\n{close_tag}"], []
     label = "Image:" if len(msg.images) == 1 else "Images:"
-    content = [f"<OBSERVATIONS>\n{msg.description}\n{label}\n"]
+    content = [f"{open_tag}\n{msg.description}\n{label}\n"]
     for annotated_image in msg.images:
-        content.append(decode_annotated_image(annotated_image))
-    content.append("</OBSERVATIONS>")
-    return content
+        image = decode_annotated_image(annotated_image)
+        content.append(image)
+        images.append(image)
+    if (len(extra_results_content) > 0):
+        content += extra_results_content
+    content.append(close_tag)
+    return content, images

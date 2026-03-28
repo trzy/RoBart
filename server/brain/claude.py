@@ -30,6 +30,7 @@ async def think(messages: List[Message], system: str, model: str = "claude-opus-
             if isinstance(item, str):
                 content_blocks.append({"type": "text", "text": item})
             elif isinstance(item, Image):
+                content_blocks.append({"type": "text", "text": f"image_{item.id}"})
                 content_blocks.append({
                     "type": "image",
                     "source": {

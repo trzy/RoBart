@@ -13,8 +13,8 @@ from .image import Image
 # Writes one directory per run (logs/<timestamp>/) with a numbered subdirectory per step.
 # Each step directory contains:
 #   input.txt        — formatted message history fed into the model this step
-#   output.txt       — model response from the previous step (absent for step 0)
-#   image_N.jpg ...  — every image referenced in this step (may repeat across steps)
+#   output.txt       — model response for this step
+#   image_N.jpg ...  — every image referenced in this step's input (may repeat across steps)
 ####################################################################################################
 
 class BrainLogger:
@@ -23,33 +23,31 @@ class BrainLogger:
         self._run_dir = os.path.join("logs", timestamp)
         os.makedirs(self._run_dir, exist_ok=True)
         self._step = 0
+        self._step_dir: Optional[str] = None
 
-    def log_step(self, messages: List[Message], prev_response: Optional[str]):
-        step = self._step
-        step_dir = os.path.join(self._run_dir, str(step))
-        os.makedirs(step_dir, exist_ok=True)
-        self._step += 1
+    def log_input(self, messages: List[Message]):
+        """Call before think(). Creates the step directory, saves images, and writes input.txt."""
+        self._step_dir = os.path.join(self._run_dir, str(self._step))
+        os.makedirs(self._step_dir, exist_ok=True)
 
-        # Save all images referenced in this step's message history
         for msg in messages:
             for item in msg.content:
                 if isinstance(item, Image):
                     image_bytes = base64.b64decode(item.data)
-                    with open(os.path.join(step_dir, f"image_{item.id}.jpg"), "wb") as f:
+                    with open(os.path.join(self._step_dir, f"image_{item.id}.jpg"), "wb") as f:
                         f.write(image_bytes)
 
-        # output.txt — model response from previous step
-        if prev_response is not None:
-            with open(os.path.join(step_dir, "output.txt"), "w") as f:
-                f.write(prev_response)
-            self._print_section("OUTPUT", step - 1, prev_response)
+        formatted = self._format_messages(messages)
+        with open(os.path.join(self._step_dir, "input.txt"), "w") as f:
+            f.write(formatted)
+        self._print_section("INPUT", self._step, formatted)
 
-        # input.txt — full message history going into this step (absent for the final output-only step)
-        if messages:
-            formatted = self._format_messages(messages)
-            with open(os.path.join(step_dir, "input.txt"), "w") as f:
-                f.write(formatted)
-            self._print_section("INPUT", step, formatted)
+    def log_output(self, response: str):
+        """Call immediately after think(). Writes output.txt to the current step directory."""
+        with open(os.path.join(self._step_dir, "output.txt"), "w") as f:
+            f.write(response)
+        self._print_section("OUTPUT", self._step, response)
+        self._step += 1
 
     @staticmethod
     def _print_section(kind: str, step: int, content: str):
