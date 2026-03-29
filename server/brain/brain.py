@@ -72,6 +72,9 @@ class Brain:
             logger = BrainLogger()
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
             while True:
+                # Time to summarize?
+                messages = await _summarize(messages=messages, model=model)
+
                 logger.log_input(messages)
 
                 response = await think(
@@ -81,12 +84,10 @@ class Brain:
                     stop_sequences=[STOP_TAG],
                 )
                 logger.log_output(response)
+                messages.append(Message(role="assistant", content=[response]))
 
                 blocks = parse_blocks(response)
                 tags = [b.tag for b in blocks]
-
-                messages.append(Message(role="assistant", content=[response]))
-
                 if "FINAL_RESPONSE" in tags:
                     break
 
@@ -217,13 +218,51 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
     label = "Image:" if len(msg.images) == 1 else "Images:"
     content = [f"{open_tag}\n{msg.description}\n{label}\n"]
     for annotated_image in msg.images:
-        image = decode_annotated_image(annotated_image)
+        image = decode_annotated_image(annotated_image, coords=True)
         content.append(image)
         images.append(image)
-        if len(image.points) > 0:
-            landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
-            content.append(landmarks_text)
+        # Point locations are now rendered directly on the image as coord labels
+        # if len(image.points) > 0:
+        #     landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
+        #     content.append(landmarks_text)
     if (len(extra_results_content) > 0):
         content += extra_results_content
     content.append(close_tag)
     return content, images
+
+async def _summarize(messages: List[Message], model: str) -> List[Message]:
+    # Time to summarize?
+    num_assistant_messages = len([ message for message in messages if message.role == "assistant"])
+    if num_assistant_messages < 3:
+        return messages
+    
+    # Last message should be a user message, which we remove (we want to summarize all asssistant
+    # messages prior)
+    user_message = messages.pop()
+    assert user_message.role == "user"
+    assert messages[0].role == "user"   # very first one should be user message, too
+    
+    # Add instructions to summarize
+    summary_prompt = """
+Consolidate the conversation into a single output consisting of these sections: 
+MEMORY, PLAN, INTERMEDIATE_RESPONSE, ACTIONS. 
+
+IMPORTANT: In MEMORY, list ALL image numbers you have captured with their coordinates
+and what they show. You can recall any image later using viewImages. Don't remove any
+information we may need in the future.
+"""
+    messages.append(Message(role="user", content=[ summary_prompt ]))
+
+    # Summarize
+    print("\nSummarizing...\n")
+    response = await think(
+        messages=messages,
+        system=SYSTEM_PROMPT,
+        model=model,
+        stop_sequences=[STOP_TAG],
+    )
+    assistant_message = Message(role="assistant", content=[ response ])
+
+    # Reconstruct a smaller history consisting of first user message, summarized
+    # assistant output, then the most recent user message we had
+    return [ messages[0], assistant_message, user_message ]
