@@ -21,12 +21,20 @@ public class OccupancyMapBuilder : MessageReceivingBehavior
     [SerializeField] private float _topHeight       = 1.0f;  // distance above y=0 (floor) where box ends
     [SerializeField] private LayerMask _layers;
 
-    public OccupancyMap Map { get; private set; }
+    public OccupancyMap<bool> Map { get; private set; }
+    public OccupancyMap<float> LastVisitedMap { get; private set; }
 
     private void Start()
     {
-        Map = new OccupancyMap(_mapSize, _cellSize, transform.position);
+        Map = new OccupancyMap<bool>(_mapSize, _cellSize, transform.position);
+        LastVisitedMap = new OccupancyMap<float>(_mapSize, _cellSize, transform.position, -1f);
         InvokeRepeating(nameof(Scan), 0f, _scanInterval);
+    }
+
+    private void Update()
+    {
+        CellIndices cell = LastVisitedMap.PositionToCell(transform.position);
+        LastVisitedMap.Set(cell.x, cell.z, Time.time);
     }
 
     private void Scan()
@@ -38,14 +46,14 @@ public class OccupancyMapBuilder : MessageReceivingBehavior
         // Only update cells within the scan region centred on the robot.
         Vector3 robotPos  = transform.position;
         float   halfScan  = _scanRegionSize / 2f;
-        OccupancyMap.CellIndices minCell = Map.PositionToCell(robotPos - new Vector3(halfScan, 0f, halfScan));
-        OccupancyMap.CellIndices maxCell = Map.PositionToCell(robotPos + new Vector3(halfScan, 0f, halfScan));
+        CellIndices minCell = Map.PositionToCell(robotPos - new Vector3(halfScan, 0f, halfScan));
+        CellIndices maxCell = Map.PositionToCell(robotPos + new Vector3(halfScan, 0f, halfScan));
 
         for (int z = minCell.z; z <= maxCell.z; z++)
         {
             for (int x = minCell.x; x <= maxCell.x; x++)
             {
-                Vector3 worldPos = Map.CellToPosition(new OccupancyMap.CellIndices(x, z));
+                Vector3 worldPos = Map.CellToPosition(new CellIndices(x, z));
                 worldPos.y = boxCenterY;
 
                 bool occupied = Physics.CheckBox(
@@ -55,7 +63,7 @@ public class OccupancyMapBuilder : MessageReceivingBehavior
                     _layers,
                     QueryTriggerInteraction.Ignore);
 
-                Map.SetOccupied(x, z, occupied);
+                Map.Set(x, z, occupied);
             }
         }
     }
@@ -65,14 +73,14 @@ public class OccupancyMapBuilder : MessageReceivingBehavior
         if (session == null)
             return;
 
-        session.Send(BuildOccupancyMapJson(new OccupancyMap.CellIndices[0]));
+        session.Send(BuildOccupancyMapJson(new CellIndices[0]));
     }
 
     // Builds and encodes an OccupancyMapMessage JSON payload.
     // pathCells: ordered array of cell waypoints to include in the response.
-    public byte[] BuildOccupancyMapJson(OccupancyMap.CellIndices[] pathCells)
+    public byte[] BuildOccupancyMapJson(CellIndices[] pathCells)
     {
-        OccupancyMap.CellIndices robotCell = Map.PositionToCell(transform.position);
+        CellIndices robotCell = Map.PositionToCell(transform.position);
 
         int totalCells = Map.CellsWide * Map.CellsDeep;
         var sb = new StringBuilder(totalCells * 4 + 256);
@@ -88,7 +96,7 @@ public class OccupancyMapBuilder : MessageReceivingBehavior
             for (int x = 0; x < Map.CellsWide; x++)
             {
                 if (!first) sb.Append(',');
-                sb.Append(Map.IsOccupied(x, z) ? "1.0" : "0.0");
+                sb.Append(Map.Get(x, z) ? "1.0" : "0.0");
                 first = false;
             }
         }

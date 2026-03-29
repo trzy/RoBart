@@ -9,6 +9,7 @@ public static class ActionDecoder
         {
             case "move":            return JsonUtility.FromJson<MoveAction>(json);
             case "moveTo":          return JsonUtility.FromJson<MoveToAction>(json);
+            case "moveToPos":       return JsonUtility.FromJson<MoveToPosAction>(json);
             case "turnInPlace":     return JsonUtility.FromJson<TurnInPlaceAction>(json);
             case "faceToward":      return JsonUtility.FromJson<FaceTowardAction>(json);
             case "scan360":         return JsonUtility.FromJson<Scan360Action>(json);

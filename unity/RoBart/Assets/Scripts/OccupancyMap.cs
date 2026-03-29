@@ -5,59 +5,62 @@
 // Plain C# port of the relevant parts of OccupancyMap.hpp / OccupancyMap.cpp.
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class OccupancyMap
+public struct CellIndices : IEquatable<CellIndices>
 {
-    public struct CellIndices : IEquatable<CellIndices>
+    public int x;
+    public int z;
+
+    public CellIndices(int x, int z)
     {
-        public int x;
-        public int z;
-
-        public CellIndices(int x, int z)
-        {
-            this.x = x;
-            this.z = z;
-        }
-
-        public bool Equals(CellIndices other) => x == other.x && z == other.z;
-
-        public override bool Equals(object obj) => obj is CellIndices other && Equals(other);
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return x * 397 ^ z;
-            }
-        }
-
-        public static bool operator ==(CellIndices a, CellIndices b) => a.x == b.x && a.z == b.z;
-        public static bool operator !=(CellIndices a, CellIndices b) => !(a == b);
+        this.x = x;
+        this.z = z;
     }
 
+    public bool Equals(CellIndices other) => x == other.x && z == other.z;
+
+    public override bool Equals(object obj) => obj is CellIndices other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            return x * 397 ^ z;
+        }
+    }
+
+    public static bool operator ==(CellIndices a, CellIndices b) => a.x == b.x && a.z == b.z;
+    public static bool operator !=(CellIndices a, CellIndices b) => !(a == b);
+}
+
+public class OccupancyMap<T>
+{
     private readonly float _regionSize;
     private readonly float _cellSize;
     private Vector3 _center;
     private readonly int _cellsWide;
     private readonly int _cellsDeep;
-    private readonly bool[] _cells;
+    private readonly T[] _cells;
 
     public int CellsWide => _cellsWide;
     public int CellsDeep => _cellsDeep;
     public float CellSize => _cellSize;
     public Vector3 Center => _center;
 
-    public OccupancyMap(float regionSize, float cellSize, Vector3 center)
+    public OccupancyMap(float regionSize, float cellSize, Vector3 center, T initialValue = default)
     {
         _regionSize = regionSize;
         _cellSize = cellSize;
         _center = center;
         _cellsWide = _cellsDeep = Mathf.RoundToInt(regionSize / cellSize);
-        _cells = new bool[_cellsWide * _cellsDeep];
+        _cells = new T[_cellsWide * _cellsDeep];
+        if (!EqualityComparer<T>.Default.Equals(initialValue, default))
+            Array.Fill(_cells, initialValue);
     }
 
-    /// <summary>Updates the map center and clears all occupancy data.</summary>
+    /// <summary>Updates the map center and clears all data.</summary>
     public void Recenter(Vector3 newCenter)
     {
         _center = newCenter;
@@ -86,7 +89,7 @@ public class OccupancyMap
         return new Vector3(x, _center.y, z);
     }
 
-    public bool IsOccupied(int x, int z) => _cells[z * _cellsWide + x];
+    public T Get(int x, int z) => _cells[z * _cellsWide + x];
 
-    public void SetOccupied(int x, int z, bool value) => _cells[z * _cellsWide + x] = value;
+    public void Set(int x, int z, T value) => _cells[z * _cellsWide + x] = value;
 }

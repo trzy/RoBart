@@ -37,7 +37,7 @@ public class NavigablePointSampler
     /// camera is used to project world points onto the image; its render target dimensions
     /// determine whether a projected point is on-screen.
     public static AnnotatedPoint[] Sample(
-        OccupancyMap map,
+        OccupancyMap<bool> map,
         Vector3 robotPosition,
         Vector3 robotForward,
         Camera camera,
@@ -52,7 +52,7 @@ public class NavigablePointSampler
         int   cellSpacing = Mathf.Max(1, Mathf.RoundToInt(parameters.PointSpacingMeters / cellSize));
         int   radiusCells = Mathf.RoundToInt(parameters.MaxDistanceMeters / cellSize);
 
-        OccupancyMap.CellIndices robotCell = map.PositionToCell(robotPosition);
+        CellIndices robotCell = map.PositionToCell(robotPosition);
 
         int minCellX = robotCell.x - radiusCells;
         int maxCellX = robotCell.x + radiusCells;
@@ -69,7 +69,7 @@ public class NavigablePointSampler
                 if (cx < 0 || cx >= map.CellsWide || cz < 0 || cz >= map.CellsDeep)
                     continue;
 
-                var cell = new OccupancyMap.CellIndices(cx, cz);
+                var cell = new CellIndices(cx, cz);
                 Vector3 worldPoint = map.CellToPosition(cell);
                 worldPoint.y = robotPosition.y;
 
@@ -119,7 +119,7 @@ public class NavigablePointSampler
 
     /// Amanatides-Woo 2D voxel traversal. Returns false if any occupied cell lies on the
     /// straight line between from and to (inclusive).
-    private static bool IsLineUnobstructed(OccupancyMap map, OccupancyMap.CellIndices from, OccupancyMap.CellIndices to)
+    private static bool IsLineUnobstructed(OccupancyMap<bool> map, CellIndices from, CellIndices to)
     {
         int x = from.x, z = from.z;
 
@@ -157,9 +157,9 @@ public class NavigablePointSampler
         }
     }
 
-    private static bool IsOccupiedSafe(OccupancyMap map, int x, int z)
+    private static bool IsOccupiedSafe(OccupancyMap<bool> map, int x, int z)
     {
         if (x < 0 || x >= map.CellsWide || z < 0 || z >= map.CellsDeep) return true;
-        return map.IsOccupied(x, z);
+        return map.Get(x, z);
     }
 }

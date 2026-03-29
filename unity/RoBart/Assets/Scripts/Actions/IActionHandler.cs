@@ -4,6 +4,7 @@ public interface IActionHandler
 {
     IEnumerator OnMoveAction(MoveAction action);
     IEnumerator OnMoveToAction(MoveToAction action);
+    IEnumerator OnMoveToPosAction(MoveToPosAction action);
     IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action);
     IEnumerator OnFaceTowardAction(FaceTowardAction action);
     IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action);

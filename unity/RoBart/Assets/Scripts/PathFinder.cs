@@ -10,14 +10,14 @@ using UnityEngine;
 
 public static class PathFinder
 {
-    public static List<Vector3> FindPath(OccupancyMap map, Vector3 from, Vector3 to, float robotRadius)
+    public static List<Vector3> FindPath(OccupancyMap<bool> map, Vector3 from, Vector3 to, float robotRadius)
     {
         var path = new List<Vector3>();
 
-        OccupancyMap.CellIndices src  = map.PositionToCell(from);
-        OccupancyMap.CellIndices dest = map.PositionToCell(to);
+        CellIndices src  = map.PositionToCell(from);
+        CellIndices dest = map.PositionToCell(to);
 
-        if (map.IsOccupied(dest.x, dest.z))
+        if (map.Get(dest.x, dest.z))
         {
             // Destination is occupied — no path.
             return path;
@@ -31,16 +31,16 @@ public static class PathFinder
 
         int footprint = ComputeFootprintSideLengthInCells(map, robotRadius);
 
-        var transitions = new Dictionary<OccupancyMap.CellIndices, OccupancyMap.CellIndices>();
-        var frontier    = new Queue<OccupancyMap.CellIndices>();
+        var transitions = new Dictionary<CellIndices, CellIndices>();
+        var frontier    = new Queue<CellIndices>();
         frontier.Enqueue(dest);
         transitions[dest] = dest;
 
-        var neighbors = new List<OccupancyMap.CellIndices>(4);
+        var neighbors = new List<CellIndices>(4);
 
         while (frontier.Count > 0)
         {
-            OccupancyMap.CellIndices cell = frontier.Dequeue();
+            CellIndices cell = frontier.Dequeue();
 
             GetUnoccupiedNeighbors(neighbors, map, cell, footprint);
             foreach (var neighbor in neighbors)
@@ -62,10 +62,10 @@ public static class PathFinder
 
 FoundCompletePath:
         // Trace path from src back to dest, keeping only direction-change waypoints.
-        var cellPath = new List<OccupancyMap.CellIndices>();
+        var cellPath = new List<CellIndices>();
 
-        OccupancyMap.CellIndices currentStep = src;
-        OccupancyMap.CellIndices prevStep    = src;
+        CellIndices currentStep = src;
+        CellIndices prevStep    = src;
         bool haveDir     = false;
         bool movingAlongX = false;
         bool movingAlongZ = false;
@@ -122,18 +122,18 @@ FoundCompletePath:
 
     // ---------------------------------------------------------------------------
 
-    private static int ComputeFootprintSideLengthInCells(OccupancyMap map, float robotRadius)
+    private static int ComputeFootprintSideLengthInCells(OccupancyMap<bool> map, float robotRadius)
     {
         if (map.CellsWide * map.CellsDeep <= 1)
             return 1;
 
-        OccupancyMap.CellIndices center = map.PositionToCell(map.Center);
-        OccupancyMap.CellIndices limit  = map.PositionToCell(map.Center + new Vector3(robotRadius, 0f, 0f));
+        CellIndices center = map.PositionToCell(map.Center);
+        CellIndices limit  = map.PositionToCell(map.Center + new Vector3(robotRadius, 0f, 0f));
         int cellsOut = limit.x - center.x;
         return 1 + 2 * cellsOut;
     }
 
-    private static bool IsCellSafe(OccupancyMap map, OccupancyMap.CellIndices cell, int footprint)
+    private static bool IsCellSafe(OccupancyMap<bool> map, CellIndices cell, int footprint)
     {
         int delta    = footprint / 2;
         int xMin = Mathf.Max(0, cell.x - delta);
@@ -145,7 +145,7 @@ FoundCompletePath:
         {
             for (int x = xMin; x <= xMax; x++)
             {
-                if (map.IsOccupied(x, z))
+                if (map.Get(x, z))
                     return false;
             }
         }
@@ -153,9 +153,9 @@ FoundCompletePath:
     }
 
     private static void GetUnoccupiedNeighbors(
-        List<OccupancyMap.CellIndices> result,
-        OccupancyMap map,
-        OccupancyMap.CellIndices cell,
+        List<CellIndices> result,
+        OccupancyMap<bool> map,
+        CellIndices cell,
         int footprint)
     {
         result.Clear();
@@ -163,10 +163,10 @@ FoundCompletePath:
         int x = cell.x;
         int z = cell.z;
 
-        var left  = new OccupancyMap.CellIndices(x - 1, z);
-        var right = new OccupancyMap.CellIndices(x + 1, z);
-        var front = new OccupancyMap.CellIndices(x, z - 1);
-        var back  = new OccupancyMap.CellIndices(x, z + 1);
+        var left  = new CellIndices(x - 1, z);
+        var right = new CellIndices(x + 1, z);
+        var front = new CellIndices(x, z - 1);
+        var back  = new CellIndices(x, z + 1);
 
         if (x > 0 && IsCellSafe(map, left, footprint))
             result.Add(left);

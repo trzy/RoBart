@@ -307,6 +307,27 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         m_pendingObservations.description += $"Move to point {action.pointNumber}: arrived, {distanceToGoal:F2} m from goal.\n";
     }
 
+    public IEnumerator OnMoveToPosAction(MoveToPosAction action)
+    {
+        Debug.Log($"OnMoveToPosAction: x={action.x}, z={action.z}");
+
+        Vector3 goal = new Vector3(action.x, 0, action.z);
+        List<Vector3> path = PathFinder.FindPath(m_occupancyMapBuilder.Map, transform.position, goal, m_robotRadius);
+
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogWarning($"OnMoveToPosAction: no path found to ({action.x}, {action.z})");
+            m_pendingObservations.description += $"Move to pos ({action.x:F1},{action.z:F1}): no path found.\n";
+            yield break;
+        }
+
+        Debug.Log($"OnMoveToPosAction: following {path.Count}-waypoint path");
+        yield return StartCoroutine(FollowPath(path));
+
+        float distanceToGoal = Vector3.Distance(transform.position.XZProject(), goal.XZProject());
+        m_pendingObservations.description += $"Move to pos ({action.x:F1},{action.z:F1}): arrived, {distanceToGoal:F2} m from goal.\n";
+    }
+
     private IEnumerator FollowPath(List<Vector3> waypoints)
     {
         foreach (Vector3 waypoint in waypoints)

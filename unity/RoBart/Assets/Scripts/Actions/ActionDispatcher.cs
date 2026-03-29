@@ -9,6 +9,7 @@ public static class ActionDispatcher
         {
             case MoveAction a:              return handler.OnMoveAction(a);
             case MoveToAction a:            return handler.OnMoveToAction(a);
+            case MoveToPosAction a:         return handler.OnMoveToPosAction(a);
             case TurnInPlaceAction a:       return handler.OnTurnInPlaceAction(a);
             case FaceTowardAction a:        return handler.OnFaceTowardAction(a);
             case FaceTowardHeadingAction a: return handler.OnFaceTowardHeadingAction(a);
