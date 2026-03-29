@@ -1,3 +1,11 @@
+#TODO:
+#   - Summarization
+#   - Always include trajectory photos
+#   - De-dupe landmarks (that is, reuse landmarks if possible when we already have ones near to newly-generated ones)
+#   - Transmit occupancy maps, including one showing where we have already been in some color coded
+#     way (darker color more distance, brighter more recent). Be able to place landmarks (from 
+#     memory?) into map as well, and maybe annotate with some positions, uniformly distributed.
+
 import asyncio
 import json
 import traceback
@@ -212,6 +220,9 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
         image = decode_annotated_image(annotated_image)
         content.append(image)
         images.append(image)
+        if len(image.points) > 0:
+            landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
+            content.append(landmarks_text)
     if (len(extra_results_content) > 0):
         content += extra_results_content
     content.append(close_tag)

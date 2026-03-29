@@ -113,19 +113,20 @@ class AIStepMessage(BaseModel):
 class ActionsMessage(BaseModel):
     actions: List[str]  # each element is a JSON-formatted action object
 
-class Vector3(BaseModel):
+class VectorXZ(BaseModel):
     x: float
-    y: float
     z: float
 
 class AnnotatedPoint(BaseModel):
     id: int
     screenX: float
     screenY: float
-    worldPosition: Vector3
+    worldPosition: VectorXZ
 
 class AnnotatedImage(BaseModel):
     imageJpegBase64: str
+    cameraPosition: VectorXZ
+    cameraForward: VectorXZ
     points: List[AnnotatedPoint]
 
 class ObservationsMessage(BaseModel):
@@ -134,7 +135,8 @@ class ObservationsMessage(BaseModel):
 
 class VisualTraceSample(BaseModel):
     imageJpegBase64: str
-    worldPosition: Vector3
+    worldPosition: VectorXZ
+    worldForward: VectorXZ
     timestampSeconds: float
 
 class VisualTraceMessage(BaseModel):

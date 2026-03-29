@@ -30,7 +30,12 @@ async def think(messages: List[Message], system: str, model: str = "claude-opus-
             if isinstance(item, str):
                 content_blocks.append({"type": "text", "text": item})
             elif isinstance(item, Image):
-                content_blocks.append({"type": "text", "text": f"image_{item.id}"})
+                coords = ""
+                if item.position:
+                    coords += f" pos=({item.position.x},{item.position.z})"
+                if item.forward:
+                    coords += f" fwd=({item.forward.x},{item.forward.z})"
+                content_blocks.append({"type": "text", "text": f"image_{item.id}{coords}" })
                 content_blocks.append({
                     "type": "image",
                     "source": {

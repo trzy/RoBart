@@ -4,7 +4,7 @@ from typing import List, Literal
 
 from PIL import Image as PILImage, ImageDraw, ImageFont
 
-from ..messages import AnnotatedImage, AnnotatedPoint
+from ..messages import AnnotatedImage, AnnotatedPoint, VectorXZ
 
 
 ####################################################################################################
@@ -16,11 +16,14 @@ from ..messages import AnnotatedImage, AnnotatedPoint
 class Image:
     _next_id: int = 1
 
-    def __init__(self, data: str, media_type: Literal["image/png", "image/jpeg"]):
+    def __init__(self, data: str, media_type: Literal["image/png", "image/jpeg"], points: List[AnnotatedPoint] = None, position: VectorXZ = None, forward: VectorXZ = None):
         self.id = Image._next_id
         Image._next_id += 1
         self.data = data
         self.media_type = media_type
+        self.points: List[AnnotatedPoint] = points or []
+        self.position: VectorXZ = position
+        self.forward: VectorXZ = forward
 
     @property
     def size(self) -> tuple[int, int]:
@@ -54,7 +57,7 @@ class Image:
         img = img.resize((new_w, new_h), PILImage.LANCZOS)
         out = io.BytesIO()
         img.save(out, format="JPEG")
-        return Image(data=base64.b64encode(out.getvalue()).decode("utf-8"), media_type="image/jpeg")
+        return Image(data=base64.b64encode(out.getvalue()).decode("utf-8"), media_type="image/jpeg", points=self.points, position=self.position, forward=self.forward)
 
 
 ####################################################################################################
@@ -116,6 +119,6 @@ def decode_annotated_image(annotated_image: AnnotatedImage) -> Image:
     """Decode an AnnotatedImage from the robot, apply point annotations, and return an Image."""
     jpeg_bytes = base64.b64decode(annotated_image.imageJpegBase64)
     annotated_bytes = _annotate_jpeg(jpeg_bytes, annotated_image.points)
-    return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg")
+    return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg", points=annotated_image.points, position=annotated_image.cameraPosition, forward=annotated_image.cameraForward)
 
 

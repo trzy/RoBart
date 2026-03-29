@@ -27,9 +27,15 @@ MEMORY:
     landmark points, and images, as well as actions taken. You may need to backtrack at some point.
 
     Build a structured database of the environment, visually anchored to landmarks and images so as to assist
-    in future navigation. List any points of interest here (landmark numbers and images), with
-    descriptions of their relevance. You will be able to recall any images later for further 
-    analysis if needed.
+    in future navigation. Clearly identify different regions or rooms. List any points of interest 
+    here (landmark numbers, images, and their coordinates), with descriptions of their relevance. 
+    You will be able to recall any images later for further analysis if needed and can request to 
+    move to landmarks.
+    
+    Positions and forward vectors will be provided as (x,z) components, e.g.: pos=(3.44,1.20) 
+    fwd=(0.7071,0.7071). The (x,z) position coordinates are always global positions on the floor.
+    Use coordinates to keep track of where you have already been and where things are in relation to
+    each other.
 
 INTERMEDIATE_RESPONSE:
     This will be spoken out loud. Use this to speak one or two sentences informing bystanders what
