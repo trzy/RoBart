@@ -70,6 +70,7 @@ class Image:
 def _annotate_jpeg(
     jpeg_bytes: bytes,
     points: List[AnnotatedPoint],
+    coords: bool = False,
     font_size: int = 16,
     padding: int = 4,
 ) -> bytes:
@@ -78,6 +79,7 @@ def _annotate_jpeg(
     Args:
         jpeg_bytes: Source image as JPEG bytes.
         points:     Points to annotate, each with an id and (x, y) pixel coordinates.
+        coords:     If True, label each point with its world (x,z) coords instead of its id.
         font_size:  Font height in pixels. Box height = font_size + 2 * padding.
         padding:    Pixels of space between the text and each edge of the box.
     """
@@ -91,7 +93,7 @@ def _annotate_jpeg(
         font = ImageFont.load_default()
 
     for point in points:
-        label = str(point.id)
+        label = f"{point.worldPosition.x:.1f},{point.worldPosition.z:.1f}" if coords else str(point.id)
         l, t, r, b = draw.textbbox((0, 0), label, font=font)
         text_w, text_h = r - l, b - t
 
@@ -115,10 +117,10 @@ def _annotate_jpeg(
     return out.getvalue()
 
 
-def decode_annotated_image(annotated_image: AnnotatedImage) -> Image:
+def decode_annotated_image(annotated_image: AnnotatedImage, coords: bool = False) -> Image:
     """Decode an AnnotatedImage from the robot, apply point annotations, and return an Image."""
     jpeg_bytes = base64.b64decode(annotated_image.imageJpegBase64)
-    annotated_bytes = _annotate_jpeg(jpeg_bytes, annotated_image.points)
+    annotated_bytes = _annotate_jpeg(jpeg_bytes, annotated_image.points, coords=coords)
     return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg", points=annotated_image.points, position=annotated_image.cameraPosition, forward=annotated_image.cameraForward)
 
 
