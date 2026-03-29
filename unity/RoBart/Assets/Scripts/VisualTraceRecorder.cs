@@ -57,10 +57,12 @@ public class VisualTraceRecorder : MessageReceivingBehavior
             byte[] jpegBytes = screenshot.EncodeToJPG();
             Destroy(screenshot);
 
+            Vector3 fwd = transform.forward.XZProject().normalized;
             samples.Add(new VisualTraceSample
             {
                 imageJpegBase64 = Convert.ToBase64String(jpegBytes),
-                worldPosition = transform.position,
+                worldPosition = new VectorXZ { x = transform.position.x, z = transform.position.z },
+                worldForward  = new VectorXZ { x = fwd.x, z = fwd.z },
                 timestampSeconds = Time.time - startTime
             });
 

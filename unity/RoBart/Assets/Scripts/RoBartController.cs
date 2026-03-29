@@ -235,6 +235,8 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
                     }
                 }
             }
+            Vector3 forward = transform.forward.XZProject().normalized;
+            m_pendingObservations.description += $"\nCurrent pos=({transform.position.x:F2},{transform.position.z:F2}), fwd=({forward.x:F2},{forward.z:F2})\n";
             session.Send(ref m_pendingObservations);
         }
         m_isProcessingActions = false;
@@ -482,11 +484,14 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             firstId: nextLandmarkId);
         
         // Store landmarks permanently (the global list maps ID -> world point)
-        m_landmarkWorldPoints.AddRange(points.Select(point => point.worldPosition));
+        m_landmarkWorldPoints.AddRange(points.Select(p => new Vector3(p.worldPosition.x, 0, p.worldPosition.z)));
 
+        Vector3 fwd = transform.forward.XZProject().normalized;
         AnnotatedImage annotatedImage = new AnnotatedImage
         {
             imageJpegBase64 = Convert.ToBase64String(jpegBytes),
+            cameraPosition = new VectorXZ { x = transform.position.x, z = transform.position.z },
+            cameraForward  = new VectorXZ { x = fwd.x, z = fwd.z },
             points = points
         };
         m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<AnnotatedImage>()).Append(annotatedImage).ToArray();

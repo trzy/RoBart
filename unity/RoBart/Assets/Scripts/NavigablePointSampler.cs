@@ -111,7 +111,7 @@ public class NavigablePointSampler
                 id = firstId + i,
                 screenX = candidates[i].screen.x,
                 screenY = candidates[i].screen.y,
-                worldPosition = candidates[i].world
+                worldPosition = new VectorXZ { x = candidates[i].world.x, z = candidates[i].world.z }
             };
         }
         return result;

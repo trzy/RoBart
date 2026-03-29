@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 [Serializable]
 public struct HelloMessage
@@ -24,18 +23,27 @@ public struct ActionsMessage
 }
 
 [Serializable]
+public struct VectorXZ
+{
+    public float x;
+    public float z;
+}
+
+[Serializable]
 public struct AnnotatedPoint
 {
     public int id;
     public float screenX;
     public float screenY;
-    public Vector3 worldPosition;
+    public VectorXZ worldPosition;
 }
 
 [Serializable]
 public struct AnnotatedImage
 {
     public string imageJpegBase64;
+    public VectorXZ cameraPosition;
+    public VectorXZ cameraForward;
     public AnnotatedPoint[] points;
 }
 
@@ -50,7 +58,8 @@ public struct ObservationsMessage
 public struct VisualTraceSample
 {
     public string imageJpegBase64;
-    public Vector3 worldPosition;
+    public VectorXZ worldPosition;
+    public VectorXZ worldForward;
     public float timestampSeconds;
 }
 
