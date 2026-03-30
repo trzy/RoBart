@@ -1,10 +1,12 @@
-#TODO:
-#   - Summarization
-#   - Always include trajectory photos
-#   - De-dupe landmarks (that is, reuse landmarks if possible when we already have ones near to newly-generated ones)
-#   - Transmit occupancy maps, including one showing where we have already been in some color coded
-#     way (darker color more distance, brighter more recent). Be able to place landmarks (from 
-#     memory?) into map as well, and maybe annotate with some positions, uniformly distributed.
+#
+# TODO:
+# -----
+# - Render occupancy map and see if that is easier for Claude to parse
+# - Trajectory photos for backing out
+# - Return to landmark mode
+#   - De-dupe landmarks (try to reuse landmarks rather than endlessly generating new ones)
+# - Generate each LLM output section (MEMORY, PLAN, ACTIONS) by prompting each separately.
+#
 
 import asyncio
 import json
