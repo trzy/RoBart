@@ -52,6 +52,15 @@ public struct ObservationsMessage
 {
     public string description;
     public AnnotatedImage[] images;
+
+    // Occupancy and last-visited maps (shared grid dimensions)
+    public int mapCellsWide;
+    public int mapCellsDeep;
+    public float mapOriginX;   // world X of the cell (0,0) corner
+    public float mapOriginZ;   // world Z of the cell (0,0) corner
+    public float mapCellSize;
+    public int[] occupancy;      // row-major, 0 = free, 1 = occupied
+    public float[] lastVisited;  // row-major, seconds (Time.time), -1 = never visited
 }
 
 [Serializable]

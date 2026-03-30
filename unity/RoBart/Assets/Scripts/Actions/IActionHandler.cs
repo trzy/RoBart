@@ -7,6 +7,7 @@ public interface IActionHandler
     IEnumerator OnMoveToPosAction(MoveToPosAction action);
     IEnumerator OnTurnInPlaceAction(TurnInPlaceAction action);
     IEnumerator OnFaceTowardAction(FaceTowardAction action);
+    IEnumerator OnFaceTowardPosAction(FaceTowardPosAction action);
     IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action);
     IEnumerator OnScan360Action(Scan360Action action);
     IEnumerator OnTakePhotoAction(TakePhotoAction action);

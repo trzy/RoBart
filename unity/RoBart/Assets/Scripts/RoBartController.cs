@@ -237,6 +237,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             }
             Vector3 forward = transform.forward.XZProject().normalized;
             m_pendingObservations.description += $"\nCurrent pos=({transform.position.x:F2},{transform.position.z:F2}), fwd=({forward.x:F2},{forward.z:F2})\n";
+            PopulateMaps(ref m_pendingObservations);
             session.Send(ref m_pendingObservations);
         }
         m_isProcessingActions = false;
@@ -392,6 +393,26 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         m_pendingObservations.description += $"Face toward point {action.pointNumber}: {status}, now facing {actualHeading:F1} deg.\n";
     }
 
+    public IEnumerator OnFaceTowardPosAction(FaceTowardPosAction action)
+    {
+        Debug.Log($"OnFaceTowardPosAction: x={action.x}, z={action.z}");
+
+        Vector3 target = new Vector3(action.x, 0, action.z);
+        Vector3 toTarget = (target - transform.position).XZProject();
+        if (toTarget.magnitude < 1e-3f)
+        {
+            m_pendingObservations.description += $"Face toward pos ({action.x:F1},{action.z:F1}): already at target position.\n";
+            yield break;
+        }
+
+        bool success = false;
+        yield return StartCoroutine(FaceForward(toTarget.normalized, v => success = v));
+
+        float actualHeading = Vector3.SignedAngle(Vector3.forward, transform.forward.XZProject().normalized, Vector3.up);
+        string status = success ? "completed" : "timed out";
+        m_pendingObservations.description += $"Face toward pos ({action.x:F1},{action.z:F1}): {status}, now facing {actualHeading:F1} deg.\n";
+    }
+
     public IEnumerator OnFaceTowardHeadingAction(FaceTowardHeadingAction action)
     {
         Debug.Log($"OnFaceTowardHeadingAction: headingDegrees={action.headingDegrees}");
@@ -516,6 +537,35 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             points = points
         };
         m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<AnnotatedImage>()).Append(annotatedImage).ToArray();
+    }
+
+    private void PopulateMaps(ref ObservationsMessage obs)
+    {
+        var occupancyMap = m_occupancyMapBuilder.Map;
+        var lastVisitedMap = m_occupancyMapBuilder.LastVisitedMap;
+
+        int cellsWide = occupancyMap.CellsWide;
+        int cellsDeep = occupancyMap.CellsDeep;
+        int totalCells = cellsWide * cellsDeep;
+
+        obs.mapCellsWide = cellsWide;
+        obs.mapCellsDeep = cellsDeep;
+        obs.mapCellSize = occupancyMap.CellSize;
+        obs.mapOriginX = occupancyMap.Center.x - cellsWide * occupancyMap.CellSize / 2f;
+        obs.mapOriginZ = occupancyMap.Center.z - cellsDeep * occupancyMap.CellSize / 2f;
+
+        obs.occupancy = new int[totalCells];
+        obs.lastVisited = new float[totalCells];
+
+        for (int z = 0; z < cellsDeep; z++)
+        {
+            for (int x = 0; x < cellsWide; x++)
+            {
+                int i = z * cellsWide + x;
+                obs.occupancy[i] = occupancyMap.Get(x, z) ? 1 : 0;
+                obs.lastVisited[i] = lastVisitedMap.Get(x, z);
+            }
+        }
     }
 
     public IEnumerator OnBackOutAction(BackOutAction action)

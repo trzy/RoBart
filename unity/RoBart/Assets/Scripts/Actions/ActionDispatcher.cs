@@ -12,6 +12,7 @@ public static class ActionDispatcher
             case MoveToPosAction a:         return handler.OnMoveToPosAction(a);
             case TurnInPlaceAction a:       return handler.OnTurnInPlaceAction(a);
             case FaceTowardAction a:        return handler.OnFaceTowardAction(a);
+            case FaceTowardPosAction a:     return handler.OnFaceTowardPosAction(a);
             case FaceTowardHeadingAction a: return handler.OnFaceTowardHeadingAction(a);
             case Scan360Action a:           return handler.OnScan360Action(a);
             case TakePhotoAction a:         return handler.OnTakePhotoAction(a);

@@ -29,6 +29,12 @@ public struct FaceTowardAction
     public int pointNumber;
 }
 
+public struct FaceTowardPosAction
+{
+    public float x;
+    public float z;
+}
+
 public struct FaceTowardHeadingAction
 {
     public float headingDegrees;
