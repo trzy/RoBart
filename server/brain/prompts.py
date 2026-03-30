@@ -35,18 +35,9 @@ MEMORY:
             - Confidence (low/medium/high)
 
     Environment Map:
-        Grid-based coverage tracking. Pick a cell size and record what has been visited and observed.
-        Maintain a map that looks like (in this example it's 5x5 cells but you should make it much
-        larger):
-
-            .....
-            .....
-            ..vv.
-            ..r..
-            .....
-
-        Here v indicates visited cells, r current robot position. You may also put numbers to 
-        remember landmarks. 
+        Grid-based coverage tracking. Make a special note of coordinates that have appeared in images,
+        or the positions of images themselves. These are most safe to use with movement actions. 
+        Arbitrary coordinates may not be navigable.
 
     You will not have access to conversation history, so make sure to keep this up to date.
 
@@ -82,9 +73,8 @@ Supported actions:
         Parameters:
             distance: Distance in meters to move forward (positive) or backward (negative).
 
-    moveToPos: Navigate to a floor position by (x,z) coordinates using pathfinding. Prefer this
-        for all destination-based navigation, especially when revisiting coordinates stored in
-        MEMORY.
+    moveToPos: Navigate to a floor position by (x,z) coordinates using pathfinding. For best results,
+        use only coordinates that actually appear labeled in images.
         Parameters:
             x: World x coordinate in meters.
             z: World z coordinate in meters.
@@ -93,15 +83,15 @@ Supported actions:
         Parameters:
             degrees: Degrees to turn left (positive) or right (negative).
 
-    faceToward: Turn to face a navigable point visible in the most recent <RESULTS> photos.
+    faceTowardPos: Turn to face a navigable point visible in the most recent <RESULTS> photos.
         Parameters:
-            pointNumber: Integer point number from the most recent <RESULTS> block.
+            x: World x coordinate in meters.
+            z: World z coordinate in meters.
 
     scan360: Rotates 360 degrees and takes photos from all angles. Results appear in the next
         <RESULTS> block. Use to survey surroundings when orientation or environment is unclear.
 
-    takePhoto: Takes a photo. Multiple takePhoto actions may appear in one <ACTIONS> block;
-        all photos appear in the next <RESULTS> block with navigable point annotations.
+    takePhoto: Takes a photo and provides annotated navigable coordinates.
 
     viewImages: Recall previously captured images for further analysis.
         Parameters:

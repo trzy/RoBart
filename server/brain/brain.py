@@ -190,6 +190,45 @@ Keep your output concise and avoid extraneous formatting.
 # Helpers
 ####################################################################################################
 
+def _create_occupancy_map(msg: ObservationsMessage) -> str:
+    cells_wide = msg.mapCellsWide
+    cells_deep = msg.mapCellsDeep
+    last_visited = msg.lastVisited
+    occupancy = msg.occupancy
+    total = cells_wide * cells_deep
+
+    # First pass: render visited cells as digits, unvisited as '.'
+    grid = ['.'] * total
+
+    visited = [t for t in last_visited if t >= 0]
+    if visited:
+        newest = max(visited)
+        oldest = min(visited)
+        time_range = newest - oldest
+
+        for i in range(total):
+            t = last_visited[i]
+            if t >= 0:
+                if time_range < 1e-6:
+                    grid[i] = '0'
+                else:
+                    age = newest - t
+                    digit = min(int(age / time_range * 9.999), 9)
+                    grid[i] = str(digit)
+
+    # Second pass: mark occupied cells as 'x'
+    for i in range(total):
+        if occupancy[i]:
+            grid[i] = 'x'
+
+    # Build row strings
+    rows = []
+    for z in range(cells_deep):
+        start = z * cells_wide
+        rows.append("".join(grid[start:start + cells_wide]))
+    return "\n".join(rows)
+
+
 def _extract_actions(blocks) -> list[str]:
     for b in blocks:
         if b.tag == "ACTIONS":
@@ -210,11 +249,16 @@ async def _wait_for_observations(queue: asyncio.Queue) -> ObservationsMessage:
 def _format_results(msg: Optional[ObservationsMessage], extra_results_content: list) -> Tuple[list, list]:
     open_tag = f"<{RESULT_SECTION_NAME}>"
     close_tag = f"</{RESULT_SECTION_NAME}>"
+    
     images: List[Image] = []
+    
     if msg is None:
         return [f"{open_tag}\nStep completed successfully.\n{close_tag}"], []
+    
     if not msg.images:
         return [f"{open_tag}\n{msg.description}\n{close_tag}"], []
+    
+    # Description from robot and images
     label = "Image:" if len(msg.images) == 1 else "Images:"
     content = [f"{open_tag}\n{msg.description}\n{label}\n"]
     for annotated_image in msg.images:
@@ -225,8 +269,21 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
         # if len(image.points) > 0:
         #     landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
         #     content.append(landmarks_text)
+    
+    # Occupancy map
+    map_text = "\n".join([
+        "Occupancy Map:",
+        ".=navigable x=obstacle 0-9=heatmap of last visited positions (0 is now, 9 is longest ago)",
+        f"cell width={msg.mapCellSize}, top left cell pos=({msg.mapOriginX + 0.5 * msg.mapCellSize:.1f},{msg.mapOriginZ + 0.5 * msg.mapCellSize:.1f}), bottom right cell pos=({msg.mapOriginX + (msg.mapCellsWide - 0.5) * msg.mapCellSize:.1f},{msg.mapOriginZ + (msg.mapCellsDeep - 0.5) * msg.mapCellSize:.1f})",
+        _create_occupancy_map(msg=msg)
+    ])
+    content.append(map_text)
+
+    # Any additional content server wants to add
     if (len(extra_results_content) > 0):
         content += extra_results_content
+    
+    # End
     content.append(close_tag)
     return content, images
 

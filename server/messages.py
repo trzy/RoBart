@@ -132,6 +132,13 @@ class AnnotatedImage(BaseModel):
 class ObservationsMessage(BaseModel):
     description: str
     images: List[AnnotatedImage]
+    mapCellsWide: int
+    mapCellsDeep: int
+    mapOriginX: float
+    mapOriginZ: float
+    mapCellSize: float
+    occupancy: List[int]        # row-major, 0 = free, 1 = occupied
+    lastVisited: List[float]    # row-major, seconds (Time.time), -1 = never visited
 
 class VisualTraceSample(BaseModel):
     imageJpegBase64: str
