@@ -132,6 +132,8 @@ class AnnotatedImage(BaseModel):
 class ObservationsMessage(BaseModel):
     description: str
     images: List[AnnotatedImage]
+    currentPosition: VectorXZ
+    currentForward: VectorXZ
     mapCellsWide: int
     mapCellsDeep: int
     mapOriginX: float

@@ -2,6 +2,12 @@
 # TODO:
 # -----
 # - Render occupancy map and see if that is easier for Claude to parse
+#   - Add a tool or a section for Claude to record landmarks and these can be printed in the 
+#     occupancy map (for e.g., keeping track of search)
+# - Need to make sure prompts tell robot to use landmark based navigation if possible otherwise
+#   to use manual navigation to get out of sticky situations. Should be helped by trajectory images.
+# - Agent often makes reference to compass directions but we need to give it a convention to follow
+#   (e.g., north = decreasing Z, west=decreasing x)
 # - Trajectory photos for backing out
 # - Return to landmark mode
 #   - De-dupe landmarks (try to reuse landmarks rather than endlessly generating new ones)
@@ -10,6 +16,7 @@
 
 import asyncio
 import json
+import os
 import traceback
 from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
@@ -19,6 +26,7 @@ from .claude import Message, think
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image
 from .logger import BrainLogger
+from .occupancy_map import CoordUnit, MapAnnotation, RobotMarker, RenderOptions, render_occupancy_map
 from .prompts import SYSTEM_PROMPT
 from ..messages import ActionsMessage, ObservationsMessage, VisualTraceMessage
 
@@ -107,7 +115,7 @@ class Brain:
                 
                 # Convert response from robot along with server action results to a single results
                 # section
-                results_content, images = _format_results(msg=obs_msg, extra_results_content=server_results_content)
+                results_content, images = _format_results(msg=obs_msg, extra_results_content=server_results_content, log_dir=logger.step_directory)
 
                 # Images from the robot are stored
                 self._store_images(images=images)
@@ -248,7 +256,7 @@ async def _send_actions(send, actions: list[str]):
 async def _wait_for_observations(queue: asyncio.Queue) -> ObservationsMessage:
     return await queue.get()
 
-def _format_results(msg: Optional[ObservationsMessage], extra_results_content: list) -> Tuple[list, list]:
+def _format_results(msg: Optional[ObservationsMessage], extra_results_content: list, log_dir: str) -> Tuple[list, list]:
     open_tag = f"<{RESULT_SECTION_NAME}>"
     close_tag = f"</{RESULT_SECTION_NAME}>"
     
@@ -272,14 +280,36 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
         #     landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
         #     content.append(landmarks_text)
     
-    # Occupancy map
-    map_text = "\n".join([
+    # Render occupancy map
+    occupancy_map_render_options = RenderOptions(
+        cells_wide=msg.mapCellsWide,
+        cells_deep=msg.mapCellsDeep,
+        occupancy=msg.occupancy,
+        origin_x=msg.mapOriginX,
+        origin_z=msg.mapOriginZ,
+        cell_size=msg.mapCellSize,
+        cell_pixels=8,
+        last_visited=msg.lastVisited,
+        robot=RobotMarker(position=msg.currentPosition, forward=msg.currentForward, radius_cells=1.5),
+        output_path=os.path.join(log_dir, "occupancy.png")
+    )
+    occupancy_map = render_occupancy_map(opts=occupancy_map_render_options)
+    occupancy_description = "\n".join([
         "Occupancy Map:",
-        ".=navigable x=obstacle 0-9=heatmap of last visited positions (0 is now, 9 is longest ago)",
+        "blue=obstacle, red dot=robot (red line indicates forward dir), green=most recently visited cells (lighter is more recent)",
         f"cell width={msg.mapCellSize}, top left cell pos=({msg.mapOriginX + 0.5 * msg.mapCellSize:.1f},{msg.mapOriginZ + 0.5 * msg.mapCellSize:.1f}), bottom right cell pos=({msg.mapOriginX + (msg.mapCellsWide - 0.5) * msg.mapCellSize:.1f},{msg.mapOriginZ + (msg.mapCellsDeep - 0.5) * msg.mapCellSize:.1f})",
-        _create_occupancy_map(msg=msg)
     ])
-    content.append(map_text)
+    content.append(occupancy_description)
+    content.append(occupancy_map)
+    
+    # Text version
+    # map_text = "\n".join([
+    #     "Occupancy Map:",
+    #     ".=navigable x=obstacle 0-9=heatmap of last visited positions (0 is now, 9 is longest ago)",
+    #     f"cell width={msg.mapCellSize}, top left cell pos=({msg.mapOriginX + 0.5 * msg.mapCellSize:.1f},{msg.mapOriginZ + 0.5 * msg.mapCellSize:.1f}), bottom right cell pos=({msg.mapOriginX + (msg.mapCellsWide - 0.5) * msg.mapCellSize:.1f},{msg.mapOriginZ + (msg.mapCellsDeep - 0.5) * msg.mapCellSize:.1f})",
+    #     _create_occupancy_map(msg=msg)
+    # ])
+    # content.append(map_text)
 
     # Any additional content server wants to add
     if (len(extra_results_content) > 0):

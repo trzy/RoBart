@@ -25,6 +25,13 @@ class BrainLogger:
         self._step = 0
         self._step_dir: Optional[str] = None
 
+    @property
+    def step_directory(self) -> str:
+        if not self._step_dir:
+            self._step_dir = os.path.join(self._run_dir, str(self._step))
+            os.makedirs(self._step_dir, exist_ok=True)
+        return self._step_dir
+
     def log_input(self, messages: List[Message]):
         """Call before think(). Creates the step directory, saves images, and writes input.txt."""
         self._step_dir = os.path.join(self._run_dir, str(self._step))
