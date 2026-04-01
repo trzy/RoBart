@@ -52,6 +52,8 @@ public struct ObservationsMessage
 {
     public string description;
     public AnnotatedImage[] images;
+    public VectorXZ currentPosition;
+    public VectorXZ currentForward;
 
     // Occupancy and last-visited maps (shared grid dimensions)
     public int mapCellsWide;

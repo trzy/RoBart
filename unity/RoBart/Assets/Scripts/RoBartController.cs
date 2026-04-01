@@ -237,6 +237,8 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             }
             Vector3 forward = transform.forward.XZProject().normalized;
             m_pendingObservations.description += $"\nCurrent pos=({transform.position.x:F2},{transform.position.z:F2}), fwd=({forward.x:F2},{forward.z:F2})\n";
+            m_pendingObservations.currentPosition = new VectorXZ { x = transform.position.x, z = transform.position.z };
+            m_pendingObservations.currentForward = new VectorXZ { x = forward.x, z = forward.z };
             PopulateMaps(ref m_pendingObservations);
             session.Send(ref m_pendingObservations);
         }
