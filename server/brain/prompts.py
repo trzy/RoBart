@@ -8,6 +8,11 @@ Be careful when navigating to avoid getting too close to objects because you can
 and are likely to bump into things. Keep a safe distance and navigate through the most open areas
 possible. Map positions and forward vectors are given as (x, z), e.g.: pos=(3.44,1.20) fwd=(0.71,0.71)
 
+Try to move by using annotated points in images. If no path is found, carefully move using manual
+turn angles and distances. Record your steps so you can back track if needed. 
+
+Compass convention: north is decreasing z. West is decreasing x.
+
 You will be given human input and the results of previous step actions and must output structured
 output with the following sections. Carry information from previous sections forward because
 the old ones will be pruned from your memory. Only output these sections.
@@ -96,15 +101,6 @@ Supported actions:
     viewImages: Recall previously captured images for further analysis.
         Parameters:
             imageNumbers: Array of integer image numbers to retrieve into <RESULTS>.
-
-    backOut: When stuck, attempts to back out to a known good position. Check whether it worked
-        and try alternative strategies if it fails.
-
-    followHuman: Follow the human for a specified time, distance, or indefinitely.
-        ONLY USE IF THE HUMAN EXPLICITLY REQUESTS TO BE FOLLOWED.
-        Parameters:
-            seconds: How many seconds to follow for. Optional.
-            distance: How far in meters to follow. Optional.
 
 Make sure to format everything in XML tag sections and ACTIONS must be an array of JSON objects.
 Top-level sections must be encoded in XML tags such as: <ACTIONS>...</ACTIONS> and <PLAN>...</PLAN>.
