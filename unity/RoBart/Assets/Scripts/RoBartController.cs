@@ -29,6 +29,10 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     [SerializeField]
     private NavigablePointSampler.Parameters m_navigablePointParameters = NavigablePointSampler.Parameters.Default;
 
+    [SerializeField]
+    [Tooltip("Visual trace capture rate in Hz during action execution")]
+    private float m_traceCaptureHz = 2f;
+
     private Rigidbody m_rb;
     private OccupancyMapBuilder m_occupancyMapBuilder;
     private float m_robotRadius;
@@ -224,10 +228,31 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             }
 
             m_pendingObservations = new ObservationsMessage();
+
+            var traceSamples = new List<VisualTraceSample>();
+            bool stopTrace = false;
+            bool traceRunning = false;
+
             foreach (object action in actions)
             {
                 if (action != null)
                 {
+                    bool shouldTrace = action is MoveAction or MoveToAction or MoveToPosAction
+                        or TurnInPlaceAction or FaceTowardAction or FaceTowardPosAction or FaceTowardHeadingAction;
+
+                    if (shouldTrace && !traceRunning)
+                    {
+                        stopTrace = false;
+                        StartCoroutine(VisualTraceCapture.RecordSamples(transform, m_traceCaptureHz, traceSamples, () => stopTrace));
+                        traceRunning = true;
+                    }
+                    else if (!shouldTrace && traceRunning)
+                    {
+                        stopTrace = true;
+                        yield return null;
+                        traceRunning = false;
+                    }
+
                     IEnumerator coroutine = ActionDispatcher.Dispatch(action, this);
                     if (coroutine != null)
                     {
@@ -235,6 +260,14 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
                     }
                 }
             }
+
+            if (traceRunning)
+            {
+                stopTrace = true;
+                yield return null;
+            }
+            m_pendingObservations.visualTrace = traceSamples.ToArray();
+
             Vector3 forward = transform.forward.XZProject().normalized;
             m_pendingObservations.description += $"\nCurrent pos=({transform.position.x:F2},{transform.position.z:F2}), fwd=({forward.x:F2},{forward.z:F2})\n";
             m_pendingObservations.currentPosition = new VectorXZ { x = transform.position.x, z = transform.position.z };

@@ -63,6 +63,9 @@ public struct ObservationsMessage
     public float mapCellSize;
     public int[] occupancy;      // row-major, 0 = free, 1 = occupied
     public float[] lastVisited;  // row-major, seconds (Time.time), -1 = never visited
+
+    // Visual trace captured during action execution
+    public VisualTraceSample[] visualTrace;
 }
 
 [Serializable]

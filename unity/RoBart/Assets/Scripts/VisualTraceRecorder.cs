@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,28 +45,10 @@ public class VisualTraceRecorder : MessageReceivingBehavior
     private IEnumerator RecordCoroutine()
     {
         var samples = new List<VisualTraceSample>();
-        float startTime = Time.time;
-        float interval = 1f / m_captureHz;
 
-        while (m_isRecording)
-        {
-            yield return new WaitForEndOfFrame();
-
-            Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
-            byte[] jpegBytes = screenshot.EncodeToJPG();
-            Destroy(screenshot);
-
-            Vector3 fwd = transform.forward.XZProject().normalized;
-            samples.Add(new VisualTraceSample
-            {
-                imageJpegBase64 = Convert.ToBase64String(jpegBytes),
-                worldPosition = new VectorXZ { x = transform.position.x, z = transform.position.z },
-                worldForward  = new VectorXZ { x = fwd.x, z = fwd.z },
-                timestampSeconds = Time.time - startTime
-            });
-
-            yield return new WaitForSeconds(interval);
-        }
+        yield return StartCoroutine(
+            VisualTraceCapture.RecordSamples(transform, m_captureHz, samples, () => !m_isRecording)
+        );
 
         if (m_session != null && samples.Count > 0)
         {
