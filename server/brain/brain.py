@@ -8,7 +8,8 @@
 #   to use manual navigation to get out of sticky situations. Should be helped by trajectory images.
 # - Agent often makes reference to compass directions but we need to give it a convention to follow
 #   (e.g., north = decreasing Z, west=decreasing x)
-# - Trajectory photos for backing out
+# x Trajectory photos for backing out
+#   - What if we always just pass in trajectory photos and remove explicit photo taking commands?
 # - Return to landmark mode
 #   - De-dupe landmarks (try to reuse landmarks rather than endlessly generating new ones)
 # - Generate each LLM output section (MEMORY, PLAN, ACTIONS) by prompting each separately.
@@ -311,10 +312,20 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
     # ])
     # content.append(map_text)
 
+    # Visual trace
+    # if msg.visualTrace:
+    #     content.append(f"\nVisual trace ({len(msg.visualTrace)} samples during action execution):\n")
+    #     for sample in msg.visualTrace:
+    #         trace_img = Image(data=sample.imageJpegBase64, media_type="image/jpeg")
+    #         trace_img = trace_img.resize(scale=0.25)
+    #         p = sample.worldPosition
+    #         content.append(f"t={sample.timestampSeconds:.2f}s pos=({p.x:.2f},{p.z:.2f})\n")
+    #         content.append(trace_img)
+
     # Any additional content server wants to add
     if (len(extra_results_content) > 0):
         content += extra_results_content
-    
+
     # End
     content.append(close_tag)
     return content, images

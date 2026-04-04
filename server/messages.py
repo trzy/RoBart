@@ -23,7 +23,7 @@
 # parts.
 #
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -141,6 +141,7 @@ class ObservationsMessage(BaseModel):
     mapCellSize: float
     occupancy: List[int]        # row-major, 0 = free, 1 = occupied
     lastVisited: List[float]    # row-major, seconds (Time.time), -1 = never visited
+    visualTrace: Optional[List["VisualTraceSample"]] = None
 
 class VisualTraceSample(BaseModel):
     imageJpegBase64: str
@@ -150,3 +151,5 @@ class VisualTraceSample(BaseModel):
 
 class VisualTraceMessage(BaseModel):
     entries: List[VisualTraceSample]
+
+ObservationsMessage.model_rebuild()
