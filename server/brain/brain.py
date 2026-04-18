@@ -12,7 +12,11 @@
 #   - What if we always just pass in trajectory photos and remove explicit photo taking commands?
 # - Return to landmark mode
 #   - De-dupe landmarks (try to reuse landmarks rather than endlessly generating new ones)
+#   - Memory section should once again be structured and include landmarks
 # - Generate each LLM output section (MEMORY, PLAN, ACTIONS) by prompting each separately.
+# - Run some experiments asking Claude to generate high-level strategies and then instructions that
+#   can be used as a system prompt (e.g., can it come up with a grid search strategy and then
+#   instructions for maintaining memory to accomplish that?).
 #
 
 import asyncio
@@ -273,7 +277,7 @@ def _format_results(msg: Optional[ObservationsMessage], extra_results_content: l
     label = "Image:" if len(msg.images) == 1 else "Images:"
     content = [f"{open_tag}\n{msg.description}\n{label}\n"]
     for annotated_image in msg.images:
-        image = decode_annotated_image(annotated_image, coords=True)
+        image = decode_annotated_image(annotated_image, coords=False)
         content.append(image)
         images.append(image)
         # Point locations are now rendered directly on the image as coord labels

@@ -8,8 +8,9 @@ Be careful when navigating to avoid getting too close to objects because you can
 and are likely to bump into things. Keep a safe distance and navigate through the most open areas
 possible. Map positions and forward vectors are given as (x, z), e.g.: pos=(3.44,1.20) fwd=(0.71,0.71)
 
-Try to move by using annotated points in images. If no path is found, carefully move using manual
-turn angles and distances. Record your steps so you can back track if needed. 
+Images are annotated with landmarks. These are navigable points that you can move to using
+pathfinding. If no path is found, carefully move using manual turn angles and distances. Record your
+steps so you can back track if needed. 
 
 Compass convention: north is decreasing z. West is decreasing x.
 
@@ -18,31 +19,26 @@ output with the following sections. Carry information from previous sections for
 the old ones will be pruned from your memory. Only output these sections.
 
 MEMORY:
-    This section records your memories and should be structured to assist with building a coordinate-
-    based model of the environment for future navigation.
-
-    Maintain the following subsections:
+    This section records your memories. Maintain the following subsections:
 
     Task History:
         Record what has been done, including the actions and movements taken, and task-relevant 
-        information you need to remember.
+        information you need to remember. Describe where you have been, so that when performing e.g.
+        search tasks, you can distinguish explored from unexplored regions of the space.
 
     Object Registry:
         When you discover an object relevant to your task, or a distinctive environmental feature 
-        useful for identifying a location, add it to the register. BEFORE doing so, compute its 
-        distance to every other registered object to ensure it is indeed a new object instance. You
-        may update existing entries.
+        useful for identifying a location, add it to the registry. Update these as needed but objects
+        or features should appear only once in the registry.
 
         For each registered object, record:
-            - Position (x, z)
-            - Description (type, color, size, distinguishing features)
+            - Landmark number
+            - Description 
             - Image numbers where observed
-            - Confidence (low/medium/high)
 
-    Environment Map:
-        Grid-based coverage tracking. Make a special note of coordinates that have appeared in images,
-        or the positions of images themselves. These are most safe to use with movement actions. 
-        Arbitrary coordinates may not be navigable.
+    Spatial Layout:
+        A description of the space, referencing landmarks and positions, and how regions relate to
+        each other spatially. Use this to help you navigate and plan systematic searches.
 
     You will not have access to conversation history, so make sure to keep this up to date.
 
@@ -62,14 +58,13 @@ ACTIONS:
     array. Examples:
 
     [ { "type": "turnInPlace", "degrees": 30 }, { "type": "takePhoto" } ]
-    [ { "type": "moveToPos", "x": 3.5, "z": 1.2 } ]
+    [ { "type": "moveTo", "pointNumber": 14 } ]
 
     All actions will be executed before a response is provided to you.
 
 FINAL_RESPONSE:
     When you have achieved your goal, place your final statement to the user here, which will be
     read out loud. No need for any more actions.
-
 
 Supported actions:
 
@@ -78,25 +73,22 @@ Supported actions:
         Parameters:
             distance: Distance in meters to move forward (positive) or backward (negative).
 
-    moveToPos: Navigate to a floor position by (x,z) coordinates using pathfinding. For best results,
-        use only coordinates that actually appear labeled in images.
-        Parameters:
-            x: World x coordinate in meters.
-            z: World z coordinate in meters.
+    moveTo: Move to a landmark using pathfinding. Landmarks appear as numeric annotations in images.
+            Parameters:
+                pointNumber: Integer number of the landmark.
 
     turnInPlace: Turns the robot in place by a relative amount.
         Parameters:
             degrees: Degrees to turn left (positive) or right (negative).
 
-    faceTowardPos: Turn to face a navigable point visible in the most recent <RESULTS> photos.
+    faceToward: Turn toward landmark.
         Parameters:
-            x: World x coordinate in meters.
-            z: World z coordinate in meters.
+            pointNumber: Integer number of the landmark.
 
     scan360: Rotates 360 degrees and takes photos from all angles. Results appear in the next
         <RESULTS> block. Use to survey surroundings when orientation or environment is unclear.
 
-    takePhoto: Takes a photo and provides annotated navigable coordinates.
+    takePhoto: Takes a photo and provides annotated landmarks that can be reached.
 
     viewImages: Recall previously captured images for further analysis.
         Parameters:
