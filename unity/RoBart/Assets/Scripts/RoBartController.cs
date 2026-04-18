@@ -46,7 +46,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     private bool m_isProcessingActions = false;
     private ObservationsMessage m_pendingObservations;
 
-    private List<Vector3> m_landmarkWorldPoints = new List<Vector3>();
+    private LandmarkStore m_landmarkStore;
 
     private struct KeyboardControls
     {
@@ -84,6 +84,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         m_positionPIDController = GetComponent<CascadedPIDController>();
         m_orientationPIDController = GetComponent<CascadedOrientationPIDController>();
         m_robotRadius = Footprint.GetRadius(gameObject);
+        m_landmarkStore = new LandmarkStore(m_navigablePointParameters.PointSpacingMeters * 0.5f);
 
         // Create targets for PID controllers
         m_positionTarget = new GameObject(name: "Target - Position");
@@ -319,14 +320,14 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     {
         Debug.Log($"OnMoveToAction: pointNumber={action.pointNumber}");
 
-        if (action.pointNumber < 0 || action.pointNumber >= m_landmarkWorldPoints.Count)
+        if (!m_landmarkStore.IsValidId(action.pointNumber))
         {
-            Debug.LogError($"OnMoveToAction: point {action.pointNumber} not found (have {m_landmarkWorldPoints.Count} landmarks)");
+            Debug.LogError($"OnMoveToAction: point {action.pointNumber} not found (have {m_landmarkStore.Count} landmarks)");
             m_pendingObservations.description += $"Move to point {action.pointNumber}: failed (unknown point).\n";
             yield break;
         }
 
-        Vector3 goal = m_landmarkWorldPoints[action.pointNumber];
+        Vector3 goal = m_landmarkStore[action.pointNumber];
         List<Vector3> path = PathFinder.FindPath(m_occupancyMapBuilder.Map, transform.position, goal, m_robotRadius);
 
         if (path == null || path.Count == 0)
@@ -406,14 +407,14 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     {
         Debug.Log($"OnFaceTowardAction: pointNumber={action.pointNumber}");
 
-        if (action.pointNumber < 0 || action.pointNumber >= m_landmarkWorldPoints.Count)
+        if (!m_landmarkStore.IsValidId(action.pointNumber))
         {
-            Debug.LogError($"OnFaceTowardAction: point {action.pointNumber} not found (have {m_landmarkWorldPoints.Count} landmarks)");
+            Debug.LogError($"OnFaceTowardAction: point {action.pointNumber} not found (have {m_landmarkStore.Count} landmarks)");
             m_pendingObservations.description += $"Face toward point {action.pointNumber}: failed (unknown point).\n";
             yield break;
         }
 
-        Vector3 toTarget = (m_landmarkWorldPoints[action.pointNumber] - transform.position).XZProject();
+        Vector3 toTarget = (m_landmarkStore[action.pointNumber] - transform.position).XZProject();
         if (toTarget.magnitude < 1e-3f)
         {
             m_pendingObservations.description += $"Face toward point {action.pointNumber}: already at target position.\n";
@@ -549,19 +550,16 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         byte[] jpegBytes = screenshot.EncodeToJPG();
         Destroy(screenshot);
 
-        // Landmark IDs are just their index in the global store (begin with 0)
-        int nextLandmarkId = m_landmarkWorldPoints.Count;
-
         AnnotatedPoint[] points = NavigablePointSampler.Sample(
             m_occupancyMapBuilder.Map,
             transform.position,
             transform.forward,
             Camera.main,
             m_navigablePointParameters,
-            firstId: nextLandmarkId);
-        
-        // Store landmarks permanently (the global list maps ID -> world point)
-        m_landmarkWorldPoints.AddRange(points.Select(p => new Vector3(p.worldPosition.x, 0, p.worldPosition.z)));
+            firstId: 0);
+
+        // Deduplicate against existing landmarks and assign stable IDs
+        points = m_landmarkStore.Resolve(points);
 
         Vector3 fwd = transform.forward.XZProject().normalized;
         AnnotatedImage annotatedImage = new AnnotatedImage

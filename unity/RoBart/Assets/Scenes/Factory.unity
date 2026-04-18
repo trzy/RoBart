@@ -38626,6 +38626,10 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5231427285368890933, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
+      propertyPath: m_Constraints
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 5231427285368890933, guid: 5e8f02745649b4777bf8d94b20d4fb9f, type: 3}
       propertyPath: m_IncludeLayers.m_Bits
       value: 0
       objectReference: {fileID: 0}
@@ -42270,6 +42274,10 @@ PrefabInstance:
     - target: {fileID: 7416903146364144429, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_Name
       value: moto_prefab (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8205976907076848631, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8468661557839545491, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -53512,6 +53520,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: moto_prefab (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8205976907076848631, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8468661557839545491, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -26.95
@@ -55826,6 +55838,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: moto_prefab (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8205976907076848631, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8468661557839545491, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -13.6
@@ -56520,6 +56536,10 @@ PrefabInstance:
     - target: {fileID: 7416903146364144429, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_Name
       value: moto_prefab (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8205976907076848631, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8468661557839545491, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -72728,6 +72748,10 @@ PrefabInstance:
     - target: {fileID: 7678488556732597979, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.7153
+      objectReference: {fileID: 0}
+    - target: {fileID: 8205976907076848631, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8468661557839545491, guid: 1e29f93b56052994e9a762bddf3e87e3, type: 3}
       propertyPath: m_LocalPosition.x
