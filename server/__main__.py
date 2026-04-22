@@ -35,7 +35,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Tuple, Type
 import numpy as np
 from pydantic import BaseModel
 
-from .brain import Brain, list_models
+from .brain import Brain, NewBrain, list_models
 from .image_viewer import ImageViewer
 from .messages import *
 from .navigation import NavigationUI
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     tasks = []
     navigation_ui = NavigationUI()
     image_viewer = ImageViewer()
-    brain = Brain()
+    brain = NewBrain()
     server = RoBartDebugServer(port=8000, navigation_ui=navigation_ui, image_viewer=image_viewer, brain=brain)
     brain.set_send(server.send_to_clients)
     console = CommandConsole(tasks=tasks, send_message=server.send_to_clients, image_viewer=image_viewer, brain=brain)

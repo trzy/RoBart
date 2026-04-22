@@ -1,42 +1,17 @@
-#
-# TODO:
-# -----
-# - Render occupancy map and see if that is easier for Claude to parse
-#   - Add a tool or a section for Claude to record landmarks and these can be printed in the 
-#     occupancy map (for e.g., keeping track of search)
-# - Need to make sure prompts tell robot to use landmark based navigation if possible otherwise
-#   to use manual navigation to get out of sticky situations. Should be helped by trajectory images.
-# - Agent often makes reference to compass directions but we need to give it a convention to follow
-#   (e.g., north = decreasing Z, west=decreasing x)
-# x Trajectory photos for backing out
-#   - What if we always just pass in trajectory photos and remove explicit photo taking commands?
-# - Return to landmark mode
-#   - De-dupe landmarks (try to reuse landmarks rather than endlessly generating new ones)
-#   - Memory section should once again be structured and include landmarks
-# - Generate each LLM output section (MEMORY, PLAN, ACTIONS) by prompting each separately.
-# - Run some experiments asking Claude to generate high-level strategies and then instructions that
-#   can be used as a system prompt (e.g., can it come up with a grid search strategy and then
-#   instructions for maintaining memory to accomplish that?).
-#
-
 import asyncio
 import json
 import os
 import traceback
-from typing import Awaitable, Callable, Dict, List, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
-from .claude import Message, ThinkResult, think
+from .claude import ParamType, ToolParameter, Tool, Message, think
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image
 from .logger import BrainLogger
 from .occupancy_map import CoordUnit, MapAnnotation, RobotMarker, RenderOptions, render_occupancy_map
-from .prompts import SYSTEM_PROMPT
 from ..messages import ActionsMessage, ObservationsMessage, VisualTraceMessage
-
-RESULT_SECTION_NAME = "RESULTS" #"OBSERVATIONS"
-STOP_TAG = f"<{RESULT_SECTION_NAME}>"
 
 
 ####################################################################################################
@@ -46,7 +21,28 @@ STOP_TAG = f"<{RESULT_SECTION_NAME}>"
 # for observations before continuing.
 ####################################################################################################
 
-class Brain:
+SYSTEM_PROMPT = """
+You are RoBart, a mobile wheeled robot with the world's most capable AI that dutifully helps users.
+Use the tools available to you to see the world, move about, and query stored information.
+
+Diligently maintain a structured, precise long-term strategy for solving your task. Additionally,
+break this down into sub-tasks as appropriate.
+
+Maintain a memory of your environment, both its layout and objects, features, or areas you have
+encountered, as well as the spatial relationships between them. When you acquire images, they will
+be labeled with numeric landmark points that will remain consistent over time. Additionally, your
+position and forward vector on the xz-plane will frequently be given as vectors of (x,z). 
+
+Maintain a sufficiently detailed history of your actions to help you back track when you are stuck.
+
+Give regular spoken updates to let people nearby know what you are trying to do next. These should
+be 1-3 sentences and enclosed in <INTERMEDIATE_RESPONSE>...</INTERMEDIATE_RESPONSE> tags.
+
+When you are finished, given a final spoken response (up to 5 sentences) in
+<FINAL_RESPONSE>...</FINAL_RESPONSE> tags.
+"""
+
+class NewBrain:
     def __init__(self):
         self._send: Optional[Callable[[BaseModel], Awaitable[None]]] = None
         self._observations_queue: asyncio.Queue[ObservationsMessage] = asyncio.Queue()
@@ -59,73 +55,150 @@ class Brain:
         await self._observations_queue.put(msg)
 
     async def on_visual_trace_message(self, session, msg: VisualTraceMessage, timestamp: float):
-        await handle_visual_trace_message(msg=msg, send=self._send)
+        print("[NewBrain] Received visual trace message: Ignoring (not implemented).")
 
     def _store_images(self, images: List[Image]):
         for image in images:
             self._image_by_id[image.id] = image
+
+    def _process_observations(self, msg: Optional[ObservationsMessage]) -> List[str | Image]:
+        if msg is None:
+            return [ "Step completed successfully" ]
+        
+        images: List[Image] = []
+        
+        # Description from robot only
+        if not msg.images:
+            return [f"{msg.description}\n"]
     
-    def _handle_server_actions(self, actions: List[str]) -> list:
-        content = []
-        for action_str in actions:
-            try:
-                action = json.loads(action_str)
-                if action["type"] == "viewImages":
-                    for id in action["imageNumbers"]:
-                        image = self._image_by_id.get(id)
-                        if image is not None:
-                            content.append(image)
-                        else:
-                            print(f"Error: Unable to lookup image id={id}")
-            except Exception as e:
-                print(f"Error: Unable to process action: {action_str}, reason: {e}")
-                traceback.print_exc()
+        # Description and images
+        label = "Image:" if len(msg.images) == 1 else "Images:"
+        content = [f"{msg.description}\n{label}\n"]
+        for annotated_image in msg.images:
+            image = decode_annotated_image(annotated_image, coords=False)
+            content.append(image)
+            images.append(image)
+        # if len(image.points) > 0:
+        #     landmarks_text = "\nPoint locations:\n" + "\n".join([ f"pos=({point.worldPosition.x:.2f},{point.worldPosition.z:.2f})" for point in image.points ])
+        #     content.append(landmarks_text)
+    
+        # Save images for future recall
+        self._store_images(images=images)
+
         return content
+
+    async def _tool_take_photo(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "takePhoto" }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)
+    
+    async def _tool_scan_360(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "scan360" }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)
+    
+    async def _tool_move(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "move", "distance": params["distance"] }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)        
+    
+    async def _tool_move_to(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "moveTo", "pointNumber": params["pointNumber"] }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)
+    
+    async def _tool_turn_in_place(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "turnInPlace", "degrees": params["degrees"] }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)
+    
+    async def _tool_face_toward(self, params: Dict[str, Any]) -> List[str | Image]:
+        action = { "type": "faceToward", "pointNumber": params["pointNumber"] }
+        msg = ActionsMessage(actions=[ json.dumps(action) ])
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg)
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         try:
+            tools = [
+                Tool(
+                    name="takePhoto",
+                    description="Take a photo",
+                    parameters=[],
+                    handler=self._tool_take_photo
+                ),
+                Tool(
+                    name="scan360",
+                    description="Turn 360 degrees and take multiple photos all around, useful for analyzing surroundings",
+                    parameters=[],
+                    handler=self._tool_scan_360
+
+                ),
+                Tool(
+                    name="move",
+                    description="Move forward or backward",
+                    parameters=[
+                        ToolParameter(name="distance", type=ParamType.NUMBER, description="Meters to move forward (positive) or backward (negative)")
+                    ],
+                    handler=self._tool_move
+                ),
+                Tool(
+                    name="moveTo",
+                    description="Move to a specific landmark point",
+                    parameters=[
+                        ToolParameter(name="pointNumber", type=ParamType.INTEGER, description="Landmark point to go to")
+                    ],
+                    handler=self._tool_move_to
+                ),
+                Tool(
+                    name="turnInPlace",
+                    description="Turn the robot in place",
+                    parameters=[
+                        ToolParameter(name="degrees", type=ParamType.NUMBER, description="Degrees to turn left (positive) or right (negative)")
+                    ],
+                    handler=self._tool_turn_in_place
+                ),
+                Tool(
+                    name="faceToward",
+                    description="Turn to face a landmark",
+                    parameters=[
+                        ToolParameter(name="pointNumber", type=ParamType.INTEGER, description="Landmark point to face")
+                    ],
+                    handler=self._tool_face_toward
+                ),
+            ]
             logger = BrainLogger()
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
             while True:
-                # Time to summarize?
-                messages = await _summarize(messages=messages, model=model)
-
                 logger.log_input(messages)
 
-                result = await think(
+                response = await think(
                     messages=messages,
                     system=SYSTEM_PROMPT,
                     model=model,
-                    stop_sequences=[STOP_TAG],
+                    tools=tools
                 )
-                logger.log_output(result.messages)
-                messages.extend(result.messages)
+                logger.log_output(response.messages)
+                messages.extend(response.messages)
 
-                blocks = parse_blocks(result.text)
+                #TODO: this is broken because there are no more turns!
+
+                blocks = parse_blocks(response.text)
                 tags = [b.tag for b in blocks]
                 if "FINAL_RESPONSE" in tags:
                     break
 
-                actions = _extract_actions(blocks)
-
-                # Send actions to robot
-                if actions and self._send:
-                    await _send_actions(self._send, actions)
-                    obs_msg = await _wait_for_observations(self._observations_queue)
-                else:
-                    obs_msg = None
-
-                # Handle any actions that are designed to be handled here
-                server_results_content = self._handle_server_actions(actions=actions)
-                
-                # Convert response from robot along with server action results to a single results
-                # section
-                results_content, images = _format_results(msg=obs_msg, extra_results_content=server_results_content, log_dir=logger.step_directory)
-
-                # Images from the robot are stored
-                self._store_images(images=images)
-
-                messages.append(Message(role="user", content=results_content))
         except Exception as e:
             print(f"Error: Exception caught: {e}")
             traceback.print_exc()
@@ -189,11 +262,11 @@ Keep your output concise and avoid extraneous formatting.
         content.append(f"t={sample.timestampSeconds:.2f}s  pos=({p.x:.2f}, {p.y:.2f}, {p.z:.2f})\n")
         content.append(img)
     messages = [Message(role="user", content=content)]
-    result = await think(messages=messages, system=system, model="claude-sonnet-4-6")
-    print(f"\n{result.text}")
+    response = await think(messages=messages, system=system, model="claude-sonnet-4-6")
+    print(f"\n{response}")
 
     # Extract and send actions, if any
-    blocks = parse_blocks(result.text)
+    blocks = parse_blocks(response)
     actions = _extract_actions(blocks)
     if actions and send:
         await _send_actions(send, actions)
@@ -359,13 +432,13 @@ information we may need in the future.
 
     # Summarize
     print("\nSummarizing...\n")
-    result = await think(
+    response = await think(
         messages=messages,
         system=SYSTEM_PROMPT,
         model=model,
         stop_sequences=[STOP_TAG],
     )
-    assistant_message = Message(role="assistant", content=[ result.text ])
+    assistant_message = Message(role="assistant", content=[ response ])
 
     # Reconstruct a smaller history consisting of first user message, summarized
     # assistant output, then the most recent user message we had

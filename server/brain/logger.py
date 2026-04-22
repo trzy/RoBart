@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from .claude import Message
+from .claude import Message, ToolResult, ToolUseBlock
 from .image import Image
 
 
@@ -49,11 +49,12 @@ class BrainLogger:
             f.write(formatted)
         self._print_section("INPUT", self._step, formatted)
 
-    def log_output(self, response: str):
+    def log_output(self, messages: List[Message]):
         """Call immediately after think(). Writes output.txt to the current step directory."""
+        formatted = self._format_messages(messages)
         with open(os.path.join(self._step_dir, "output.txt"), "w") as f:
-            f.write(response)
-        self._print_section("OUTPUT", self._step, response)
+            f.write(formatted)
+        self._print_section("OUTPUT", self._step, formatted)
         self._step += 1
 
     @staticmethod
@@ -70,6 +71,15 @@ class BrainLogger:
                     content_parts.append(item)
                 elif isinstance(item, Image):
                     content_parts.append(f"<image_{item.id}.jpg>")
+                elif isinstance(item, ToolUseBlock):
+                    content_parts.append(f"<tool_use name={item.name} id={item.id}>\n{item.input}\n</tool_use>")
+                elif isinstance(item, ToolResult):
+                    error_str = " is_error=true" if item.is_error else ""
+                    inner = "".join(
+                        c if isinstance(c, str) else f"<image_{c.id}.jpg>" if isinstance(c, Image) else str(c)
+                        for c in item.content
+                    )
+                    content_parts.append(f"<tool_result id={item.tool_use_id}{error_str}>\n{inner}\n</tool_result>")
             banner = "=" * (len(msg.role) + 4) + "\n"
             parts.append(banner + f"  {msg.role.upper()}\n" + banner + f"\n{''.join(content_parts)}")
         return "\n\n".join(parts)
