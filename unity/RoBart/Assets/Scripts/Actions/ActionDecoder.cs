@@ -4,6 +4,7 @@ public static class ActionDecoder
 {
     public static object DecodeAction(string json)
     {
+        Debug.Log($"ActionDecoder: Received: {json}");
         string type = JsonUtility.FromJson<ActionHeader>(json).type;
         switch (type)
         {
