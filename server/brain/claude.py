@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Awaitable, Callable, List, Literal
+from typing import Awaitable, Callable, List, Literal, Optional
 
 import anthropic
 
@@ -168,6 +168,7 @@ async def think(
     model: str = "claude-opus-4-6",
     stop_sequences: List[str] = [],
     tools: List[Tool] = [],
+    on_message: Optional[Callable[[Message], None]] = None,
 ) -> ThinkResult:
     client = anthropic.AsyncAnthropic()
 
@@ -213,6 +214,8 @@ async def think(
             assistant_msg = Message(role="assistant", content=assistant_content)
             new_messages.append(assistant_msg)
             api_messages.append({"role": "assistant", "content": _serialize_content_items(assistant_content)})
+            if on_message:
+                on_message(assistant_msg)
 
             if response.stop_reason != "tool_use" or not tool_use_blocks:
                 break
@@ -234,6 +237,8 @@ async def think(
             user_msg = Message(role="user", content=user_content)
             new_messages.append(user_msg)
             api_messages.append({"role": "user", "content": _serialize_content_items(user_content)})
+            if on_message:
+                on_message(user_msg)
 
         text = "\n".join(accumulated_text)
         # Truncate at stop sequences just in case the model includes them in its output

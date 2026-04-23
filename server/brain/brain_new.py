@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from .claude import ParamType, ToolParameter, Tool, Message, think
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image
-from .logger import BrainLogger
+from .streaming_logger import StreamingLogger
 from .occupancy_map import CoordUnit, MapAnnotation, RobotMarker, RenderOptions, render_occupancy_map
 from ..messages import ActionsMessage, ObservationsMessage, VisualTraceMessage
 
@@ -25,15 +25,16 @@ SYSTEM_PROMPT = """
 You are RoBart, a mobile wheeled robot with the world's most capable AI that dutifully helps users.
 Use the tools available to you to see the world, move about, and query stored information.
 
-Diligently maintain a structured, precise long-term strategy for solving your task. Additionally,
-break this down into sub-tasks as appropriate.
+Create and maintain a plan. This should include a long-term strategy for solving your task. Break
+this down further into sub-tasks as appropriate and keep track of them. Write this down your plan
+and progress in <PLAN>...</PLAN> tags. Update this each time you complete a step. Maintain a sufficiently
+detailed history of your actions to help you back track when you get stuck.
 
-Maintain a memory of your environment, both its layout and objects, features, or areas you have
-encountered, as well as the spatial relationships between them. When you acquire images, they will
-be labeled with numeric landmark points that will remain consistent over time. Additionally, your
-position and forward vector on the xz-plane will frequently be given as vectors of (x,z). 
-
-Maintain a sufficiently detailed history of your actions to help you back track when you are stuck.
+Maintain a memory of your environment, objects and areas you have seen, and spatial relationships
+between them. Images will be labeled with numeric landmark points that remain consistent over time.
+Your position and forward vector on the xz-plane will be given as vectors of (x,z). Maintain your 
+observations and analysis in <MEMORY>...</MEMORY> sections and update these each time you have new
+observations.
 
 Give regular spoken updates to let people nearby know what you are trying to do next. These should
 be 1-3 sentences and enclosed in <INTERMEDIATE_RESPONSE>...</INTERMEDIATE_RESPONSE> tags.
@@ -178,18 +179,20 @@ class NewBrain:
                     handler=self._tool_face_toward
                 ),
             ]
-            logger = BrainLogger()
+            logger = StreamingLogger()
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
             while True:
-                logger.log_input(messages)
+                logger.next_step()
+                for msg in messages:
+                    logger.log_message(msg)
 
                 response = await think(
                     messages=messages,
                     system=SYSTEM_PROMPT,
                     model=model,
-                    tools=tools
+                    tools=tools,
+                    on_message=logger.log_message,
                 )
-                logger.log_output(response.messages)
                 messages.extend(response.messages)
 
                 #TODO: this is broken because there are no more turns!
