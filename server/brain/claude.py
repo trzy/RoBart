@@ -47,6 +47,27 @@ class ToolParameter:
     type: ParamType
     description: str
     required: bool = True
+    properties: Optional[list["ToolParameter"]] = None  # fields when type is OBJECT or ARRAY of objects
+    array_type: Optional["ParamType"] = None             # element type when type is ARRAY
+
+    def __post_init__(self):
+        if self.type == ParamType.ARRAY:
+            if self.array_type is None:
+                raise ValueError(f"ToolParameter '{self.name}': array_type is required when type is ARRAY")
+            if self.array_type == ParamType.OBJECT and not self.properties:
+                raise ValueError(f"ToolParameter '{self.name}': properties is required when array_type is OBJECT")
+            if self.array_type != ParamType.OBJECT and self.properties:
+                raise ValueError(f"ToolParameter '{self.name}': properties should not be set when array_type is {self.array_type.value}")
+        elif self.type == ParamType.OBJECT:
+            if not self.properties:
+                raise ValueError(f"ToolParameter '{self.name}': properties is required when type is OBJECT")
+            if self.array_type is not None:
+                raise ValueError(f"ToolParameter '{self.name}': array_type should not be set when type is OBJECT")
+        else:
+            if self.properties is not None:
+                raise ValueError(f"ToolParameter '{self.name}': properties should not be set for type {self.type.value}")
+            if self.array_type is not None:
+                raise ValueError(f"ToolParameter '{self.name}': array_type should not be set for type {self.type.value}")
 
 
 @dataclass
@@ -81,6 +102,8 @@ class Tool:
 class ThinkResult:
     """Return value of think().
 
+    succeeded:True if successful, otherwise an error occurred (with text
+              containing the message and messages empty).
     text:     All text blocks from Claude's responses concatenated (joined by
               newlines). Tool use blocks, tool results, and images are stripped
               out — this is purely what Claude "said" across all turns.
@@ -89,8 +112,35 @@ class ThinkResult:
               and user (with ToolResult) messages. Append these to your
               conversation history to preserve tool call context.
     """
+    succeeded: bool
     text: str
     messages: list[Message] = field(default_factory=list)
+
+
+def _param_to_schema(p: ToolParameter) -> dict:
+    """Convert a ToolParameter to a JSON Schema dict."""
+    schema = {"type": p.type.value, "description": p.description}
+    if p.type == ParamType.OBJECT:
+        obj_props = {}
+        obj_required = []
+        for child in p.properties:
+            obj_props[child.name] = _param_to_schema(child)
+            if child.required:
+                obj_required.append(child.name)
+        schema["properties"] = obj_props
+        schema["required"] = obj_required
+    elif p.type == ParamType.ARRAY:
+        if p.array_type == ParamType.OBJECT:
+            items_props = {}
+            items_required = []
+            for child in p.properties:
+                items_props[child.name] = _param_to_schema(child)
+                if child.required:
+                    items_required.append(child.name)
+            schema["items"] = {"type": "object", "properties": items_props, "required": items_required}
+        else:
+            schema["items"] = {"type": p.array_type.value}
+    return schema
 
 
 def _tool_to_api_schema(tool: Tool) -> dict:
@@ -98,7 +148,7 @@ def _tool_to_api_schema(tool: Tool) -> dict:
     properties = {}
     required = []
     for p in tool.parameters:
-        properties[p.name] = {"type": p.type.value, "description": p.description}
+        properties[p.name] = _param_to_schema(p)
         if p.required:
             required.append(p.name)
     return {
@@ -245,6 +295,6 @@ async def think(
         for stop in stop_sequences:
             if stop in text:
                 text = text[:text.index(stop)]
-        return ThinkResult(text=text, messages=new_messages)
+        return ThinkResult(succeeded=True, text=text, messages=new_messages)
     except Exception as e:
-        return ThinkResult(text=f"Error: {e}", messages=[])
+        return ThinkResult(succeeded=False, text=f"Error: {e}", messages=[])
