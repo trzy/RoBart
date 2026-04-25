@@ -22,58 +22,52 @@ from ..messages import ActionsMessage, ObservationsMessage, VectorXZ, VisualTrac
 ####################################################################################################
 
 SYSTEM_PROMPT = """
-You are RoBart, a mobile wheeled robot with the world's most capable AI that dutifully helps users.
+You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
 Use the tools available to you to see the world, move about, and query stored information.
 
-# Planning
-
+<planning>
 Create and maintain a plan. This should include a long-term strategy for solving your task. Break
 this down further into sub-tasks as appropriate and keep track of them. Write down your plan
 and progress in <PLAN>...</PLAN> tags. Update this each time you complete a step and re-state it in
 its entirety so that the latest copy is the current plan-of-record.
 
-## Format of a Good Plan
+Format of a good plan:
 
-    # [Short, action-oriented description]
+    <PLAN>
+        <objective>
+            Explain in a few sentences the overall task objective and the condition for which it will be
+            considered complete.
+        </objective>
 
-    This plan is a living document. The sections "Progress", "State", "Outcomes & Retrospective",
-    must be kept up to date as you proceed.
+        <procedure>
+            Describe the overall procedure or algorithm you will use to perform the task. You may use
+            pseudo-code, lists, and write multiple sub-sections as desired. If you will need to keep track
+            of state or observations, describe clearly their format and rules for updating them.
+        </procedure>
+        
+        <progress>
+            Record granular progress as you perform the task using a list with checkboxes.
+        </progress>
 
-    ## Objective
+        <state>
+            Record every decision made while working on the task and any state information necessary to the
+            overall state of the task and current sub-task. Any information that your procedure or algorithm
+            needs to track should be recorded here to help long- and short-term decision making at each step.
+        </state>
 
-    Explain in a few sentences the overall task objective and the condition for which it will be
-    considered complete.
+        <outcomes_and_retrospective>
+            Summarize outcomes, gaps, and lessons learned at major milestones or at completion. Compare the
+            result against the original purpose and determine whether you are making progress or getting stuck.
+        </outcomes_and_retrospective>
+    </PLAN>
+</planning>
 
-    ## Procedure
+<feedback>
+Regularly give 1-3 sentence spoken updates to let people nearby know what you are trying to do next
+using the speak tool. When the task is complete, use this tool to deliver a final response.
+</feedback>
 
-    Describe the overall procedure or algorithm you will use to perform the task. You may use
-    pseudo-code, lists, and write multiple sub-sections as desired. If you will need to keep track
-    of state or observations, describe clearly their format and rules for updating them.
-    
-    ## Progress
 
-    Record granular progress as you perform the task using a list with checkboxes.
-
-    ## State
-
-    Record every decision made while working on the task and any state information necessary to the
-    overall state of the task and current sub-task. Any information that your procedure or algorithm
-    needs to track should be recorded here to help long- and short-term decision making at each step.
-
-    ## Outcomes & Retrospective
-
-    Summarize outcomes, gaps, and lessons learned at major milestones or at completion. Compare the
-    result against the original purpose and determine whether you are making progress or getting stuck.
-
-# Feedback to People
-
-Give regular spoken updates to let people nearby know what you are trying to do next. These should
-be 1-3 sentences and enclosed in <INTERMEDIATE_RESPONSE>...</INTERMEDIATE_RESPONSE> tags.
-
-# Stopping Condition1
-
-When you are finished, given a final spoken response (up to 5 sentences) in
-<FINAL_RESPONSE>...</FINAL_RESPONSE> tags.
 """
 
 class NewBrain:
@@ -82,6 +76,7 @@ class NewBrain:
         self._observations_queue: asyncio.Queue[ObservationsMessage] = asyncio.Queue()
         self._image_by_id: Dict[int, Image] = {}
         self._memory: Dict[int, str] = {}
+        self._final_response_delivered = False
 
     def set_send(self, send: Callable[[BaseModel], Awaitable[None]]):
         self._send = send
@@ -180,6 +175,14 @@ class NewBrain:
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
         return self._process_observations(msg=obs_msg)
+    
+    async def _tool_speak(self, params: Dict[str, Any]) -> List[str | Image]:
+        print(f"RoBart says: {params['text']}")
+        if params["final"]:
+            self._final_response_delivered = True
+            print("RoBart is finished.")
+            return [ "RoBart is finished." ]
+        return [ "RoBart spoke." ]
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         print(f"Using model: {model}")
@@ -204,6 +207,15 @@ class NewBrain:
                 #     ],
                 #     handler=self._tool_update_memories
                 # ),
+                Tool(
+                    name="speak",
+                    description="Speak out loud. Use this to inform nearby people of what you are about to do and deliver final responses.",
+                    parameters=[
+                        ToolParameter(name="text", type=ParamType.STRING, description="Text to speak"),
+                        ToolParameter(name="final", type=ParamType.BOOLEAN, description="If true, we are finished and speaking our final response"),
+                    ],
+                    handler=self._tool_speak
+                ),
                 Tool(
                     name="takePhoto",
                     description="Take a photo",
@@ -250,9 +262,13 @@ class NewBrain:
                     handler=self._tool_face_toward
                 ),
             ]
+            
             logger = StreamingLogger()
+            
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
-            while True:
+            self._final_response_delivered = False
+            
+            while not self._final_response_delivered:
                 logger.next_step()
                 for msg in messages:
                     logger.log_message(msg)
