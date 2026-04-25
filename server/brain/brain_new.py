@@ -6,7 +6,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
-from .claude import ParamType, ToolParameter, Tool, Message, think
+from .claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image
 from .streaming_logger import StreamingLogger
@@ -63,11 +63,9 @@ Format of a good plan:
 </planning>
 
 <feedback>
-Regularly give 1-3 sentence spoken updates to let people nearby know what you are trying to do next
-using the speak tool. When the task is complete, use this tool to deliver a final response.
+Regularly give spoken updates to let people nearby know what you are trying to do next using the 
+speak tool. When the task is complete, use this tool to deliver a final response.
 </feedback>
-
-
 """
 
 class NewBrain:
@@ -209,7 +207,7 @@ class NewBrain:
                 # ),
                 Tool(
                     name="speak",
-                    description="Speak out loud. Use this to inform nearby people of what you are about to do and deliver final responses.",
+                    description="Speak out loud. Use this to inform nearby people of what you are about to do and deliver final responses. Be direct and concise because this will be spoken.",
                     parameters=[
                         ToolParameter(name="text", type=ParamType.STRING, description="Text to speak"),
                         ToolParameter(name="final", type=ParamType.BOOLEAN, description="If true, we are finished and speaking our final response"),
@@ -277,6 +275,7 @@ class NewBrain:
                     messages=messages,
                     system=SYSTEM_PROMPT,
                     model=model,
+                    thinking=ThinkingEffort.HIGH,
                     tools=tools,
                     on_message=logger.log_message,
                 )

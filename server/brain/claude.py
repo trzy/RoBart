@@ -25,11 +25,27 @@ class ToolResult:
     is_error: bool = False
 
 
+@dataclass
+class ThinkingBlock:
+    """Represents a thinking block from Claude's response. Stored in Message.content
+    for logging purposes only — not round-tripped to the API."""
+    text: str
+
+
 class Message:
     def __init__(self, role: Literal["user", "assistant"], content: list):
-        """content: list of str | Image | ToolUseBlock | ToolResult"""
+        """content: list of str | Image | ToolUseBlock | ToolResult | ThinkingBlock"""
         self.role = role
         self.content = content
+
+
+class ThinkingEffort(Enum):
+    NONE = "none"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    XHIGH = "xhigh"
+    MAX = "max"
 
 
 class ParamType(Enum):
@@ -216,6 +232,7 @@ async def think(
     messages: List[Message],
     system: str,
     model: str = "claude-opus-4-6",
+    thinking: ThinkingEffort = ThinkingEffort.NONE,
     stop_sequences: List[str] = [],
     tools: List[Tool] = [],
     on_message: Optional[Callable[[Message], None]] = None,
@@ -238,10 +255,13 @@ async def think(
         while True:
             kwargs = dict(
                 model=model,
-                max_tokens=4096,
+                max_tokens=16384 if thinking != ThinkingEffort.NONE else 4096,
                 system=system,
                 messages=api_messages,
             )
+            if thinking != ThinkingEffort.NONE:
+                kwargs["thinking"] = {"type": "adaptive"}
+                kwargs["output_config"] = {"effort": thinking.value}
             if stop_sequences:
                 kwargs["stop_sequences"] = stop_sequences
             if api_tools:
@@ -253,7 +273,9 @@ async def think(
             assistant_content = []
             tool_use_blocks = []
             for block in response.content:
-                if block.type == "text":
+                if block.type == "thinking":
+                    assistant_content.append(ThinkingBlock(text=block.thinking))
+                elif block.type == "text":
                     accumulated_text.append(block.text)
                     assistant_content.append(block.text)
                 elif block.type == "tool_use":

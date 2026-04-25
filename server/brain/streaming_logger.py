@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from .claude import Message, ToolResult, ToolUseBlock
+from .claude import Message, ThinkingBlock, ToolResult, ToolUseBlock
 from .image import Image
 
 
@@ -78,6 +78,8 @@ class StreamingLogger:
                 content_parts.append(item)
             elif isinstance(item, Image):
                 content_parts.append(f"<image_{item.id}.jpg>")
+            elif isinstance(item, ThinkingBlock):
+                content_parts.append(f"<thinking>\n{item.text}\n</thinking>")
             elif isinstance(item, ToolUseBlock):
                 content_parts.append(f"<tool_use name={item.name} id={item.id}>\n{item.input}\n</tool_use>")
             elif isinstance(item, ToolResult):
