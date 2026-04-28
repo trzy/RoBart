@@ -2,10 +2,11 @@
 
 import argparse
 import asyncio
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
-from ..brain.image import load_image, Image
+from ..brain.image import load_image, Image, pil_to_base64_png
 from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
+from ..brain.streaming_logger import StreamingLogger
 from .generate_maps import Map, generate_images
 
 SYSTEM_PROMPT = """
@@ -35,6 +36,8 @@ def get_current_coord(map: Map) -> Tuple[str | None, int, int]:
     return None, 0, 0
     
 def update_map(map: Map, to: str) -> str:
+    to = to.lower()
+
     # Map size
     cells = map.map
     num_rows = len(cells)
@@ -64,6 +67,11 @@ def update_map(map: Map, to: str) -> str:
     # Successful
     return f"Moved from {coord} to {to}"
 
+def map_to_image(map: Map) -> Image:
+    pil_image = generate_images(maps=[ map ], save_to_disk=False)[0]
+    data = pil_to_base64_png(image=pil_image)
+    return Image(data=data, media_type="image/png")
+
 async def main():
     map = Map(
         map=[
@@ -72,24 +80,56 @@ async def main():
             "000x00",
             "000000",
         ],
-        landmarks_by_cell=[]
+        landmarks_by_cell={}
     )
 
-    content = [
-        "Explore the entire map.",
-        
+    async def handle_move_tool(params: Dict[str, Any]) -> List[str | Image]:
+        result = update_map(map=map, to=params["coordinate"])
+        print(map)
+        return [ result, "\nNew map:\n", map_to_image(map=map) ]
+
+    logger = StreamingLogger()
+
+    messages = [
+        Message(
+            role="user",
+            content=[
+                "Explore the entire map.",
+                map_to_image(map=map)
+            ]
+        )
     ]
 
-    coord = get_current_coord(map=map)
-    print(f"Starting coordinate: {coord}")
-    print(map)
-    path = [ "e3", "f3", "f2", "e1", "d1", "c1", "b1", "a1" ]
+    logger.next_step()
+    for msg in messages:
+        logger.log_message(msg)
 
-    for next_coord in path:
-        print(f"Move to: {next_coord}")
-        result = update_map(map=map, to=next_coord)
-        print(result)
-        print(map)
+    response = await think(
+        messages=messages,
+        system=SYSTEM_PROMPT,
+        tools=[
+            Tool(
+                name="move",
+                description="Move to a neighboring cell.",
+                parameters=[
+                    ToolParameter(name="coordinate", type=ParamType.STRING, description="Coordinate (column and row) to move to, e.g. b5 "),
+                ],
+                handler=handle_move_tool,
+            ),
+        ],
+        on_message=logger.log_message,
+    )
+
+    # coord = get_current_coord(map=map)
+    # print(f"Starting coordinate: {coord}")
+    # print(map)
+    # path = [ "e3", "f3", "f2", "e1", "d1", "c1", "b1", "a1" ]
+
+    # for next_coord in path:
+    #     print(f"Move to: {next_coord}")
+    #     result = update_map(map=map, to=next_coord)
+    #     print(result)
+    #     print(map)
 
 if __name__ == "__main__":
     asyncio.run(main())
