@@ -89,34 +89,49 @@ class NewBrain:
         for image in images:
             self._image_by_id[image.id] = image
 
-    def _process_observations(self, msg: Optional[ObservationsMessage]) -> List[str | Image]:
+    def _process_observations(self, msg: Optional[ObservationsMessage], include_visual_trace: bool) -> List[str | Image]:
         if msg is None:
-            return [ "Step completed successfully" ]
+            return [ "\n<command_result>Step completed successfully<command_result>\n" ]
         
+        content = [ "\n<command_result>\n" ]
         images: List[Image] = []
-        
-        # Description from robot only
-        if not msg.images:
-            return [f"{msg.description}\n"]
-    
-        # Description and images
-        label = "Image:" if len(msg.images) == 1 else "Images:"
-        content = [f"{msg.description}\n{label}\n"]
-        for annotated_image in msg.images:
-            image = decode_annotated_image(annotated_image, coords=False)
-            content.append(image)
-            images.append(image)
 
-        # Collect unique point locations across all images
-        points_by_id = _collect_points(images)
-        if points_by_id:
-            content.append("\Landmark locations:\n" + "\n".join(
-                f"  {pid}: pos=({pos.x:.2f},{pos.z:.2f})" for pid, pos in sorted(points_by_id.items())
-            ))
+        # Description
+        content.append(f"{msg.description}\n")
+
+        # Photos
+        if len(msg.images) > 0:
+            content.append("\n<photos>\n")
+            
+            # Photos
+            for annotated_image in msg.images:
+                image = decode_annotated_image(annotated_image, coords=False)
+                content.append(image)
+                images.append(image)
+
+            # Collect unique landmark points and list them
+            points_by_id = _collect_points(images)
+            if points_by_id:
+                content.append("\nLandmark positions:\n" + "\n".join(f"  {pid}: pos=({pos.x:.2f},{pos.z:.2f})" for pid, pos in sorted(points_by_id.items())))
+
+            content.append("\n</photos>\n")
+
+        # Visual trace
+        # if include_visual_trace:
+        #     content.append("\n<video>\nVideo of action:\n")
+        #     for sample in msg.visualTrace:
+        #         trace_img = Image(data=sample.imageJpegBase64, media_type="image/jpeg")
+        #         trace_img = trace_img.resize(scale=0.25)
+        #         p = sample.worldPosition
+        #         content.append(f"t={sample.timestampSeconds:.2f}s pos=({p.x:.2f},{p.z:.2f})\n")
+        #         content.append(trace_img)
+        #     content.append("\n</video>\n")
 
         # Save images for future recall
         self._store_images(images=images)
 
+        # Terminate block and return
+        content.append("\n</command_result>\n")
         return content
     
     async def _tool_update_memories(self, params: Dict[str, Any]) -> List[str | Image]:
@@ -137,42 +152,42 @@ class NewBrain:
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)
+        return self._process_observations(msg=obs_msg, include_visual_trace=False)
     
     async def _tool_scan_360(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "scan360" }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)
+        return self._process_observations(msg=obs_msg, include_visual_trace=False)
     
     async def _tool_move(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "move", "distance": params["distance"] }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)        
+        return self._process_observations(msg=obs_msg, include_visual_trace=True)        
     
     async def _tool_move_to(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "moveTo", "pointNumber": params["pointNumber"] }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)
+        return self._process_observations(msg=obs_msg, include_visual_trace=True)
     
     async def _tool_turn_in_place(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "turnInPlace", "degrees": params["degrees"] }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)
+        return self._process_observations(msg=obs_msg, include_visual_trace=True)
     
     async def _tool_face_toward(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "faceToward", "pointNumber": params["pointNumber"] }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
         await self._send(msg)
         obs_msg = await self._observations_queue.get()
-        return self._process_observations(msg=obs_msg)
+        return self._process_observations(msg=obs_msg, include_visual_trace=True)
     
     async def _tool_speak(self, params: Dict[str, Any]) -> List[str | Image]:
         print(f"RoBart says: {params['text']}")

@@ -124,3 +124,24 @@ def decode_annotated_image(annotated_image: AnnotatedImage, coords: bool = False
     return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg", points=annotated_image.points, position=annotated_image.cameraPosition, forward=annotated_image.cameraForward)
 
 
+####################################################################################################
+# Load from Disk
+####################################################################################################
+
+def load_image(path: str) -> tuple[str, Literal["image/png", "image/jpeg"]]:
+    """Load an image file and return (base64_data, media_type).
+
+    Only JPEG and PNG files are supported. Raises ValueError for other formats.
+    """
+    ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+    media_type_map = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+    }
+    media_type = media_type_map.get(ext)
+    if media_type is None:
+        raise ValueError(f"Unsupported image format '.{ext}': only JPEG and PNG are supported")
+    with open(path, "rb") as f:
+        data = base64.b64encode(f.read()).decode("utf-8")
+    return data, media_type
