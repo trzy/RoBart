@@ -145,3 +145,12 @@ def load_image(path: str) -> tuple[str, Literal["image/png", "image/jpeg"]]:
     with open(path, "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
     return data, media_type
+
+def pil_to_base64_png(image: PILImage):
+    buffered = io.BytesIO()
+    # Specify the format (PNG, JPEG, etc.)
+    image.save(buffered, format="PNG")
+    # Encode the bytes from the buffer
+    img_bytes = base64.b64encode(buffered.getvalue())
+    # Convert bytes to string
+    return img_bytes.decode('utf-8')
