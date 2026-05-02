@@ -1,3 +1,4 @@
+import math
 import random
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
@@ -9,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 class Map:
     map: List[str]
     landmarks_by_cell: Dict[str, List[int]]
+    robot_forward: Tuple[float, float] = (1, -1)  # (x, z) direction vector; z negative = up
 
     def __str__(self):
         return "\n".join([ f"[ {row} ]" for row in self.map ])
@@ -22,12 +24,12 @@ class MapImageConfig:
     label_color: Tuple[int, int, int] = (0, 0, 0)
     background_color: Tuple[int, int, int] = (255, 255, 255)
     grid_thickness: int = 1
-    margin: int = 32
-    legend_height: int = 40
     free_label: str = "Unexplored"
     occupied_label: str = "Visited"
     robot_color: Tuple[int, int, int] = (50, 100, 220)
     robot_label: str = "Robot"
+    robot_size: float = 0.7  # proportion of cell size
+    robot_line_width: int = 6
     landmark_font_color: Tuple[int, int, int] = (255, 255, 255)
     landmark_box_color: Tuple[int, int, int] = (0, 0, 0)
     landmark_padding: int = 2
@@ -39,16 +41,17 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
         rows = len(m.map)
         cols = len(m.map[0]) if rows > 0 else 0
 
-        cell_size = (config.image_width - config.margin) // cols
+        cell_size = config.image_width // (cols + 1)
+        margin = cell_size
         grid_w = cell_size * cols
         grid_h = cell_size * rows
-        image_height = config.margin + grid_h + config.legend_height
+        image_height = margin + grid_h + margin
 
         img = Image.new("RGB", (config.image_width, image_height), config.background_color)
         draw = ImageDraw.Draw(img)
 
-        ox = config.margin
-        oy = config.margin
+        ox = margin
+        oy = margin
 
         # Fill cells
         robot_cells = []
@@ -73,12 +76,11 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
             y = oy + r * cell_size
             draw.line([(ox, y), (ox + grid_w, y)], fill=config.grid_color, width=config.grid_thickness)
 
-        # Draw X marks on robot cells
-        x_pad = cell_size // 4
-        x_width = max(2, config.grid_thickness + 1)
+        # Draw robot chevron
         for x0, y0 in robot_cells:
-            draw.line([(x0 + x_pad, y0 + x_pad), (x0 + cell_size - x_pad, y0 + cell_size - x_pad)], fill=config.robot_color, width=x_width)
-            draw.line([(x0 + cell_size - x_pad, y0 + x_pad), (x0 + x_pad, y0 + cell_size - x_pad)], fill=config.robot_color, width=x_width)
+            cx = x0 + cell_size / 2
+            cy = y0 + cell_size / 2
+            _draw_chevron(draw, cx, cy, m.robot_forward, cell_size * config.robot_size / 2, config.robot_color, config.robot_line_width)
 
         # Draw landmarks
         landmark_font_size = max(8, cell_size // 4)
@@ -118,8 +120,8 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
                 draw.rectangle([bx0, by0, bx0 + box_w, by0 + box_h], fill=config.landmark_box_color)
                 draw.text((bx0 + pad - bbox[0], by0 + pad - bbox[1]), label, fill=config.landmark_font_color, font=landmark_font)
 
-        # Fit font to cell size
-        font_size = max(8, cell_size * 2 // 3)
+        # Fit font to margin
+        font_size = max(8, margin * 2 // 3)
         try:
             font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
         except (OSError, IOError):
@@ -144,7 +146,7 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
             draw.text(((ox - lw) // 2, cy - lh // 2), label, fill=config.label_color, font=font)
 
         # Legend
-        legend_y = oy + grid_h + (config.legend_height - font_size) // 2
+        legend_y = oy + grid_h + (margin - font_size) // 2
         swatch_size = font_size
         legend_entries = [
             (config.free_color, config.free_label),
@@ -156,7 +158,7 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
         except (OSError, IOError):
             legend_font = ImageFont.load_default()
 
-        # Robot legend entry: just the X mark + label
+        # Robot legend entry: chevron + label
         robot_bbox = legend_font.getbbox(config.robot_label)
         robot_entry_w = swatch_size + 4 + (robot_bbox[2] - robot_bbox[0])
 
@@ -176,20 +178,58 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
             draw.text((lx + swatch_size + 4, legend_y + (swatch_size - lh) // 2), label, fill=config.label_color, font=legend_font)
             lx += ew + spacing
 
-        # Robot: draw X mark then label
-        sp = swatch_size // 4
-        draw.line([(lx + sp, legend_y + sp), (lx + swatch_size - sp, legend_y + swatch_size - sp)], fill=config.robot_color, width=x_width)
-        draw.line([(lx + swatch_size - sp, legend_y + sp), (lx + sp, legend_y + swatch_size - sp)], fill=config.robot_color, width=x_width)
+        # Robot: draw chevron then label
+        legend_cx = lx + swatch_size / 2
+        legend_cy = legend_y + swatch_size / 2
+        _draw_chevron(draw, legend_cx, legend_cy, (0, -1), swatch_size * 0.4, config.robot_color, config.robot_line_width)
         lh = robot_bbox[3] - robot_bbox[1]
         draw.text((lx + swatch_size + 4, legend_y + (swatch_size - lh) // 2), config.robot_label, fill=config.label_color, font=legend_font)
 
         if save_to_disk:
             filename = f"map_{i}.png"
             img.save(filename)
-            print("Saved {filename}")
+            print(f"Saved {filename}")
         images.append(img)
 
     return images
+
+
+def _draw_chevron(draw: ImageDraw.Draw, cx: float, cy: float, forward: Tuple[float, float], radius: float, color: Tuple[int, int, int], width: int):
+    """Draw a chevron (V shape) pointing in the forward direction.
+
+    The chevron tip is at the front (in the forward direction), and the two
+    arms extend backward at 45 degrees to each side.
+
+    Args:
+        cx, cy:   Center of the chevron in pixel coordinates.
+        forward:  (x, z) direction vector. z negative = up on screen.
+        radius:   Half-size of the chevron (distance from center to tip/arms).
+        color:    Line color.
+        width:    Line width.
+    """
+    fx, fz = forward
+    length = math.sqrt(fx * fx + fz * fz)
+    if length < 1e-9:
+        return
+    # Normalize: forward direction in pixel space (z maps to y on screen)
+    dx = fx / length
+    dy = fz / length
+
+    # Tip: center + forward * radius
+    tip = (cx + dx * radius, cy + dy * radius)
+
+    # Two arms extend backward and to each side
+    # Perpendicular vector
+    px, py = -dy, dx
+
+    back_x = cx - dx * radius
+    back_y = cy - dy * radius
+    left = (back_x + px * radius, back_y + py * radius)
+    right = (back_x - px * radius, back_y - py * radius)
+
+    # Draw two lines: left arm -> tip, tip -> right arm
+    draw.line([left, tip], fill=color, width=width)
+    draw.line([tip, right], fill=color, width=width)
 
 
 map_0 = Map(
