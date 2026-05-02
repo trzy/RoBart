@@ -112,6 +112,7 @@ class Tool:
     description: str
     parameters: list[ToolParameter]
     handler: Callable[[dict], Awaitable[list[str | Image]]]
+    rewrite_history: Optional[Callable[[List[Message]], List[Message]]] = None
 
 
 @dataclass
@@ -239,18 +240,21 @@ async def think(
 ) -> ThinkResult:
     client = anthropic.AsyncAnthropic()
 
-    # Convert caller's Message objects to API format
-    api_messages = []
-    for message in messages:
-        api_messages.append({"role": message.role, "content": _serialize_content_items(message.content)})
+    # Maintain full message history as Message objects (source of truth)
+    all_messages = list(messages)
+    num_input_messages = len(all_messages)
 
     # Build tool definitions for the API
     api_tools = [_tool_to_api_schema(t) for t in tools]
     handlers = {t.name: t.handler for t in tools}
+    rewriters = {t.name: t.rewrite_history for t in tools if t.rewrite_history}
+
+    def _rebuild_api_messages():
+        return [{"role": m.role, "content": _serialize_content_items(m.content)} for m in all_messages]
 
     try:
         accumulated_text = []
-        new_messages = []
+        api_messages = _rebuild_api_messages()
 
         while True:
             kwargs = dict(
@@ -284,7 +288,7 @@ async def think(
                     assistant_content.append(tu)
 
             assistant_msg = Message(role="assistant", content=assistant_content)
-            new_messages.append(assistant_msg)
+            all_messages.append(assistant_msg)
             api_messages.append({"role": "assistant", "content": _serialize_content_items(assistant_content)})
             if on_message:
                 on_message(assistant_msg)
@@ -294,11 +298,14 @@ async def think(
 
             # Execute tool handlers and build tool_result user message
             user_content = []
+            needs_rebuild = False
             for tu in tool_use_blocks:
                 handler = handlers.get(tu.name)
                 if handler:
                     result_content = await handler(tu.input)
                     user_content.append(ToolResult(tool_use_id=tu.id, content=result_content))
+                    if tu.name in rewriters:
+                        needs_rebuild = True
                 else:
                     user_content.append(ToolResult(
                         tool_use_id=tu.id,
@@ -307,16 +314,24 @@ async def think(
                     ))
 
             user_msg = Message(role="user", content=user_content)
-            new_messages.append(user_msg)
-            api_messages.append({"role": "user", "content": _serialize_content_items(user_content)})
+            all_messages.append(user_msg)
             if on_message:
                 on_message(user_msg)
+
+            # Let tools rewrite history if needed, then rebuild api_messages
+            if needs_rebuild:
+                for tu in tool_use_blocks:
+                    rewriter = rewriters.get(tu.name)
+                    if rewriter:
+                        all_messages = rewriter(all_messages)
+            api_messages = _rebuild_api_messages()
 
         text = "\n".join(accumulated_text)
         # Truncate at stop sequences just in case the model includes them in its output
         for stop in stop_sequences:
             if stop in text:
                 text = text[:text.index(stop)]
+        new_messages = all_messages[num_input_messages:]
         return ThinkResult(succeeded=True, text=text, messages=new_messages)
     except Exception as e:
         return ThinkResult(succeeded=False, text=f"Error: {e}", messages=[])
