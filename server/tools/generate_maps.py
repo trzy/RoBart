@@ -1,5 +1,4 @@
 import math
-import random
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
@@ -12,16 +11,17 @@ class Map:
     def __init__(self, origin: VectorXZ, cell_size: float, cells_wide: int, cells_deep: int,
                  robot_position: VectorXZ = VectorXZ(x=0.0, z=0.0),
                  robot_forward: VectorXZ = VectorXZ(x=1.0, z=-1.0),
-                 landmarks_by_cell: Optional[Dict[str, List[int]]] = None):
+                 landmark_coordinates: Optional[Dict[int, VectorXZ]] = None):
         """Create a map from grid parameters. All cells start as '0' (unvisited).
 
         Args:
-            origin:             World position of the top-left corner of cell (0,0).
-            cell_size:          Size of each cell in world units.
-            cells_wide:         Number of columns.
-            cells_deep:         Number of rows.
-            robot_position:     World position of the robot.
-            robot_forward:      Direction vector the robot is facing.
+            origin:               World position of the top-left corner of cell (0,0).
+            cell_size:            Size of each cell in world units.
+            cells_wide:           Number of columns.
+            cells_deep:           Number of rows.
+            robot_position:       World position of the robot.
+            robot_forward:        Direction vector the robot is facing.
+            landmark_coordinates: Landmark ID -> world position.
         """
         self.origin = origin
         self.cell_size = cell_size
@@ -30,12 +30,12 @@ class Map:
         self.map: List[List[str]] = [["0"] * cells_wide for _ in range(cells_deep)]
         self.robot_position = robot_position
         self.robot_forward = robot_forward
-        self.landmarks_by_cell = landmarks_by_cell or {}
+        self.landmark_coordinates = landmark_coordinates or {}
 
     @classmethod
     def from_strings(cls, rows: List[str], cell_size: float = 1.0, origin: VectorXZ = VectorXZ(x=0.0, z=0.0),
                      robot_forward: VectorXZ = VectorXZ(x=1.0, z=-1.0),
-                     landmarks_by_cell: Optional[Dict[str, List[int]]] = None) -> "Map":
+                     landmark_coordinates: Optional[Dict[int, VectorXZ]] = None) -> "Map":
         """Create a map from an array of strings (e.g., "001110").
 
         If an 'x' is present, it marks the robot's initial cell. It is replaced
@@ -59,7 +59,7 @@ class Map:
         m = cls(origin=origin, cell_size=cell_size,
                 cells_wide=cells_wide, cells_deep=cells_deep,
                 robot_position=robot_position, robot_forward=robot_forward,
-                landmarks_by_cell=landmarks_by_cell)
+                landmark_coordinates=landmark_coordinates)
         m.map = parsed
         return m
 
@@ -172,28 +172,23 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
         except (OSError, IOError):
             landmark_font = ImageFont.load_default()
         pad = config.landmark_padding
-        rng = random.Random(42)
-        for cell_key, ids in m.landmarks_by_cell.items():
-            c, r = Map._parse_cell_key(cell_key)
-            cell_x0 = ox + c * cell_size
-            cell_y0 = oy + r * cell_size
+        pixels_per_unit = cell_size / m.cell_size
+        for landmark_id, pos in m.landmark_coordinates.items():
+            label = str(landmark_id)
+            bbox = landmark_font.getbbox(label)
+            tw = bbox[2] - bbox[0]
+            th = bbox[3] - bbox[1]
+            box_w = tw + 2 * pad
+            box_h = th + 2 * pad
 
-            for landmark_id in ids:
-                label = str(landmark_id)
-                bbox = landmark_font.getbbox(label)
-                tw = bbox[2] - bbox[0]
-                th = bbox[3] - bbox[1]
-                box_w = tw + 2 * pad
-                box_h = th + 2 * pad
+            # Convert world position to pixel position
+            px = ox + (pos.x - m.origin.x) * pixels_per_unit
+            py = oy + (pos.z - m.origin.z) * pixels_per_unit
 
-                # Random center point within the cell, clamped so the box stays inside
-                cx = rng.randint(cell_x0 + box_w // 2 + 1, cell_x0 + cell_size - box_w // 2 - 1)
-                cy = rng.randint(cell_y0 + box_h // 2 + 1, cell_y0 + cell_size - box_h // 2 - 1)
-
-                bx0 = cx - box_w // 2
-                by0 = cy - box_h // 2
-                draw.rectangle([bx0, by0, bx0 + box_w, by0 + box_h], fill=config.landmark_box_color)
-                draw.text((bx0 + pad - bbox[0], by0 + pad - bbox[1]), label, fill=config.landmark_font_color, font=landmark_font)
+            bx0 = px - box_w / 2
+            by0 = py - box_h / 2
+            draw.rectangle([bx0, by0, bx0 + box_w, by0 + box_h], fill=config.landmark_box_color)
+            draw.text((bx0 + pad - bbox[0], by0 + pad - bbox[1]), label, fill=config.landmark_font_color, font=landmark_font)
 
         # Fit font to margin
         font_size = max(8, margin * 2 // 3)
@@ -314,9 +309,10 @@ map_0 = Map.from_strings(
         "0001110000",
         "0001000000",
     ],
-    landmarks_by_cell={
-        "e3": [ 0, 7 ],
-        "d4": [ 1 ],
+    landmark_coordinates={
+        0: VectorXZ(x=4.3, z=2.7),
+        7: VectorXZ(x=4.8, z=2.3),
+        1: VectorXZ(x=3.5, z=3.5),
     }
 )
 
