@@ -17,53 +17,34 @@ column and row (e.g., A1 is the top left cell).
 You can only venture one cell in any direction. Favor familiar territory when possible.
 """
 
-def update_cell(cells: List[str], yi: int, xi: int, char: str):
+def update_cell(cells: List[List[str]], yi: int, xi: int, char: str):
     assert len(char) == 1
-    row = cells[yi]
-    row = row[:xi] + char + row[xi+1:]
-    cells[yi] = row
+    cells[yi][xi] = char
 
 def get_current_coord(map: Map) -> Tuple[str | None, int, int]:
-    cells = map.map
-    num_rows = len(cells)
-    num_cols = len(cells[0])
-    for yi in range(num_rows):
-        for xi in range(num_cols):
-            coord_letter = chr(ord("a") + xi)
-            coord_number = yi + 1   # starts with 1
-            if cells[yi][xi] == "x":
-                return f"{coord_letter}{coord_number}", yi, xi
+    for yi in range(map.cells_deep):
+        for xi in range(map.cells_wide):
+            if map.map[yi][xi] == "x":
+                return map.cell_key(xi, yi), yi, xi
     return None, 0, 0
     
 def update_map(map: Map, to: str) -> str:
     to = to.lower()
 
-    # Map size
-    cells = map.map
-    num_rows = len(cells)
-    num_cols = len(cells[0])
-
     # Decode and validate "to" position
-    to_yi = int(to[1]) - 1          # y is the number [1,num_rows]
-    to_xi = ord(to[0]) - ord("a")   # x is the letter
-    if to_yi < 0 or to_yi >= num_rows or to_xi < 0 or to_xi >= num_cols:
+    to_xi, to_yi = Map._parse_cell_key(to)
+    if to_yi < 0 or to_yi >= map.cells_deep or to_xi < 0 or to_xi >= map.cells_wide:
         return f"Destination coordinate {to} is out of bounds (y={to_yi}, x={to_xi}) of map"
 
     # Find existing position
     coord, yi, xi = get_current_coord(map=map)
     if coord is None:
         return "Cannot find robot on map"
-    
-    # Coordinate: (yi,xi)
-    # Check bounds
-    if yi >= num_rows or yi < 0 or xi >= num_cols or xi < 0:
-        # Error: cannot move (bounds)
-        return "Cannot move beyond map bounds"
-    
+
     # Move!
-    update_cell(cells=cells, yi=yi, xi=xi, char="1")        # mark old position as visited
-    update_cell(cells=cells, yi=to_yi, xi=to_xi, char="x")  # move robot
-    
+    update_cell(cells=map.map, yi=yi, xi=xi, char="1")        # mark old position as visited
+    update_cell(cells=map.map, yi=to_yi, xi=to_xi, char="x")  # move robot
+
     # Successful
     return f"Moved from {coord} to {to}"
 
@@ -73,14 +54,13 @@ def map_to_image(map: Map) -> Image:
     return Image(data=data, media_type="image/png")
 
 async def main():
-    map = Map(
-        map=[
+    map = Map.from_strings(
+        rows=[
             "000000",
             "000000",
             "000x00",
             "000000",
         ],
-        landmarks_by_cell={}
     )
 
     async def handle_move_tool(params: Dict[str, Any]) -> List[str | Image]:

@@ -1,19 +1,87 @@
 import math
 import random
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
 
-@dataclass
 class Map:
-    map: List[str]
-    landmarks_by_cell: Dict[str, List[int]]
-    robot_forward: Tuple[float, float] = (1, -1)  # (x, z) direction vector; z negative = up
+    def __init__(self, origin_x: float, origin_z: float, cell_size: float, cells_wide: int, cells_deep: int,
+                 landmarks_by_cell: Optional[Dict[str, List[int]]] = None,
+                 robot_forward: Tuple[float, float] = (1, -1)):
+        """Create a map from grid parameters. All cells start as '0' (unvisited).
+
+        Args:
+            origin_x, origin_z: World position of the top-left corner of cell (0,0).
+            cell_size:          Size of each cell in world units.
+            cells_wide:         Number of columns.
+            cells_deep:         Number of rows.
+        """
+        self.origin_x = origin_x
+        self.origin_z = origin_z
+        self.cell_size = cell_size
+        self.cells_wide = cells_wide
+        self.cells_deep = cells_deep
+        self.map: List[List[str]] = [["0"] * cells_wide for _ in range(cells_deep)]
+        self.landmarks_by_cell = landmarks_by_cell or {}
+        self.robot_forward = robot_forward
+
+    @classmethod
+    def from_strings(cls, rows: List[str], cell_size: float = 1.0, origin_x: float = 0.0, origin_z: float = 0.0,
+                     landmarks_by_cell: Optional[Dict[str, List[int]]] = None,
+                     robot_forward: Tuple[float, float] = (1, -1)) -> "Map":
+        """Create a map from an array of strings (e.g., "00x110")."""
+        cells_deep = len(rows)
+        cells_wide = len(rows[0]) if cells_deep > 0 else 0
+        m = cls(origin_x=origin_x, origin_z=origin_z, cell_size=cell_size,
+                cells_wide=cells_wide, cells_deep=cells_deep,
+                landmarks_by_cell=landmarks_by_cell, robot_forward=robot_forward)
+        m.map = [list(row) for row in rows]
+        return m
+
+    @staticmethod
+    def _parse_cell_key(key: str) -> Tuple[int, int]:
+        """Parse a cell key like 'b9' or 'B9' into (col, row) zero-indexed."""
+        col_letter = ""
+        row_str = ""
+        for ch in key:
+            if ch.isalpha():
+                col_letter += ch
+            else:
+                row_str += ch
+        col = ord(col_letter.lower()) - ord("a")
+        row = int(row_str) - 1
+        return col, row
+
+    def cell_key(self, col: int, row: int) -> str:
+        """Return the cell key string for a (col, row) pair."""
+        return f"{chr(ord('a') + col)}{row + 1}"
+
+    def world_to_cell(self, x: float, z: float) -> Optional[str]:
+        """Return the cell key for a world position, or None if outside the grid."""
+        col = int((x - self.origin_x) / self.cell_size)
+        row = int((z - self.origin_z) / self.cell_size)
+        if 0 <= col < self.cells_wide and 0 <= row < self.cells_deep:
+            return self.cell_key(col, row)
+        return None
+
+    def point_in_cell(self, x: float, z: float, cell_key: str) -> bool:
+        """Test whether a world point (x, z) is within the specified cell."""
+        col, row = self._parse_cell_key(cell_key)
+        cell_x = self.origin_x + col * self.cell_size
+        cell_z = self.origin_z + row * self.cell_size
+        return (cell_x <= x < cell_x + self.cell_size and
+                cell_z <= z < cell_z + self.cell_size)
+
+    def get(self, col: int, row: int) -> str:
+        return self.map[row][col]
+
+    def set(self, col: int, row: int, value: str):
+        self.map[row][col] = value
 
     def __str__(self):
-        return "\n".join([ f"[ {row} ]" for row in self.map ])
+        return "\n".join([ f"[ {''.join(row)} ]" for row in self.map ])
 
 @dataclass
 class MapImageConfig:
@@ -38,8 +106,8 @@ class MapImageConfig:
 def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), save_to_disk: bool = True) -> List[Image.Image]:
     images = []
     for i, m in enumerate(maps):
-        rows = len(m.map)
-        cols = len(m.map[0]) if rows > 0 else 0
+        rows = m.cells_deep
+        cols = m.cells_wide
 
         cell_size = config.image_width // (cols + 1)
         margin = cell_size
@@ -91,15 +159,7 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
         pad = config.landmark_padding
         rng = random.Random(42)
         for cell_key, ids in m.landmarks_by_cell.items():
-            col_letter = ""
-            row_str = ""
-            for ch in cell_key:
-                if ch.isalpha():
-                    col_letter += ch
-                else:
-                    row_str += ch
-            c = ord(col_letter.lower()) - ord("a")
-            r = int(row_str) - 1
+            c, r = Map._parse_cell_key(cell_key)
             cell_x0 = ox + c * cell_size
             cell_y0 = oy + r * cell_size
 
@@ -232,8 +292,8 @@ def _draw_chevron(draw: ImageDraw.Draw, cx: float, cy: float, forward: Tuple[flo
     draw.line([tip, right], fill=color, width=width)
 
 
-map_0 = Map(
-    map=[
+map_0 = Map.from_strings(
+    rows=[
         "0000000000",
         "00000x0000",
         "0001110000",
@@ -245,14 +305,13 @@ map_0 = Map(
     }
 )
 
-map_1 = Map(
-    map=[
+map_1 = Map.from_strings(
+    rows=[
         "0000000000",
         "000001x000",
         "0001110000",
         "0000000000",
     ],
-    landmarks_by_cell={}
 )
 
 if __name__ == "__main__":
