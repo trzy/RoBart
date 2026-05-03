@@ -2,11 +2,12 @@
 
 import argparse
 import asyncio
-from typing import List, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any
 
 from ..brain.image import load_image, Image, pil_to_base64_png
 from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
 from ..brain.streaming_logger import StreamingLogger
+from ..messages import VectorXZ
 from .generate_maps import Map, generate_images
 
 SYSTEM_PROMPT = """
@@ -17,17 +18,9 @@ column and row (e.g., A1 is the top left cell).
 You can only venture one cell in any direction. Favor familiar territory when possible.
 """
 
-def update_cell(cells: List[List[str]], yi: int, xi: int, char: str):
-    assert len(char) == 1
-    cells[yi][xi] = char
+def get_current_coord(map: Map) -> Optional[str]:
+    return map.world_to_cell(map.robot_position.x, map.robot_position.z)
 
-def get_current_coord(map: Map) -> Tuple[str | None, int, int]:
-    for yi in range(map.cells_deep):
-        for xi in range(map.cells_wide):
-            if map.map[yi][xi] == "x":
-                return map.cell_key(xi, yi), yi, xi
-    return None, 0, 0
-    
 def update_map(map: Map, to: str) -> str:
     to = to.lower()
 
@@ -36,17 +29,14 @@ def update_map(map: Map, to: str) -> str:
     if to_yi < 0 or to_yi >= map.cells_deep or to_xi < 0 or to_xi >= map.cells_wide:
         return f"Destination coordinate {to} is out of bounds (y={to_yi}, x={to_xi}) of map"
 
-    # Find existing position
-    coord, yi, xi = get_current_coord(map=map)
-    if coord is None:
-        return "Cannot find robot on map"
+    from_coord = get_current_coord(map=map)
 
-    # Move!
-    update_cell(cells=map.map, yi=yi, xi=xi, char="1")        # mark old position as visited
-    update_cell(cells=map.map, yi=to_yi, xi=to_xi, char="x")  # move robot
+    # Move robot to center of target cell, mark it visited
+    map.robot_position = VectorXZ(x=map.origin.x + (to_xi + 0.5) * map.cell_size,
+                                  z=map.origin.z + (to_yi + 0.5) * map.cell_size)
+    map.map[to_yi][to_xi] = "1"
 
-    # Successful
-    return f"Moved from {coord} to {to}"
+    return f"Moved from {from_coord} to {to}"
 
 def map_to_image(map: Map) -> Image:
     pil_image = generate_images(maps=[ map ], save_to_disk=False)[0]

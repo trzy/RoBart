@@ -5,39 +5,62 @@ from typing import Dict, List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
+from ..messages import VectorXZ
+
 
 class Map:
-    def __init__(self, origin_x: float, origin_z: float, cell_size: float, cells_wide: int, cells_deep: int,
-                 landmarks_by_cell: Optional[Dict[str, List[int]]] = None,
-                 robot_forward: Tuple[float, float] = (1, -1)):
+    def __init__(self, origin: VectorXZ, cell_size: float, cells_wide: int, cells_deep: int,
+                 robot_position: VectorXZ = VectorXZ(x=0.0, z=0.0),
+                 robot_forward: VectorXZ = VectorXZ(x=1.0, z=-1.0),
+                 landmarks_by_cell: Optional[Dict[str, List[int]]] = None):
         """Create a map from grid parameters. All cells start as '0' (unvisited).
 
         Args:
-            origin_x, origin_z: World position of the top-left corner of cell (0,0).
+            origin:             World position of the top-left corner of cell (0,0).
             cell_size:          Size of each cell in world units.
             cells_wide:         Number of columns.
             cells_deep:         Number of rows.
+            robot_position:     World position of the robot.
+            robot_forward:      Direction vector the robot is facing.
         """
-        self.origin_x = origin_x
-        self.origin_z = origin_z
+        self.origin = origin
         self.cell_size = cell_size
         self.cells_wide = cells_wide
         self.cells_deep = cells_deep
         self.map: List[List[str]] = [["0"] * cells_wide for _ in range(cells_deep)]
-        self.landmarks_by_cell = landmarks_by_cell or {}
+        self.robot_position = robot_position
         self.robot_forward = robot_forward
+        self.landmarks_by_cell = landmarks_by_cell or {}
 
     @classmethod
-    def from_strings(cls, rows: List[str], cell_size: float = 1.0, origin_x: float = 0.0, origin_z: float = 0.0,
-                     landmarks_by_cell: Optional[Dict[str, List[int]]] = None,
-                     robot_forward: Tuple[float, float] = (1, -1)) -> "Map":
-        """Create a map from an array of strings (e.g., "00x110")."""
+    def from_strings(cls, rows: List[str], cell_size: float = 1.0, origin: VectorXZ = VectorXZ(x=0.0, z=0.0),
+                     robot_forward: VectorXZ = VectorXZ(x=1.0, z=-1.0),
+                     landmarks_by_cell: Optional[Dict[str, List[int]]] = None) -> "Map":
+        """Create a map from an array of strings (e.g., "001110").
+
+        If an 'x' is present, it marks the robot's initial cell. It is replaced
+        with '1' (visited) and the robot position is set to the center of that cell.
+        """
         cells_deep = len(rows)
         cells_wide = len(rows[0]) if cells_deep > 0 else 0
-        m = cls(origin_x=origin_x, origin_z=origin_z, cell_size=cell_size,
+
+        # Find robot 'x', replace with '1', compute position
+        robot_position = VectorXZ(x=origin.x + 0.5 * cell_size, z=origin.z + 0.5 * cell_size)
+        parsed = []
+        for r, row in enumerate(rows):
+            row_list = list(row)
+            for c, ch in enumerate(row_list):
+                if ch == "x":
+                    row_list[c] = "1"
+                    robot_position = VectorXZ(x=origin.x + (c + 0.5) * cell_size,
+                                              z=origin.z + (r + 0.5) * cell_size)
+            parsed.append(row_list)
+
+        m = cls(origin=origin, cell_size=cell_size,
                 cells_wide=cells_wide, cells_deep=cells_deep,
-                landmarks_by_cell=landmarks_by_cell, robot_forward=robot_forward)
-        m.map = [list(row) for row in rows]
+                robot_position=robot_position, robot_forward=robot_forward,
+                landmarks_by_cell=landmarks_by_cell)
+        m.map = parsed
         return m
 
     @staticmethod
@@ -60,8 +83,8 @@ class Map:
 
     def world_to_cell(self, x: float, z: float) -> Optional[str]:
         """Return the cell key for a world position, or None if outside the grid."""
-        col = int((x - self.origin_x) / self.cell_size)
-        row = int((z - self.origin_z) / self.cell_size)
+        col = int((x - self.origin.x) / self.cell_size)
+        row = int((z - self.origin.z) / self.cell_size)
         if 0 <= col < self.cells_wide and 0 <= row < self.cells_deep:
             return self.cell_key(col, row)
         return None
@@ -69,8 +92,8 @@ class Map:
     def point_in_cell(self, x: float, z: float, cell_key: str) -> bool:
         """Test whether a world point (x, z) is within the specified cell."""
         col, row = self._parse_cell_key(cell_key)
-        cell_x = self.origin_x + col * self.cell_size
-        cell_z = self.origin_z + row * self.cell_size
+        cell_x = self.origin.x + col * self.cell_size
+        cell_z = self.origin.z + row * self.cell_size
         return (cell_x <= x < cell_x + self.cell_size and
                 cell_z <= z < cell_z + self.cell_size)
 
@@ -96,7 +119,7 @@ class MapImageConfig:
     occupied_label: str = "Visited"
     robot_color: Tuple[int, int, int] = (50, 100, 220)
     robot_label: str = "Robot"
-    robot_size: float = 0.7  # proportion of cell size
+    robot_size: float = 0.5  # proportion of cell size
     robot_line_width: int = 6
     landmark_font_color: Tuple[int, int, int] = (255, 255, 255)
     landmark_box_color: Tuple[int, int, int] = (0, 0, 0)
@@ -122,19 +145,12 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
         oy = margin
 
         # Fill cells
-        robot_cells = []
         for r in range(rows):
             for c in range(cols):
                 x0 = ox + c * cell_size
                 y0 = oy + r * cell_size
-                ch = m.map[r][c]
-                if ch == "x":
-                    draw.rectangle([x0, y0, x0 + cell_size, y0 + cell_size], fill=config.occupied_color)
-                    robot_cells.append((x0, y0))
-                elif ch == "1":
-                    draw.rectangle([x0, y0, x0 + cell_size, y0 + cell_size], fill=config.occupied_color)
-                else:
-                    draw.rectangle([x0, y0, x0 + cell_size, y0 + cell_size], fill=config.free_color)
+                color = config.occupied_color if m.map[r][c] == "1" else config.free_color
+                draw.rectangle([x0, y0, x0 + cell_size, y0 + cell_size], fill=color)
 
         # Draw grid lines
         for c in range(cols + 1):
@@ -144,11 +160,10 @@ def generate_images(maps: List[Map], config: MapImageConfig = MapImageConfig(), 
             y = oy + r * cell_size
             draw.line([(ox, y), (ox + grid_w, y)], fill=config.grid_color, width=config.grid_thickness)
 
-        # Draw robot chevron
-        for x0, y0 in robot_cells:
-            cx = x0 + cell_size / 2
-            cy = y0 + cell_size / 2
-            _draw_chevron(draw, cx, cy, m.robot_forward, cell_size * config.robot_size / 2, config.robot_color, config.robot_line_width)
+        # Draw robot chevron at world position
+        robot_px = ox + (m.robot_position.x - m.origin.x) / m.cell_size * cell_size
+        robot_py = oy + (m.robot_position.z - m.origin.z) / m.cell_size * cell_size
+        _draw_chevron(draw, robot_px, robot_py, (m.robot_forward.x, m.robot_forward.z), cell_size * config.robot_size / 2, config.robot_color, config.robot_line_width)
 
         # Draw landmarks
         landmark_font_size = max(8, cell_size // 4)
