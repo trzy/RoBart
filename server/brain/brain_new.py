@@ -8,10 +8,11 @@ from pydantic import BaseModel
 
 from .claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
 from .block_parser import parse_blocks
-from .image import decode_annotated_image, Image
+from .image import decode_annotated_image, Image, pil_to_base64_png
 from .streaming_logger import StreamingLogger
 from .occupancy_map import CoordUnit, MapAnnotation, RobotMarker, RenderOptions, render_occupancy_map
 from ..messages import ActionsMessage, ObservationsMessage, VectorXZ, VisualTraceMessage
+from ..tools.generate_maps import Map, generate_images
 
 
 ####################################################################################################
@@ -105,6 +106,7 @@ class NewBrain:
         self._observations_queue: asyncio.Queue[ObservationsMessage] = asyncio.Queue()
         self._image_by_id: Dict[int, Image] = {}
         self._memory: Dict[int, str] = {}
+        self._overhead_map: Optional[Map] = None
         self._final_response_delivered = False
 
     def set_send(self, send: Callable[[BaseModel], Awaitable[None]]):
@@ -161,6 +163,12 @@ class NewBrain:
 
         # Save images for future recall
         self._store_images(images=images)
+
+        # Overhead map
+        self._overhead_map, overhead_map_image = _update_overhead_map(map=self._overhead_map, observations_msg=msg)
+        content.append("\n<overhead_map>\n")
+        content.append(overhead_map_image)
+        content.append("\n</overhead_map>\n")
 
         # Terminate block and return
         content.append("\n</command_result>\n")
@@ -428,3 +436,46 @@ def _collect_points(images: List[Image]) -> Dict[int, VectorXZ]:
         for point in image.points:
             points_by_id[point.id] = point.worldPosition
     return points_by_id
+
+def _update_overhead_map(map: Optional[Map], observations_msg: ObservationsMessage) -> Tuple[Map, Image]:
+    # Extract landmarks from current batch of images
+    landmark_coordinates: Dict[int, VectorXZ] = {}
+    for image in observations_msg.images:
+        for point in image.points:
+            landmark_coordinates[point.id] = point.worldPosition
+    
+    # No map yet? Create one.
+    if map is None:
+        # Compute total size of occupancy map and use that to create overhead map with coarse grid
+        occupancy_map_width = observations_msg.mapCellSize * observations_msg.mapCellsWide
+        occupancy_map_depth = observations_msg.mapCellSize * observations_msg.mapCellsDeep
+        overhead_map_cells = 10 # per side
+        overhead_map_cell_size = max(occupancy_map_width, occupancy_map_depth) / 10.0
+
+        # Create an unexplored map
+        map = Map(
+            origin=VectorXZ(x=observations_msg.mapOriginX, z=observations_msg.mapOriginZ),
+            cell_size=overhead_map_cell_size,
+            cells_wide=overhead_map_cells,
+            cells_deep=overhead_map_cells
+        )
+
+    # Robot position
+    map.robot_position = observations_msg.currentPosition
+    map.robot_forward = observations_msg.currentForward
+
+    # Landmarks for this batch of images (hopefully some are in neighboring cells)
+    map.landmark_coordinates = landmark_coordinates
+
+    # Mark our position as visited
+    col_and_row = map.world_to_column_and_row(x=map.robot_position.x, z=map.robot_position.z)
+    if col_and_row is not None:
+        col, row = col_and_row
+        map.set(col=col, row=row, value="1")
+
+    # Produce an image of the map
+    pil_image = generate_images(maps=[ map ], save_to_disk=False)[0]
+    data = pil_to_base64_png(image=pil_image)
+    image = Image(data=data, media_type="image/png")
+    
+    return map, image

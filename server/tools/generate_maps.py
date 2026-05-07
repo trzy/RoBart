@@ -81,13 +81,21 @@ class Map:
         """Return the cell key string for a (col, row) pair."""
         return f"{chr(ord('a') + col)}{row + 1}"
 
-    def world_to_cell(self, x: float, z: float) -> Optional[str]:
-        """Return the cell key for a world position, or None if outside the grid."""
+    def world_to_column_and_row(self, x: float, z: float) -> Optional[Tuple[int, int]]:
+        """Return the column and row indices (or None if out of bounds)."""
         col = int((x - self.origin.x) / self.cell_size)
         row = int((z - self.origin.z) / self.cell_size)
         if 0 <= col < self.cells_wide and 0 <= row < self.cells_deep:
-            return self.cell_key(col, row)
+            return col, row
         return None
+    
+    def world_to_cell(self, x: float, z: float) -> Optional[str]:
+        """Return the cell key for a world position, or None if outside the grid."""
+        col_and_row = self.world_to_column_and_row(x=x, z=z)
+        if col_and_row is None:
+            return None
+        col, row = col_and_row
+        return self.cell_key(col, row)
 
     def point_in_cell(self, x: float, z: float, cell_key: str) -> bool:
         """Test whether a world point (x, z) is within the specified cell."""
