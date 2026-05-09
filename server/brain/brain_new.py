@@ -6,7 +6,8 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
-from .claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
+from enum import Enum
+from .claude import ParamType, ToolParameter, Tool, ToolResult, Message, ThinkingEffort, think, count_tokens, context_window_size
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image, pil_to_base64_png
 from .streaming_logger import StreamingLogger
@@ -22,7 +23,22 @@ from ..tools.generate_maps import Map, generate_images
 # for observations before continuing.
 ####################################################################################################
 
+# TODO: summarization periodically, also remove images frequently N messages prior
 # TODO: add a tool to rewind history until time=t, which means giving the time each update.
+
+# IDEA: New architecture
+#   - based around observation events. Any time we see anything novel and noteworthy, we should 
+#     store it: landmarks and general observations.
+#       - We can perhaps create a better memory tool. If objects are mentioned as interesting, we
+#         could then run another prompt for further analysis (extracting positions, etc.)
+#           - Should this be a separate agent with system prompt?
+#       - After each of these observations, use a prompt to summarize everything into a new plan
+#           - Should this be a separate agent with system prompt to create plan, also having tools
+#             to look up previous
+#           - What do we want to get out of these planning steps? Hopefully induce LLM to think about
+#             what it has just observed and determine when it is observing the same object again.
+#       - Should we get rid of landmark system and just use angles?
+#       - Explore polar coordinates from map origin as a way to make landmarks more interpretable?
 
 SYSTEM_PROMPT = """
 You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
@@ -104,6 +120,9 @@ class NewBrain:
     def __init__(self):
         self._send: Optional[Callable[[BaseModel], Awaitable[None]]] = None
         self._observations_queue: asyncio.Queue[ObservationsMessage] = asyncio.Queue()
+
+        # This state is reset on each run() call
+        self._model = "claude-sonnet-4-6"
         self._image_by_id: Dict[int, Image] = {}
         self._memory: Dict[int, str] = {}
         self._overhead_map: Optional[Map] = None
@@ -174,8 +193,23 @@ class NewBrain:
         content.append("\n</command_result>\n")
         return content
     
-    def _compact_history(self, messages: List[Message]) -> List[Message]:
-        return _remove_all_but_last_video_frames(messages=messages)
+    async def _compact_history(self, messages: List[Message]) -> List[Message]:
+        messages = _remove_all_but_last_video_frames(messages=messages)
+        messages = _remove_images_from_messages(messages=messages, keep=3)
+
+        # Summarize if time to do so. We include the very first user message plus the summary.
+        #TODO: we should also count tools
+        num_tokens = await count_tokens(messages=messages, system=SYSTEM_PROMPT, model=self._model)
+        max_tokens = await context_window_size(model=self._model)
+        context_window_usage_pct = 100.0 * (num_tokens / max_tokens)
+        if num_tokens > 5000: #context_window_usage_pct >= 50:
+            print(f"\nContext window usage is {context_window_usage_pct:.1f}%, compacting...\n")
+            original_user_message = messages[0]
+            summary_assistant_message = await _produce_summary(messages=messages)
+            continue_user_message = Message(role="user", content=[ "Continue." ])   # assistant prefill not supported, must end with a user message
+            messages = [ original_user_message, summary_assistant_message, continue_user_message ]
+
+        return messages
     
     async def _tool_update_memories(self, params: Dict[str, Any]) -> List[str | Image]:
         memories = params["memories"]
@@ -242,6 +276,13 @@ class NewBrain:
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         print(f"Using model: {model}")
+
+        # Reset state
+        self._model = model
+        self._image_by_id: Dict[int, Image] = {}
+        self._memory: Dict[int, str] = {}
+        self._overhead_map: Optional[Map] = None
+        self._final_response_delivered = False
 
         try:
             tools = [
@@ -324,10 +365,9 @@ class NewBrain:
             ]
             
             logger = StreamingLogger()
-            
+
             messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
-            self._final_response_delivered = False
-            
+
             while not self._final_response_delivered:
                 logger.next_step()
                 for msg in messages:
@@ -337,7 +377,7 @@ class NewBrain:
                     messages=messages,
                     system=SYSTEM_PROMPT,
                     model=model,
-                    thinking=ThinkingEffort.HIGH,
+                    thinking=ThinkingEffort.NONE,#ThinkingEffort.HIGH,
                     tools=tools,
                     on_message=logger.log_message,
                 )
@@ -358,6 +398,98 @@ class NewBrain:
         except Exception as e:
             print(f"Error: Exception caught: {e}")
             traceback.print_exc()
+
+
+####################################################################################################
+# Compaction
+####################################################################################################
+
+#TODO: How do Codex, OpenClaw, and Claude Code do this? Do they compact everything into a user 
+#      message to avoid assistant prefill? Or do they compact up to the last user message only?
+
+SUMMARIZATION_SYSTEM_PROMPT = """
+You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
+
+<capabilities>
+You can move, turn, and photograph your environment. 
+</capabilities>
+
+<building_spatial_awareness>
+Landmark points are given in images. These represent unobstructed points on the ground you can 
+navigate to, although reachability is not always guaranteed. The points stay stable. Use the memory
+tools to save points of interest that you see. They can be recalled later. Describe any interesting
+objects, locations, and transition points between locations in terms of landmark points.
+
+Use the provided overhead grid map to keep track of where you have explored. Cells are denoted by
+coordinates like A1 and G5. Track these in your planning but to actually navigate to a neighboring cell,
+you need to use landmark points or manually track direction. You can ask for any landmark to be 
+rendered on the grid map to orient yourself better. Rendering specific landmarks of interest atop
+the grid can be used strategically to give you a better sense of how objects and points of interest
+are laid out spatially relative to you and each other.
+
+North is decreasing z and west is decreasing x.
+</building_spatial_awareness>
+"""
+
+SUMMARIZATION_USER_PROMPT = """
+\nHere is a plan template:
+
+<PLAN>
+    <objective>
+        Explain in a few sentences the overall task objective and the condition for which it will be
+        considered complete.
+    </objective>
+
+    <procedure>
+        Describe the overall procedure or algorithm you will use to perform the task. List the 
+        tools and capabilities that will be helpful. Use pseudo-code, lists, and write multiple
+        sub-sections as desired. Describe clearly the format of any state information you will 
+        store to keep track of your movements and actions, and objects and locations of interest
+        you encounter.
+    </procedure>
+    
+    <progress>
+        Record granular progress, including why you made decisions, in a list, with the current
+        state last. E.g.:
+
+        - Action: Scanned surroundings
+            Reason: To understand environment and decide where to search first.
+
+        - Action: Moved toward landmark 7.
+            Reason: Living room appears beyond landmark 7. Likely to contain TV we are looking for.
+
+        - Current state: Arrived in living room but no TV visible.
+            Next steps: Scan surroundings for TV. If TV is not present, consult map to determine
+            where to search next.
+    </progress>
+</PLAN>
+
+Summarixe all progress thus far and produce a plan for this point onwards using the above template.
+"""
+
+async def _produce_summary(messages: List[Message], model: str = "claude-sonnet-4-6") -> Message:
+    # Create a shallow copy of messages
+    messages = list(messages)
+
+    # Remove all images
+    messages = _remove_images_from_messages(messages=messages, keep=0)
+
+    # If last message is an assistant message, append user message with SUMMARIZATION_USER_PROMPT.
+    # Otherwise, if last message is a user message, create a deep copy of that message and append
+    # the prompt to its content.
+    if messages[-1].role == "assistant":
+        messages.append(Message(role="user", content=[SUMMARIZATION_USER_PROMPT]))
+    else:
+        last = messages[-1]
+        messages[-1] = Message(role=last.role, content=list(last.content) + [SUMMARIZATION_USER_PROMPT])
+
+    # Send to LLM and return only the assistant message produced
+    result = await think(
+        messages=messages,
+        system=SUMMARIZATION_SYSTEM_PROMPT,
+        model=model,
+    )
+    return Message(role="assistant", content=[result.text])
 
 
 ####################################################################################################
@@ -427,6 +559,75 @@ def _resample(samples: List, max_samples: int) -> List:
         return samples
     indices = [round(i * (n - 1) / (max_samples - 1)) for i in range(max_samples)]
     return [samples[j] for j in indices]
+
+
+class RetainMode(Enum):
+    LAST_N_MESSAGES = "last_n_messages"             # count backward from the last message
+    LAST_N_WITH_IMAGES = "last_n_with_images"       # count only messages that contain images
+
+
+def _message_has_images(message: Message) -> bool:
+    for item in message.content:
+        if isinstance(item, Image):
+            return True
+        if isinstance(item, ToolResult):
+            for c in item.content:
+                if isinstance(c, Image):
+                    return True
+    return False
+
+
+def _strip_images_from_message(message: Message) -> Message:
+    new_content = []
+    for item in message.content:
+        if isinstance(item, Image):
+            new_content.append(f"<image {item.id} removed>")
+        elif isinstance(item, ToolResult):
+            new_inner = []
+            for c in item.content:
+                if isinstance(c, Image):
+                    new_inner.append(f"<image {c.id} removed>")
+                else:
+                    new_inner.append(c)
+            new_content.append(ToolResult(tool_use_id=item.tool_use_id, content=new_inner, is_error=item.is_error))
+        else:
+            new_content.append(item)
+    return Message(role=message.role, content=new_content)
+
+
+def _remove_images_from_messages(messages: List[Message], keep: int = 2, mode: RetainMode = RetainMode.LAST_N_WITH_IMAGES) -> List[Message]:
+    """Remove images from older messages, retaining them only in recent ones.
+
+    Args:
+        messages: Full message history.
+        keep:     Number of messages allowed to retain images.
+        mode:     LAST_N_MESSAGES counts backward from the end (regardless of
+                  whether they have images). LAST_N_WITH_IMAGES counts only
+                  messages that actually contain images.
+    """
+    # Build set of indices that are allowed to keep images
+    keep_indices = set()
+    if mode == RetainMode.LAST_N_MESSAGES:
+        # Last N messages keep their images
+        for i in range(max(0, len(messages) - keep), len(messages)):
+            keep_indices.add(i)
+    elif mode == RetainMode.LAST_N_WITH_IMAGES:
+        # Last N messages that have images keep them
+        count = 0
+        for i in range(len(messages) - 1, -1, -1):
+            if _message_has_images(messages[i]):
+                keep_indices.add(i)
+                count += 1
+                if count >= keep:
+                    break
+
+    result = []
+    for i, msg in enumerate(messages):
+        if i in keep_indices or not _message_has_images(msg):
+            result.append(msg)
+        else:
+            result.append(_strip_images_from_message(msg))
+    return result
 
 
 def _collect_points(images: List[Image]) -> Dict[int, VectorXZ]:

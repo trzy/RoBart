@@ -112,7 +112,7 @@ class Tool:
     description: str
     parameters: list[ToolParameter]
     handler: Callable[[dict], Awaitable[list[str | Image]]]
-    rewrite_history: Optional[Callable[[List[Message]], List[Message]]] = None
+    rewrite_history: Optional[Callable[[List[Message]], Awaitable[List[Message]]]] = None
 
 
 @dataclass
@@ -177,6 +177,33 @@ def _tool_to_api_schema(tool: Tool) -> dict:
             "required": required,
         },
     }
+
+
+async def count_tokens(
+    messages: List[Message],
+    system: str,
+    model: str = "claude-opus-4-6",
+    tools: List[Tool] = [],
+) -> int:
+    """Estimate the number of input tokens for a set of messages."""
+    client = anthropic.AsyncAnthropic()
+    api_messages = [{"role": m.role, "content": _serialize_content_items(m.content)} for m in messages]
+    kwargs = dict(model=model, system=system, messages=api_messages)
+    if tools:
+        kwargs["tools"] = [_tool_to_api_schema(t) for t in tools]
+    response = await client.messages.count_tokens(**kwargs)
+    return response.input_tokens
+
+
+async def context_window_size(model: str = "claude-opus-4-6") -> Optional[int]:
+    """Return the context window size (max input tokens) for the given model, or None on failure."""
+    try:
+        client = anthropic.AsyncAnthropic()
+        response = await client.models.retrieve(model_id=model)
+        return response.max_input_tokens
+    except Exception as e:
+        print(f"Error retrieving model info: {e}")
+        return None
 
 
 async def list_models() -> List[str]:
@@ -323,7 +350,7 @@ async def think(
                 for tu in tool_use_blocks:
                     rewriter = rewriters.get(tu.name)
                     if rewriter:
-                        all_messages = rewriter(all_messages)
+                        all_messages = await rewriter(all_messages)
             api_messages = _rebuild_api_messages()
 
         text = "\n".join(accumulated_text)
