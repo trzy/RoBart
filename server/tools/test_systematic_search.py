@@ -72,7 +72,7 @@ async def main():
 
     logger.next_step()
     for msg in messages:
-        logger.log_message(msg)
+        logger.log_message(msg, all_messages=messages)
 
     response = await think(
         messages=messages,

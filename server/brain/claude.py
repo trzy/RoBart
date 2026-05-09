@@ -263,7 +263,7 @@ async def think(
     thinking: ThinkingEffort = ThinkingEffort.NONE,
     stop_sequences: List[str] = [],
     tools: List[Tool] = [],
-    on_message: Optional[Callable[[Message], None]] = None,
+    on_message: Optional[Callable[[Message, List[Message]], None]] = None,
 ) -> ThinkResult:
     client = anthropic.AsyncAnthropic()
 
@@ -318,7 +318,7 @@ async def think(
             all_messages.append(assistant_msg)
             api_messages.append({"role": "assistant", "content": _serialize_content_items(assistant_content)})
             if on_message:
-                on_message(assistant_msg)
+                on_message(assistant_msg, all_messages)
 
             if response.stop_reason != "tool_use" or not tool_use_blocks:
                 break
@@ -343,7 +343,7 @@ async def think(
             user_msg = Message(role="user", content=user_content)
             all_messages.append(user_msg)
             if on_message:
-                on_message(user_msg)
+                on_message(user_msg, all_messages)
 
             # Let tools rewrite history if needed, then rebuild api_messages
             if needs_rebuild:

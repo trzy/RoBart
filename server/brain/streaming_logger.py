@@ -1,17 +1,19 @@
 import base64
 import os
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from .claude import Message, ThinkingBlock, ToolResult, ToolUseBlock
 from .image import Image
 
 
 class StreamingLogger:
-    """Logger that appends messages incrementally to a single file per step.
+    """Logger that writes each message to its own subdirectory.
 
-    Designed for use with think(on_message=...) so that tool call messages
-    are logged to stdout and files as they are generated, not batched at the end.
+    Each log entry creates a subdirectory named "n-m" where n is the step number
+    and m is the turn number within that step. Each subdirectory contains:
+    - messages.txt: the latest message followed by the complete message history
+    - Any images from the messages saved as separate files
     """
 
     def __init__(self):
@@ -19,56 +21,68 @@ class StreamingLogger:
         self._run_dir = os.path.join("logs", timestamp)
         os.makedirs(self._run_dir, exist_ok=True)
         self._step = 0
-        self._step_dir: Optional[str] = None
-        self._log_file = None
+        self._turn = 0
 
     @property
     def step_directory(self) -> str:
-        if not self._step_dir:
-            self._step_dir = os.path.join(self._run_dir, str(self._step))
-            os.makedirs(self._step_dir, exist_ok=True)
-        return self._step_dir
+        return os.path.join(self._run_dir, f"{self._step}-{self._turn}")
 
     def next_step(self):
-        """Start a new step. Closes previous log file, creates new step directory and log file."""
-        if self._log_file:
-            self._log_file.close()
-        self._step_dir = os.path.join(self._run_dir, str(self._step))
-        os.makedirs(self._step_dir, exist_ok=True)
-        self._log_file = open(os.path.join(self._step_dir, "log.txt"), "w")
+        """Advance to the next step and reset the turn counter."""
         self._step += 1
+        self._turn = 0
 
-    def log_message(self, message: Message):
-        """Append a single message to the current step's log file and print to stdout."""
-        formatted = self._format_message(message)
+    def log_message(self, message: Message, all_messages: Optional[List[Message]] = None):
+        """Log a message to a new subdirectory and print to stdout.
 
-        # Save images
+        Args:
+            message:      The most recent message.
+            all_messages: The complete message history including the latest message.
+        """
+        # Create subdirectory for this turn
+        turn_dir = os.path.join(self._run_dir, f"{self._step}-{self._turn}")
+        os.makedirs(turn_dir, exist_ok=True)
+        self._turn += 1
+
+        # Save images from the latest message
+        self._save_images(message, turn_dir)
+
+        # Write messages.txt
+        with open(os.path.join(turn_dir, "messages.txt"), "w") as f:
+            # Latest message
+            f.write("=" * 80 + "\n")
+            f.write("  LATEST MESSAGE\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(self._format_message(message))
+            f.write("\n\n")
+
+            # Complete history
+            if all_messages:
+                f.write("=" * 80 + "\n")
+                f.write("  COMPLETE MESSAGE HISTORY\n")
+                f.write("=" * 80 + "\n\n")
+                for msg in all_messages:
+                    f.write(self._format_message(msg))
+                    f.write("\n\n")
+
+        # Print to stdout
+        header = f"[ {message.role.upper()} — step {self._step}, turn {self._turn - 1} ]"
+        print(f"\n{header}\n{'-' * len(header)}\n{self._format_message(message)}")
+
+    @staticmethod
+    def _save_images(message: Message, directory: str):
+        """Save all images from a message to the given directory."""
         for item in message.content:
             if isinstance(item, Image):
                 image_bytes = base64.b64decode(item.data)
-                with open(os.path.join(self._step_dir, f"image_{item.id}.jpg"), "wb") as f:
+                with open(os.path.join(directory, f"image_{item.id}.jpg"), "wb") as f:
                     f.write(image_bytes)
             elif isinstance(item, ToolResult):
                 for c in item.content:
                     if isinstance(c, Image):
                         image_bytes = base64.b64decode(c.data)
-                        with open(os.path.join(self._step_dir, f"image_{c.id}.jpg"), "wb") as f:
+                        with open(os.path.join(directory, f"image_{c.id}.jpg"), "wb") as f:
                             f.write(image_bytes)
-
-        # Write to file and flush
-        if self._log_file:
-            self._log_file.write(formatted + "\n\n")
-            self._log_file.flush()
-
-        # Print to stdout
-        step_num = self._step - 1
-        header = f"[ {message.role.upper()} — step {step_num} ]"
-        print(f"\n{header}\n{'-' * len(header)}\n{formatted}")
-
-    def close(self):
-        if self._log_file:
-            self._log_file.close()
-            self._log_file = None
 
     @staticmethod
     def _format_message(message: Message) -> str:
