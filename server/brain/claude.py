@@ -228,7 +228,7 @@ def _serialize_content_items(items: list) -> list[dict]:
                 coords += f" pos=({item.position.x},{item.position.z})"
             if item.forward:
                 coords += f" fwd=({item.forward.x},{item.forward.z})"
-            blocks.append({"type": "text", "text": f"\nimage_{item.id}{coords}\n"})
+            blocks.append({"type": "text", "text": f"\nimage_{item.id}:\n"})
             blocks.append({
                 "type": "image",
                 "source": {
