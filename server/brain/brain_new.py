@@ -1,5 +1,6 @@
 import asyncio
 import json
+import math
 import os
 import traceback
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
@@ -44,6 +45,11 @@ from ..tools.generate_maps import Map, generate_images
 #   - The LLM often overshoots and it seems to realize this. Should we ask it to give an update about
 #.    whether it is confused or surprised, and then run another conversation thread with previous
 #.    photos to strategize how to recover.
+#   - What do we do about situations where the agent is moving toward an object but then gets 
+#     distracted by another object (e.g., first identifies and moves toward green barrel, does a 
+#     scan and gets disoriented and then pursues orange barrels further away)? I feel like these 
+#     should be tracked explicitly as sub-tasks and objects should be localized as precisely as 
+#     possible early on, with this estimate refined.
 
 SYSTEM_PROMPT = """
 You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
@@ -125,6 +131,7 @@ class NewBrain:
             for annotated_image in msg.images:
                 image = decode_annotated_image(annotated_image, coords=False)
                 content.append(image)
+                content.append(_get_angle_to_image(image=image, currentForward=msg.currentForward))
                 images.append(image)
 
             # Collect unique landmark points and list them
@@ -640,6 +647,20 @@ def _remove_images_from_messages(messages: List[Message], keep: int = 2, mode: R
         else:
             result.append(_strip_images_from_message(msg))
     return result
+
+
+def _get_angle_to_image(image: Image, currentForward: VectorXZ) -> str:
+    """Return a string describing the signed turn angle from the current forward direction to the
+    image's camera direction. Positive = left, negative = right (matching turnInPlace convention)."""
+    if image.forward is None:
+        return ""
+    # This math matches Unity. In Unity, positive = right but we negate the angle first there. This
+    # code produces the correct result.
+    dot = currentForward.x * image.forward.x + currentForward.z * image.forward.z
+    cross = currentForward.x * image.forward.z - currentForward.z * image.forward.x
+    angle_rad = math.atan2(cross, dot)
+    angle_deg = math.degrees(angle_rad)
+    return f"\nAngle from current heading -> image = {angle_deg:.0f} deg\n"
 
 
 def _collect_points(images: List[Image]) -> Dict[int, VectorXZ]:
