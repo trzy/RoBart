@@ -24,6 +24,8 @@ from ..tools.generate_maps import Map, generate_images
 ####################################################################################################
 
 # TODO: summarization periodically, also remove images frequently N messages prior
+# TODO: we need to specify what angles 360 degree photos are in relative to the end position to
+#.      encourage the agent to turn back toward an image
 # TODO: add a tool to rewind history until time=t, which means giving the time each update.
 
 # IDEA: New architecture
@@ -39,6 +41,9 @@ from ..tools.generate_maps import Map, generate_images
 #             what it has just observed and determine when it is observing the same object again.
 #       - Should we get rid of landmark system and just use angles?
 #       - Explore polar coordinates from map origin as a way to make landmarks more interpretable?
+#   - The LLM often overshoots and it seems to realize this. Should we ask it to give an update about
+#.    whether it is confused or surprised, and then run another conversation thread with previous
+#.    photos to strategize how to recover.
 
 SYSTEM_PROMPT = """
 You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
@@ -50,65 +55,26 @@ objectives.
 You are cheerful and helpful. You always speak in very short, concise sentences.
 </personality>
 
-<planning>
-Create and maintain a plan. This should include a long-term strategy for *how* to solve your task.
-Break this down further into sub-tasks as appropriate and keep track of them. Write down your plan
-and progress in <PLAN>...</PLAN> tags. Update this each time you complete a step and re-state it in
-its entirety so that the latest copy is the current plan-of-record.
+<thinking_and_planning>
+Frequently rethink how you will accomplish your objective. Keep notes about what you have
+encountered. Review past steps to determine whether you are stuck and need to back out and retry.
+State these in <PLAN>...</PLAN> tags.
+</thinking_and_planning>
 
-Format of a good plan:
+<movement>
+You can move directly by specifying distances and turn angles directly. You can also use landmark
+points, which are given in images and remain stable. Use direct movement and fine adjustments when
+the landmark points are not precisely where you need to go or face. When you find yourself repeatedly
+finding and then losing sight of a target, try switching to a strategy of finer adjustments.
 
-    <PLAN>
-        <objective>
-            Explain in a few sentences the overall task objective and the condition for which it will be
-            considered complete.
-        </objective>
-
-        <procedure>
-            Describe the overall procedure or algorithm you will use to perform the task. List the 
-            tools and capabilities that will be helpful. Use pseudo-code, lists, and write multiple
-            sub-sections as desired. Describe clearly the format of any state information you will 
-            store to keep track of your movements and actions, and objects and locations of interest
-            you encounter.
-        </procedure>
-        
-        <progress>
-            Record granular progress, including why you made decisions, in a list, with the current
-            state last. E.g.:
-
-            - Action: Scanned surroundings
-              Reason: To understand environment and decide where to search first.
-
-            - Action: Moved toward landmark 7.
-              Reason: Living room appears beyond landmark 7. Likely to contain TV we are looking for.
-
-            - Current state: Arrived in living room but no TV visible.
-              Next steps: Scan surroundings for TV. If TV is not present, consult map to determine
-              where to search next.
-        </progress>
-    </PLAN>
-</planning>
+North is decreasing z and west is decreasing x.
+</movement>
 
 <videos>
 When performing movements, video frames of the motion will be provided. Use these to determine if
-an object has been overshot, an obstacle has been hit, etc.
+an object has been overshot, an obstacle has been hit, etc. These can help determine whether you
+need to make fine adjustments.
 </videos>
-
-<building_spatial_awareness>
-Landmark points are given in images. These represent unobstructed points on the ground you can 
-navigate to, although reachability is not always guaranteed. The points stay stable. Use the memory
-tools to save points of interest that you see. They can be recalled later. Describe any interesting
-objects, locations, and transition points between locations in terms of landmark points.
-
-Use the provided overhead grid map to keep track of where you have explored. Cells are denoted by
-coordinates like A1 and G5. Track these in your planning but to actually navigate to a neighboring cell,
-you need to use landmark points or manually track direction. You can ask for any landmark to be 
-rendered on the grid map to orient yourself better. Rendering specific landmarks of interest atop
-the grid can be used strategically to give you a better sense of how objects and points of interest
-are laid out spatially relative to you and each other.
-
-North is decreasing z and west is decreasing x.
-</building_spatial_awareness>
 
 <feedback>
 Regularly give spoken updates to let people nearby know what you are trying to do next using the 
@@ -163,8 +129,8 @@ class NewBrain:
 
             # Collect unique landmark points and list them
             points_by_id = _collect_points(images)
-            if points_by_id:
-                content.append("\nLandmark positions:\n" + "\n".join(f"  {pid}: pos=({pos.x:.2f},{pos.z:.2f})" for pid, pos in sorted(points_by_id.items())))
+            # if points_by_id:
+            #     content.append("\nLandmark positions:\n" + "\n".join(f"  {pid}: pos=({pos.x:.2f},{pos.z:.2f})" for pid, pos in sorted(points_by_id.items())))
 
             content.append("\n</photos>\n")
 
@@ -202,11 +168,11 @@ class NewBrain:
         num_tokens = await count_tokens(messages=messages, system=SYSTEM_PROMPT, model=self._model)
         max_tokens = await context_window_size(model=self._model)
         context_window_usage_pct = 100.0 * (num_tokens / max_tokens)
-        if num_tokens > 5000: #context_window_usage_pct >= 50:
+        if num_tokens > 10000: #context_window_usage_pct >= 50:
             print(f"\nContext window usage is {context_window_usage_pct:.1f}%, compacting...\n")
             original_user_message = messages[0]
             summary_assistant_message = await _produce_summary(messages=messages)
-            continue_user_message = Message(role="user", content=[ "Continue." ])   # assistant prefill not supported, must end with a user message
+            continue_user_message = Message(role="user", content=[ "Continue from the plan's next step" ])   # assistant prefill not supported, must end with a user message
             messages = [ original_user_message, summary_assistant_message, continue_user_message ]
 
         return messages
@@ -464,7 +430,51 @@ SUMMARIZATION_USER_PROMPT = """
     </progress>
 </PLAN>
 
-Summarixe all progress thus far and produce a plan for this point onwards using the above template.
+Summarize all progress thus far and produce a plan for this point onwards using the above template.
+"""
+
+SUMMARIZATION_USER_PROMPT2 = """
+\nHere is a plan template:
+
+<PLAN>
+    <objective>
+        Explain in a few sentences the overall task objective and the condition for which it will be
+        considered complete.
+    </objective>
+
+    <procedure>
+        Describe the overall procedure or algorithm you will use to perform the task. List the 
+        tools and capabilities that will be helpful. Use pseudo-code, lists, and write multiple
+        sub-sections as desired. Describe clearly the format of any state information you will 
+        store to keep track of your movements and actions, and objects and locations of interest
+        you encounter.
+    </procedure>
+    
+    <progress>
+        Record granular progress, including why you made decisions, in a list, with the current
+        state last. E.g.:
+
+        - Action: Scanned surroundings
+            Reason: To understand environment and decide where to search first.
+
+        - Action: Moved toward landmark 7.
+            Reason: Living room appears beyond landmark 7. Likely to contain TV we are looking for.
+    </progress>
+
+    <current_state>
+        Describe the current state you are in. Provide enough context to resume.
+    </current_state>
+
+    <next_steps>
+        Describe exactly what should be performed next. Be as detailed as possible so that we can
+        resume from this plan without starting over.
+    </next_steps>
+</PLAN>
+
+Summarize the conversation. Use the PLAN template to restate the objective and include a detailed
+history of what has happened and what has been discovered so far. Most importantly, include next 
+steps in sufficient detail to resume exactly where we left off without starting over. Assume nothing
+apart from this new PLAN section will be retained.
 """
 
 async def _produce_summary(messages: List[Message], model: str = "claude-sonnet-4-6") -> Message:
@@ -478,15 +488,17 @@ async def _produce_summary(messages: List[Message], model: str = "claude-sonnet-
     # Otherwise, if last message is a user message, create a deep copy of that message and append
     # the prompt to its content.
     if messages[-1].role == "assistant":
-        messages.append(Message(role="user", content=[SUMMARIZATION_USER_PROMPT]))
+        #messages.append(Message(role="user", content=[SUMMARIZATION_USER_PROMPT]))
+        messages.append(Message(role="user", content=[SUMMARIZATION_USER_PROMPT2]))
     else:
         last = messages[-1]
-        messages[-1] = Message(role=last.role, content=list(last.content) + [SUMMARIZATION_USER_PROMPT])
-
+        #messages[-1] = Message(role=last.role, content=list(last.content) + [SUMMARIZATION_USER_PROMPT])
+        messages[-1] = Message(role=last.role, content=list(last.content) + [SUMMARIZATION_USER_PROMPT2])
     # Send to LLM and return only the assistant message produced
     result = await think(
         messages=messages,
-        system=SUMMARIZATION_SYSTEM_PROMPT,
+        #system=SUMMARIZATION_SYSTEM_PROMPT,
+        system=SYSTEM_PROMPT,
         model=model,
     )
     return Message(role="assistant", content=[result.text])
