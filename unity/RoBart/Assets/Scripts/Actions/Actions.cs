@@ -40,6 +40,14 @@ public struct FaceTowardHeadingAction
     public float headingDegrees;
 }
 
+public struct MoveToLocationAction
+{
+    public float x;
+    public float z;
+    public float forwardX;
+    public float forwardZ;
+}
+
 public struct Scan360Action
 {
 }

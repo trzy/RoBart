@@ -238,7 +238,7 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             {
                 if (action != null)
                 {
-                    bool shouldTrace = action is MoveAction or MoveToAction or MoveToPosAction
+                    bool shouldTrace = action is MoveAction or MoveToAction or MoveToPosAction or MoveToLocationAction
                         or TurnInPlaceAction or FaceTowardAction or FaceTowardPosAction or FaceTowardHeadingAction;
 
                     if (shouldTrace && !traceRunning)
@@ -365,7 +365,29 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         m_pendingObservations.description += $"Move to pos ({action.x:F1},{action.z:F1}): arrived, {distanceToGoal:F2} m from goal.\n";
     }
 
-    private IEnumerator FollowPath(List<Vector3> waypoints)
+    public IEnumerator OnMoveToLocationAction(MoveToLocationAction action)
+    {
+        Debug.Log($"OnMoveToLocationAction: x={action.x}, z={action.z}, forwardX={action.forwardX}, forwardZ={action.forwardZ}");
+
+        Vector3 goal = new Vector3(action.x, 0, action.z);
+        Vector3 targetForward = new Vector3(action.forwardX, 0, action.forwardZ);
+        List<Vector3> path = PathFinder.FindPath(m_occupancyMapBuilder.Map, transform.position, goal, m_robotRadius);
+
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogWarning($"OnMoveToLocationAction: no path found to ({action.x}, {action.z})");
+            m_pendingObservations.description += $"Move to location ({action.x:F1},{action.z:F1}): no path found.\n";
+            yield break;
+        }
+
+        Debug.Log($"OnMoveToLocationAction: following {path.Count}-waypoint path");
+        yield return StartCoroutine(FollowPath(path, targetForward));
+
+        float distanceToGoal = Vector3.Distance(transform.position.XZProject(), goal.XZProject());
+        m_pendingObservations.description += $"Move to location ({action.x:F1},{action.z:F1}): arrived, {distanceToGoal:F2} m from goal.\n";
+    }
+
+    private IEnumerator FollowPath(List<Vector3> waypoints, Vector3? targetForward = null)
     {
         foreach (Vector3 waypoint in waypoints)
         {
@@ -387,6 +409,17 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
             yield return new WaitUntilOrTimeout(() => m_positionPIDController.Error < 1e-2f, m_positionTimeoutSeconds);
             m_positionPIDController.enabled = false;
             m_orientationPIDController.enabled = false;
+        }
+
+        // Orient to target forward direction after reaching destination
+        if (targetForward.HasValue)
+        {
+            Vector3 fwd = targetForward.Value.XZProject().normalized;
+            if (fwd.magnitude > 1e-3f)
+            {
+                bool ignored = false;
+                yield return StartCoroutine(FaceForward(fwd, v => ignored = v));
+            }
         }
     }
 
