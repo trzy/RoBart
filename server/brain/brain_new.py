@@ -68,10 +68,15 @@ State these in <PLAN>...</PLAN> tags.
 </thinking_and_planning>
 
 <movement>
-You can move directly by specifying distances and turn angles directly. You can also use landmark
-points, which are given in images and remain stable. Use direct movement and fine adjustments when
-the landmark points are not precisely where you need to go or face. When you find yourself repeatedly
-finding and then losing sight of a target, try switching to a strategy of finer adjustments.
+You can move and turn in three ways:
+
+1. Landmark point numbers. These appear in images and remain stable. You can move to or turn toward them.
+2. Image numbers. If you want to return exactly to where a photo was taken from, use this. If you haven't moved from a photo position but have turned, this will turn back to that viewpoint. 
+3. Directly. You can specify meters to move forward or backward or angles to turn.
+
+When you find yourself repeatedly finding and then losing sight of a target, try switching to a strategy
+of finer adjustments with direct movement. You can return to previous known good image poses and then
+try finer adjustments.
 
 North is decreasing z and west is decreasing x.
 </movement>
@@ -225,6 +230,22 @@ class NewBrain:
         obs_msg = await self._observations_queue.get()
         return self._process_observations(msg=obs_msg, include_visual_trace=True)
     
+    async def _tool_move_to_image(self, params: Dict[str, Any]) -> List[str | Image]:
+        # Look up image
+        id = params["imageNumber"]
+        image = self._image_by_id.get(id)
+        if image is None:
+            return [ f"No image_{id} found in memory" ]
+        
+        # Create action to move to position and orientation of image
+        action = { "type": "moveToLocation", "x": image.position.x, "z": image.position.z, "forwardX": image.forward.x, "forwardZ": image.forward.z }
+        msg = ActionsMessage(actions = [ json.dumps(action) ])
+
+        # Send
+        await self._send(msg)
+        obs_msg = await self._observations_queue.get()
+        return self._process_observations(msg=obs_msg, include_visual_trace=True)
+    
     async def _tool_turn_in_place(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "turnInPlace", "degrees": params["degrees"] }
         msg = ActionsMessage(actions=[ json.dumps(action) ])
@@ -315,6 +336,15 @@ class NewBrain:
                         ToolParameter(name="pointNumber", type=ParamType.INTEGER, description="Landmark point to go to")
                     ],
                     handler=self._tool_move_to,
+                    rewrite_history=self._compact_history
+                ),
+                Tool(
+                    name="moveToImage",
+                    description="Move to location and orientation where image was taken",
+                    parameters=[
+                        ToolParameter(name="imageNumber", type=ParamType.INTEGER, description="Number of image whose location to go to")
+                    ],
+                    handler=self._tool_move_to_image,
                     rewrite_history=self._compact_history
                 ),
                 Tool(
