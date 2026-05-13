@@ -50,6 +50,13 @@ from ..tools.generate_maps import Map, generate_images
 #     scan and gets disoriented and then pursues orange barrels further away)? I feel like these 
 #     should be tracked explicitly as sub-tasks and objects should be localized as precisely as 
 #     possible early on, with this estimate refined.
+#
+# Observation: 
+#   - Model seems pretty good at navigating top-down text maps. Let's try some more standalone
+#     experiments involving rendered text maps and navigation around them. Can we devise a system
+#     where a navigation mode uses such a coarse map and records memories and state to intelligently
+#     navigate? What about if it is a picture of a map (as we have now) with landmarks rendered all
+#     over it for facilitating navigation? Can we have a zoomed in view of each cell?
 
 SYSTEM_PROMPT = """
 You are RoBart, an advanced mobile wheeled robot AI agent that dutifully helps users.
