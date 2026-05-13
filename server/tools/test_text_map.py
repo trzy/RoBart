@@ -111,7 +111,7 @@ a single sentence) until you have solved the task, at which point you speak your
 """
 
 USER_PROMPT = """
-Find the nearest plant and describe it.
+Find all the plants and describe them.
 """
 
 
@@ -178,7 +178,7 @@ class TextMapAgent:
     def __init__(self, world: WorldMap):
         self._world = world
         self._done = False
-        self._model = "claude-sonnet-4-6"
+        self._model = "claude-opus-4-7"#"claude-sonnet-4-6"
 
     async def _compact_history(self, messages: List[Message]) -> List[Message]:
         num_tokens = await count_tokens(messages=messages, system=SYSTEM_PROMPT, model=self._model)
@@ -369,6 +369,10 @@ async def main():
                      far_description="green foliage in the far corner"),
             Landmark(row=0, col=9, near_description="a window with daylight",
                      far_description="a bright rectangle on the wall"),
+            Landmark(row=7, col=3, near_description="two potted flowers on a table",
+                     far_description="a table"),
+            Landmark(row=3, col=8, near_description="a shelf with a small succulent and some photographs",
+                     far_description="a tall shelf")
         ],
     )
 
