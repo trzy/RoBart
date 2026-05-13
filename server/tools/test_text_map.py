@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict, Any
 
 from ..brain.image import load_image, Image, pil_to_base64_png
-from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
+from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think, count_tokens, context_window_size
 from ..brain.streaming_logger import StreamingLogger
 from ..messages import VectorXZ
 from .generate_maps import Map, generate_images
@@ -115,10 +115,82 @@ Find the nearest plant and describe it.
 """
 
 
+SUMMARIZATION_USER_PROMPT = """
+\nHere is a plan template:
+
+<PLAN>
+    <objective>
+        Explain in a few sentences the overall task objective and the condition for which it will be
+        considered complete.
+    </objective>
+
+    <procedure>
+        Describe the overall procedure or algorithm you will use to perform the task. List the
+        tools and capabilities that will be helpful. Use pseudo-code, lists, and write multiple
+        sub-sections as desired. Describe clearly the format of any state information you will
+        store to keep track of your movements and actions, and objects and locations of interest
+        you encounter.
+    </procedure>
+
+    <progress>
+        Record granular progress, including why you made decisions, in a list, with the current
+        state last.
+    </progress>
+
+    <current_state>
+        Describe the current state you are in. Include current row/col, what you have seen,
+        any landmarks of interest, and any cell memory worth remembering. Provide enough context
+        to resume.
+    </current_state>
+
+    <next_steps>
+        Describe exactly what should be performed next. Be as detailed as possible so that we can
+        resume from this plan without starting over.
+    </next_steps>
+</PLAN>
+
+Summarize the conversation. Use the PLAN template to restate the objective and include a detailed
+history of what has happened and what has been discovered so far. Most importantly, include next
+steps in sufficient detail to resume exactly where we left off without starting over. Assume nothing
+apart from this new PLAN section will be retained.
+"""
+
+
+COMPACT_TOKEN_THRESHOLD = 10000
+
+
+async def _produce_summary(messages: List[Message], model: str) -> Message:
+    messages = list(messages)
+    if messages[-1].role == "assistant":
+        messages.append(Message(role="user", content=[SUMMARIZATION_USER_PROMPT]))
+    else:
+        last = messages[-1]
+        messages[-1] = Message(role=last.role, content=list(last.content) + [SUMMARIZATION_USER_PROMPT])
+    result = await think(
+        messages=messages,
+        system=SYSTEM_PROMPT,
+        model=model,
+    )
+    return Message(role="assistant", content=[result.text])
+
+
 class TextMapAgent:
     def __init__(self, world: WorldMap):
         self._world = world
         self._done = False
+        self._model = "claude-sonnet-4-6"
+
+    async def _compact_history(self, messages: List[Message]) -> List[Message]:
+        num_tokens = await count_tokens(messages=messages, system=SYSTEM_PROMPT, model=self._model)
+        max_tokens = await context_window_size(model=self._model)
+        usage_pct = 100.0 * (num_tokens / max_tokens)
+        if num_tokens < COMPACT_TOKEN_THRESHOLD:
+            return messages
+        print(f"\nContext window usage is {usage_pct:.1f}%, compacting...\n")
+        original_user_message = messages[0]
+        summary_assistant_message = await _produce_summary(messages=messages, model=self._model)
+        continue_user_message = Message(role="user", content=["Continue from the plan's next step"])
+        return [original_user_message, summary_assistant_message, continue_user_message]
 
     async def _tool_view_map(self, params: Dict[str, Any]) -> List[str | Image]:
         r, c = self._world._robot_pos
@@ -206,6 +278,7 @@ class TextMapAgent:
                     ToolParameter(name="landmark", type=ParamType.INTEGER, description="Landmark index from scan results"),
                 ],
                 handler=self._tool_move,
+                rewrite_history=self._compact_history,
             ),
             Tool(
                 name="update_memory",
@@ -252,6 +325,7 @@ class TextMapAgent:
 
     async def run(self, instructions: str, model: str = "claude-sonnet-4-6"):
         print(f"Using model: {model}")
+        self._model = model
         tools = self._build_tools()
         logger = StreamingLogger()
         messages = [Message(role="user", content=[f"<HUMAN_INPUT>{instructions}</HUMAN_INPUT>"])]
@@ -304,6 +378,10 @@ async def main():
 
     agent = TextMapAgent(world=world)
     await agent.run(instructions=USER_PROMPT.strip())
+
+    print()
+    print("Final map:")
+    print(world.render())
 
 
 if __name__ == "__main__":
