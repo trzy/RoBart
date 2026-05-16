@@ -2,7 +2,7 @@ import argparse
 import asyncio
 
 from ..brain.image import load_image, Image
-from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
+from ..brain.llm import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
 
 SYSTEM_PROMPT = """
 You are a smart AI assistant controlling a mobile, wheeled robot. You will be provided a coarse

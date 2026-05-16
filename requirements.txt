@@ -3,3 +3,5 @@ matplotlib
 pydantic
 scipy
 anthropic
+openai
+tiktoken

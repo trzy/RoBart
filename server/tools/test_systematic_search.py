@@ -5,7 +5,7 @@ import asyncio
 from typing import List, Optional, Tuple, Dict, Any
 
 from ..brain.image import load_image, Image, pil_to_base64_png
-from ..brain.claude import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
+from ..brain.llm import ParamType, ToolParameter, Tool, Message, ThinkingEffort, think
 from ..brain.streaming_logger import StreamingLogger
 from ..messages import VectorXZ
 from .generate_maps import Map, generate_images

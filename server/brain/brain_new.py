@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 from pydantic import BaseModel
 
 from enum import Enum
-from .claude import ParamType, ToolParameter, Tool, ToolResult, Message, ThinkingEffort, think, count_tokens, context_window_size
+from .llm import ParamType, ToolParameter, Tool, ToolResult, Message, ThinkingEffort, think, count_tokens, context_window_size
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image, pil_to_base64_png
 from .streaming_logger import StreamingLogger

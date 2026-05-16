@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from .claude import Message, ThinkingBlock, ToolResult, ToolUseBlock
+from .llm import Message, ThinkingBlock, ToolResult, ToolUseBlock
 from .image import Image
 
 

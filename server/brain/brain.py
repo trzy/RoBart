@@ -27,7 +27,7 @@ from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
-from .claude import Message, ThinkResult, think
+from .llm import Message, ThinkResult, think
 from .block_parser import parse_blocks
 from .image import decode_annotated_image, Image
 from .logger import BrainLogger
