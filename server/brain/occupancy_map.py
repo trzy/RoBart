@@ -33,14 +33,13 @@ class MapAnnotation:
 
 @dataclass
 class RobotMarker:
-    """Draws the robot as a colored circle with a forward-direction arrow."""
+    """Draws the robot as a forward-pointing chevron."""
 
     position: VectorXZ = field(default_factory=lambda: VectorXZ(x=0, z=0))
     forward: VectorXZ = field(default_factory=lambda: VectorXZ(x=0, z=0))
 
     radius_cells: float = 2.0
     color: str = "red"
-    arrow_color: str = "red"
 
 
 @dataclass
@@ -193,29 +192,24 @@ def _draw_robot(draw: ImageDraw.ImageDraw, robot: RobotMarker, opts: RenderOptio
     px, py = _cell_to_pixel_center(cx, cz, cpx)
     radius = robot.radius_cells * cpx
 
-    # Circle
-    draw.ellipse(
-        [px - radius, py - radius, px + radius, py + radius],
-        fill=robot.color,
-    )
-
-    # Arrow protruding from circle edge with triangle head
     fx, fz = robot.forward.x, robot.forward.z
     length = math.hypot(fx, fz)
     if length < 1e-6:
         return
-    fx /= length
-    fz /= length
+    dx = fx / length
+    dy = fz / length
 
-    # Shaft runs from circle edge outward
-    shaft_start_x = px + fx * radius
-    shaft_start_y = py + fz * radius
-    shaft_len = radius * 1.2
-    tip_x = shaft_start_x + fx * shaft_len
-    tip_y = shaft_start_y + fz * shaft_len
+    # Chevron: tip points forward; arms extend backward 45 degrees to each side.
+    tip = (px + dx * radius, py + dy * radius)
+    perp_x, perp_y = -dy, dx
+    back_x = px - dx * radius
+    back_y = py - dy * radius
+    left = (back_x + perp_x * radius, back_y + perp_y * radius)
+    right = (back_x - perp_x * radius, back_y - perp_y * radius)
 
-    arrow_width = max(2, cpx // 2)
-    draw.line([(shaft_start_x, shaft_start_y), (tip_x, tip_y)], fill=robot.arrow_color, width=arrow_width)
+    line_width = max(2, cpx // 2)
+    draw.line([left, tip], fill=robot.color, width=line_width)
+    draw.line([tip, right], fill=robot.color, width=line_width)
 
 
 def _draw_annotation(draw: ImageDraw.ImageDraw, ann: MapAnnotation, opts: RenderOptions, cpx: int):

@@ -29,6 +29,33 @@ from ..tools.generate_maps import Map, generate_images
 #.      encourage the agent to turn back toward an image
 # TODO: add a tool to rewind history until time=t, which means giving the time each update.
 
+# TODO: seems hopeless to trust the model to stop and re-think things with each update. I think 
+#       we should try an explicit re-act like framework again. We may need to explicitly prompt it
+#       each step to update the plan, etc. We may also want parallel conversation threads, e.g. one
+#       that observes and does nothing more than describe the space and all objects. Or, create very
+#       high level tools like "make_observations" and "move", with separate threads with finer-grained
+#       tooling handling the details (and of course maintaining some state between these threads).
+#
+#       For example, for each image, we might need to invoke a sub-agent with some general context
+#       about the task (e.g., the user input itself), current descriptions of given landmarks, and
+#       ask it to update landmark description and generate new ones for new landmarks.
+#
+#       We could also have multiple different high level loops, such as EXPLORE/SEARCH, MOVE_TO,
+#       FREEFORM, INTERACT, etc. MOVE_TO could be a landmark, or it could be formulated as an 
+#       object in an image, with the image passed to the sub-agent. 
+#
+#       Perhaps an initial planning agent that, given a series of tools, comes up with which tools
+#       will be needed, or a plan in terms of modes to execute.
+#
+#       This project shows how to plan and break down into tasks, albeit in a very simple fashion:
+#       https://github.com/open-multi-agent/open-multi-agent/blob/591ce6da94cc35d3d2e6af406cc238ade64db3f9/src/orchestrator/orchestrator.ts#L1520
+#
+#       We may need specialized agents.
+#
+#       EXPLORE mode might render both a very coarse grid-search map and more detailed occupancy
+#       maps of each cell to search. Once thoroughly investigated, mark it and move on. During 
+#       investigation of a grid cell, we may wander into another.
+
 # IDEA: New architecture
 #   - based around observation events. Any time we see anything novel and noteworthy, we should 
 #     store it: landmarks and general observations.
@@ -68,10 +95,32 @@ objectives.
 You are cheerful and helpful. You always speak in very short, concise sentences.
 </personality>
 
+<navigation>
+An overhead occupancy map will be updated with each action you take. Empty space indicates either
+unobstructed floor space or unexplored space. Blue indicates an obstruction. Green indicates cells 
+that you have traversed. Your position and heading is indicated by a red chevron pointing in the 
+direction you are currently facing. North is decreasing z and west is decreasing x. 
+
+Landmark point numbers are rendered atop the map. These appear in photos you take as well. They 
+indicate unobstructed locations on the ground. Use them for navigation and as reference points. 
+
+As you explore the world, take note of objects of interest and remember their locations via the 
+nearest landmarks. Identify different rooms or functional parts of the space and note the landmarks
+associated with them so that you can later move between them if required by a task. Use the 
+saveLandmarks tool to store detailed information describing what is at or nearby a landmark, and what
+area of the space it is in. You can later search for landmarks semantically with findLandmarks or
+recall a specific landmark with describeLandmarks.
+</navigation>
+
 <thinking_and_planning>
-Frequently rethink how you will accomplish your objective. Keep notes about what you have
-encountered. Review past steps to determine whether you are stuck and need to back out and retry.
-State these in <PLAN>...</PLAN> tags.
+Think before you act. Make note of your overall objective as well as the criteria for determining success. 
+Evaluate whether each step you took was successful and if not, adjust your planning accordingly.
+
+As you explore and learn about your environment, create sub-goals in terms of areas you need to move to or search.
+Keep track of regions that have been unexplored in case you need to return to them later. Each time
+the occupancy map changes, update the plan and sub-goals.
+
+Review past steps to determine whether you are stuck and need to back out and retry.
 </thinking_and_planning>
 
 <movement>
@@ -84,8 +133,6 @@ You can move and turn in three ways:
 When you find yourself repeatedly finding and then losing sight of a target, try switching to a strategy
 of finer adjustments with direct movement. You can return to previous known good image poses and then
 try finer adjustments.
-
-North is decreasing z and west is decreasing x.
 </movement>
 
 <videos>
@@ -109,7 +156,7 @@ class NewBrain:
         self._model = "claude-sonnet-4-6"
         self._image_by_id: Dict[int, Image] = {}
         self._landmark_positions_by_id: Dict[int, VectorXZ] = {}
-        self._memory: Dict[int, str] = {}
+        self._landmark_descriptions: Dict[int, str] = {}
         self._overhead_map: Optional[Map] = None
         self._final_response_delivered = False
 
@@ -191,15 +238,19 @@ class NewBrain:
             last_visited = msg.lastVisited,
             heatmap_recent_color = (0, 255, 0),
             heatmap_old_color = (0, 255, 0),
+            robot = RobotMarker(position=msg.currentPosition, forward=msg.currentForward, radius_cells=2), 
             output_path = "occupancy_map.png"
         )
-        render_occupancy_map(opts=occupancy_map_options)
+        occupancy_map_image = render_occupancy_map(opts=occupancy_map_options)
+        content.append("\n<occupancy_map>\n")
+        content.append(occupancy_map_image)
+        content.append("\n</occupancy_map>\n")
 
         # Overhead map
-        self._overhead_map, overhead_map_image = _update_overhead_map(map=self._overhead_map, observations_msg=msg)
-        content.append("\n<overhead_map>\n")
-        content.append(overhead_map_image)
-        content.append("\n</overhead_map>\n")
+        # self._overhead_map, overhead_map_image = _update_overhead_map(map=self._overhead_map, observations_msg=msg)
+        # content.append("\n<overhead_map>\n")
+        # content.append(overhead_map_image)
+        # content.append("\n</overhead_map>\n")
 
         # Terminate block and return
         content.append("\n</command_result>\n")
@@ -223,18 +274,51 @@ class NewBrain:
 
         return messages
     
-    async def _tool_update_memories(self, params: Dict[str, Any]) -> List[str | Image]:
-        memories = params["memories"]
-        for memory in memories:
-            pointNumber = memory["pointNumber"]
-            description = memory["description"]
-            if len(description) == 0:
-                if pointNumber in self._memory:
-                    del self._memory[pointNumber]
+    async def _tool_save_landmarks(self, params: Dict[str, Any]) -> List[str | Image]:
+        landmarks = params["landmarks"]
+        for entry in landmarks:
+            pid = entry["pointNumber"]
+            desc = entry["description"]
+            if len(desc) == 0:
+                self._landmark_descriptions.pop(pid, None)
             else:
-                self._memory[pointNumber] = description
-        memory_text = "<LANDMARKS>\n" + "\n".join([ f"{pointNumber}: {description}" for pointNumber, description in self._memory.items() ]) + "\n</LANDMARKS>"
-        return [ memory_text ]
+                self._landmark_descriptions[pid] = desc
+        return [f"Saved {len(landmarks)} landmark update(s). Total stored: {len(self._landmark_descriptions)}."]
+
+    async def _tool_describe_landmarks(self, params: Dict[str, Any]) -> List[str | Image]:
+        point_numbers = params["pointNumbers"]
+        lines = []
+        for pid in point_numbers:
+            desc = self._landmark_descriptions.get(pid)
+            if desc is None:
+                lines.append(f"{pid}: (no description stored)")
+            else:
+                lines.append(f"{pid}: {desc}")
+        return ["<LANDMARKS>\n" + "\n".join(lines) + "\n</LANDMARKS>"]
+
+    async def _tool_find_landmarks(self, params: Dict[str, Any]) -> List[str | Image]:
+        query = params["query"]
+        if not self._landmark_descriptions:
+            return ["<LANDMARKS>\n(no landmarks stored)\n</LANDMARKS>"]
+
+        catalog = "\n".join(
+            f"{pid}: {desc}" for pid, desc in sorted(self._landmark_descriptions.items())
+        )
+        search_system = (
+            "You are a landmark search assistant. You are given a list of numbered landmarks and "
+            "a user query. Return every landmark that matches the query by meaning (not exact word "
+            "match), formatted as 'number: description' lines. "
+            "If nothing matches, say 'no matching landmarks found'."
+        )
+        search_user = f"<LANDMARKS>\n{catalog}\n</LANDMARKS>\n\nQuery: {query}"
+        result = await think(
+            messages=[Message(role="user", content=[search_user])],
+            system=search_system,
+            model=self._model,
+        )
+        if not result.succeeded:
+            return [f"Error searching landmarks: {result.text}"]
+        return [result.text]
 
     async def _tool_take_photo(self, params: Dict[str, Any]) -> List[str | Image]:
         action = { "type": "takePhoto" }
@@ -308,29 +392,51 @@ class NewBrain:
         # Reset state
         self._model = model
         self._image_by_id: Dict[int, Image] = {}
-        self._memory: Dict[int, str] = {}
+        self._landmark_descriptions: Dict[int, str] = {}
         self._overhead_map: Optional[Map] = None
         self._final_response_delivered = False
 
         try:
             tools = [
                 Tool(
-                    name="updateMemory",
-                    description="Update memory",
+                    name="saveLandmarks",
+                    description="Save descriptions for one or more landmark point numbers. Use this to remember objects, locations, or features tied to landmarks you have seen. Pass an empty description to forget a landmark.",
                     parameters=[
                         ToolParameter(
-                            name="memories",
+                            name="landmarks",
                             type=ParamType.ARRAY,
-                            description="Array of landmarks to add/update/remove",
+                            description="Array of landmarks to save/update/remove",
                             required=True,
-                            properties=[ 
-                                ToolParameter(name="pointNumber", type=ParamType.INTEGER, description="Landmark number"), 
-                                ToolParameter(name="description", type=ParamType.STRING, description="Description of landmark (empty string to delete from memory)"),
+                            properties=[
+                                ToolParameter(name="pointNumber", type=ParamType.INTEGER, description="Landmark number"),
+                                ToolParameter(name="description", type=ParamType.STRING, description="Description of the landmark (empty string to forget)"),
                             ],
-                            array_type=ParamType.OBJECT
-                        )
+                            array_type=ParamType.OBJECT,
+                        ),
                     ],
-                    handler=self._tool_update_memories
+                    handler=self._tool_save_landmarks,
+                ),
+                Tool(
+                    name="findLandmarks",
+                    description="Semantically search saved landmarks. Provide a natural-language query and get back the landmark numbers and descriptions that match.",
+                    parameters=[
+                        ToolParameter(name="query", type=ParamType.STRING, description="Natural-language search query"),
+                    ],
+                    handler=self._tool_find_landmarks,
+                ),
+                Tool(
+                    name="describeLandmarks",
+                    description="Recall the saved descriptions for specific landmark numbers.",
+                    parameters=[
+                        ToolParameter(
+                            name="pointNumbers",
+                            type=ParamType.ARRAY,
+                            description="Landmark numbers to recall",
+                            required=True,
+                            array_type=ParamType.INTEGER,
+                        ),
+                    ],
+                    handler=self._tool_describe_landmarks,
                 ),
                 Tool(
                     name="speak",
