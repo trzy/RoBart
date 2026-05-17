@@ -108,6 +108,7 @@ class NewBrain:
         # This state is reset on each run() call
         self._model = "claude-sonnet-4-6"
         self._image_by_id: Dict[int, Image] = {}
+        self._landmark_positions_by_id: Dict[int, VectorXZ] = {}
         self._memory: Dict[int, str] = {}
         self._overhead_map: Optional[Map] = None
         self._final_response_delivered = False
@@ -124,6 +125,11 @@ class NewBrain:
     def _store_images(self, images: List[Image]):
         for image in images:
             self._image_by_id[image.id] = image
+
+    def _store_landmarks(self, images: List[Image]):
+        for image in images:
+            for point in image.points:
+                self._landmark_positions_by_id[point.id] = point.worldPosition
 
     def _process_observations(self, msg: Optional[ObservationsMessage], include_visual_trace: bool) -> List[str | Image]:
         if msg is None:
@@ -167,6 +173,27 @@ class NewBrain:
 
         # Save images for future recall
         self._store_images(images=images)
+
+        # Save all landmarks
+        self._store_landmarks(images=images)
+
+        # DEBUG: Render occupancy map with all landmarks as annotations
+        occupancy_map_options = RenderOptions(
+            cells_wide = msg.mapCellsWide,
+            cells_deep = msg.mapCellsDeep,
+            occupancy = msg.occupancy,
+            origin_x = msg.mapOriginX,
+            origin_z = msg.mapOriginZ,
+            cell_size = msg.mapCellSize,
+#            image_width = 512,
+            cell_pixels=10,
+            annotations = [ MapAnnotation(x=position.x, z=position.z, label=str(id)) for id, position in self._landmark_positions_by_id.items() ],
+            last_visited = msg.lastVisited,
+            heatmap_recent_color = (0, 255, 0),
+            heatmap_old_color = (0, 255, 0),
+            output_path = "occupancy_map.png"
+        )
+        render_occupancy_map(opts=occupancy_map_options)
 
         # Overhead map
         self._overhead_map, overhead_map_image = _update_overhead_map(map=self._overhead_map, observations_msg=msg)
