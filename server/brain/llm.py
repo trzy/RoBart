@@ -179,7 +179,7 @@ def _pick_backend(model: str):
 async def think(
     messages: List[Message],
     system: str,
-    model: str = "claude-opus-4-7",
+    model: str = "claude-sonnet-4-6",
     thinking: ThinkingEffort = ThinkingEffort.NONE,
     stop_sequences: List[str] = [],
     tools: List[Tool] = [],
@@ -199,7 +199,7 @@ async def think(
 async def count_tokens(
     messages: List[Message],
     system: str,
-    model: str = "claude-opus-4-7",
+    model: str = "claude-sonnet-4-6",
     tools: List[Tool] = [],
 ) -> int:
     return await _pick_backend(model).count_tokens(
@@ -210,7 +210,7 @@ async def count_tokens(
     )
 
 
-async def context_window_size(model: str = "claude-opus-4-7") -> Optional[int]:
+async def context_window_size(model: str = "claude-sonnet-4-6") -> Optional[int]:
     return await _pick_backend(model).context_window_size(model=model)
 
 
