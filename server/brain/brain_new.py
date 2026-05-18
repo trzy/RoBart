@@ -24,11 +24,21 @@ from ..tools.generate_maps import Map, generate_images
 # for observations before continuing.
 ####################################################################################################
 
-# TODO: summarization periodically, also remove images frequently N messages prior
-# TODO: we need to specify what angles 360 degree photos are in relative to the end position to
-#.      encourage the agent to turn back toward an image
-# TODO: add a tool to rewind history until time=t, which means giving the time each update.
-
+# TODO next:
+# 
+#   - Implement some sort of system for localizing objects precisely with x, z coordinates and depth
+#     map.
+#   - Implement some of the ideas below:
+#       - Implement a MOVE sub-agent
+#       - Implement an EXPLORE sub-agent
+#       - ANALYZE sub-agent for when we think we have identified a relevant object? This should 
+#         localize precisely.
+#   - Top-level planning agent should only use overhead maps. Perhaps it should create a task list
+#     that would effectively allow it to function as an EXPLORE agent.
+#       - Would a task list (explicitly encoded with JSON so we capture it with dependencies) force
+#         the model to think about next steps? After each task is executed and crossed off by a 
+#         sub-agent, the model would need to analyze the results and update the plan.
+#  
 # TODO: seems hopeless to trust the model to stop and re-think things with each update. I think 
 #       we should try an explicit re-act like framework again. We may need to explicitly prompt it
 #       each step to update the plan, etc. We may also want parallel conversation threads, e.g. one
@@ -55,6 +65,8 @@ from ..tools.generate_maps import Map, generate_images
 #       EXPLORE mode might render both a very coarse grid-search map and more detailed occupancy
 #       maps of each cell to search. Once thoroughly investigated, mark it and move on. During 
 #       investigation of a grid cell, we may wander into another.
+
+# TODO: add a tool to rewind history until time=t, which means giving the time each update.
 
 # IDEA: New architecture
 #   - based around observation events. Any time we see anything novel and noteworthy, we should 
@@ -268,7 +280,8 @@ class NewBrain:
         if num_tokens > 10000: #context_window_usage_pct >= 50:
             print(f"\nContext window usage is {context_window_usage_pct:.1f}%, compacting...\n")
             original_user_message = messages[0]
-            summary_assistant_message = await _produce_summary(messages=messages)
+            summarization_model = "claude-sonnet-4-6" if self._model.startswith("claude") else self._model  # we don't have a default for OpenAI yet
+            summary_assistant_message = await _produce_summary(messages=messages, model=summarization_model)
             continue_user_message = Message(role="user", content=[ "Continue from the plan's next step" ])   # assistant prefill not supported, must end with a user message
             messages = [ original_user_message, summary_assistant_message, continue_user_message ]
 
