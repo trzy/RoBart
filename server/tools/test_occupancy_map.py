@@ -30,7 +30,7 @@ are rendered as numbers.
 """
 
 async def main():
-    image_base64, image_type = load_image(path="occupancy_map_test.png")
+    image_base64, image_type = load_image(path="test/sample_occupancy_map.png")
     image = Image(data=image_base64, media_type=image_type)
 
     question = Message(
