@@ -19,7 +19,9 @@ from .llm import (
 )
 
 
-# Hardcoded context-window sizes for current OpenAI models. Update as new models ship.
+# Hardcoded context-window sizes for current OpenAI models. Used as a fast path;
+# unknown variants (including dated suffixes like "gpt-5.4-2026-03-05") fall through
+# to the prefix-based resolution in context_window_size().
 _CONTEXT_WINDOWS = {
     "gpt-4o": 128_000,
     "gpt-4o-mini": 128_000,
@@ -29,6 +31,18 @@ _CONTEXT_WINDOWS = {
     "gpt-5": 400_000,
     "gpt-5-mini": 400_000,
     "gpt-5-nano": 400_000,
+    "gpt-5-codex": 400_000,
+    "gpt-5-pro": 400_000,
+    "gpt-5.1": 400_000,
+    "gpt-5.2": 400_000,
+    "gpt-5.2-pro": 400_000,
+    "gpt-5.3": 400_000,
+    "gpt-5.4": 1_050_000,
+    "gpt-5.4-mini": 1_050_000,
+    "gpt-5.4-nano": 1_050_000,
+    "gpt-5.4-pro": 1_050_000,
+    "gpt-5.5": 1_000_000,
+    "gpt-5.5-pro": 1_000_000,
     "o1": 200_000,
     "o1-mini": 128_000,
     "o1-pro": 200_000,
@@ -37,6 +51,9 @@ _CONTEXT_WINDOWS = {
     "o3-pro": 200_000,
     "o4-mini": 200_000,
 }
+
+# Conservative fallback when no prefix matches.
+_DEFAULT_CONTEXT_WINDOW = 128_000
 
 # Fallback estimate for image tokens (Responses API actual is model-dependent).
 _IMAGE_TOKEN_ESTIMATE = 1500
@@ -187,7 +204,24 @@ async def count_tokens(
 
 
 async def context_window_size(model: str) -> Optional[int]:
-    return _CONTEXT_WINDOWS.get(model)
+    if model in _CONTEXT_WINDOWS:
+        return _CONTEXT_WINDOWS[model]
+    # Strip a trailing dated suffix like "-2026-03-05" and retry exact match.
+    base = model.rsplit("-", 3)[0] if model.count("-") >= 3 else model
+    if base in _CONTEXT_WINDOWS:
+        return _CONTEXT_WINDOWS[base]
+    # Family-level fallbacks for unrecognized variants.
+    if model.startswith(("gpt-5.4", "gpt-5.5")):
+        return 1_000_000
+    if model.startswith("gpt-5"):
+        return 400_000
+    if model.startswith("gpt-4.1"):
+        return 1_047_576
+    if model.startswith("gpt-4"):
+        return 128_000
+    if model.startswith(("o1", "o3", "o4")):
+        return 200_000
+    return _DEFAULT_CONTEXT_WINDOW
 
 
 async def list_models() -> List[str]:
@@ -315,4 +349,6 @@ async def think(
         new_messages = all_messages[num_input_messages:]
         return ThinkResult(succeeded=True, text=text, messages=new_messages)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return ThinkResult(succeeded=False, text=f"Error: {e}", messages=[])
