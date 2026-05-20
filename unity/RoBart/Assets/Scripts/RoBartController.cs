@@ -33,6 +33,10 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     [Tooltip("Visual trace capture rate in Hz during action execution")]
     private float m_traceCaptureHz = 2f;
 
+    [SerializeField]
+    [Tooltip("Max distance (m) for per-pixel depth raycasts captured with each photo")]
+    private float m_depthMaxDistance = 6f;
+
     private Rigidbody m_rb;
     private OccupancyMapBuilder m_occupancyMapBuilder;
     private float m_robotRadius;
@@ -580,6 +584,8 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
     {
         yield return new WaitForEndOfFrame();
         Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+        int width = screenshot.width;
+        int height = screenshot.height;
         byte[] jpegBytes = screenshot.EncodeToJPG();
         Destroy(screenshot);
 
@@ -594,15 +600,51 @@ public class RoBartController : MessageReceivingBehavior, IActionHandler
         // Deduplicate against existing landmarks and assign stable IDs
         points = m_landmarkStore.Resolve(points);
 
+        Vector3[] depthMap = ComputeDepthMap(Camera.main, width, height, m_depthMaxDistance);
+
         Vector3 fwd = transform.forward.XZProject().normalized;
         AnnotatedImage annotatedImage = new AnnotatedImage
         {
             imageJpegBase64 = Convert.ToBase64String(jpegBytes),
             cameraPosition = new VectorXZ { x = transform.position.x, z = transform.position.z },
             cameraForward  = new VectorXZ { x = fwd.x, z = fwd.z },
-            points = points
+            points = points,
+            depthWidth = width,
+            depthHeight = height,
+            depthMap = depthMap
         };
         m_pendingObservations.images = (m_pendingObservations.images ?? Array.Empty<AnnotatedImage>()).Append(annotatedImage).ToArray();
+    }
+
+    // Casts one ray per (sub)pixel against scene colliders and returns world-space hit points
+    // in a row-major, top-left-origin array (matching JPEG pixel order). Misses (out of range or
+    // no collider) are encoded as (1e6, 1e6, 1e6).
+    // Cost is O(width * height) raycasts; at full screen resolution this blocks the main thread for
+    // a noticeable time. Replace with a depth-buffer + inverse-VP reconstruction if perf matters.
+    private const float DepthMissSentinel = 1e6f;
+    private static Vector3[] ComputeDepthMap(Camera cam, int width, int height, float maxDistance)
+    {
+        Vector3[] depth = new Vector3[width * height];
+        Vector3 miss = new Vector3(DepthMissSentinel, DepthMissSentinel, DepthMissSentinel);
+        for (int y = 0; y < height; y++)
+        {
+            // Image rows are top-down; Unity screen coords have origin at bottom-left, so flip y.
+            float screenY = (height - 1 - y) + 0.5f;
+            int rowBase = y * width;
+            for (int x = 0; x < width; x++)
+            {
+                Ray ray = cam.ScreenPointToRay(new Vector3(x + 0.5f, screenY, 0f));
+                if (Physics.Raycast(ray, out RaycastHit hit, maxDistance))
+                {
+                    depth[rowBase + x] = hit.point;
+                }
+                else
+                {
+                    depth[rowBase + x] = miss;
+                }
+            }
+        }
+        return depth;
     }
 
     private void PopulateMaps(ref ObservationsMessage obs)

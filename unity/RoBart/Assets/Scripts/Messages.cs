@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 [Serializable]
 public struct HelloMessage
@@ -45,6 +46,12 @@ public struct AnnotatedImage
     public VectorXZ cameraPosition;
     public VectorXZ cameraForward;
     public AnnotatedPoint[] points;
+
+    // Per-pixel world points (row-major, origin top-left). Length == depthWidth * depthHeight.
+    // Pixels where no surface was hit are encoded as (inf, inf, inf).
+    public int depthWidth;
+    public int depthHeight;
+    public Vector3[] depthMap;
 }
 
 [Serializable]
