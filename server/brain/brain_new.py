@@ -65,6 +65,11 @@ from ..tools.generate_maps import Map, generate_images
 #       EXPLORE mode might render both a very coarse grid-search map and more detailed occupancy
 #       maps of each cell to search. Once thoroughly investigated, mark it and move on. During 
 #       investigation of a grid cell, we may wander into another.
+#
+#       *** Breaking things down into tasks and executing one task at a time and then posting the
+#           results might improve performance if each task is a sub-agent. But if a task is to "move
+#           to living room" and along the way the overall goal is solved ("find the TV"), we don't
+#           want to miss that. Need to include that as context (or maybe not?) ***
 
 # TODO: add a tool to rewind history until time=t, which means giving the time each update.
 

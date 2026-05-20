@@ -1,10 +1,10 @@
 import base64
 import io
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from PIL import Image as PILImage, ImageDraw, ImageFont
 
-from ..messages import AnnotatedImage, AnnotatedPoint, VectorXZ
+from ..messages import AnnotatedImage, AnnotatedPoint, Vector3, VectorXZ
 
 
 ####################################################################################################
@@ -16,7 +16,7 @@ from ..messages import AnnotatedImage, AnnotatedPoint, VectorXZ
 class Image:
     _next_id: int = 1
 
-    def __init__(self, data: str, media_type: Literal["image/png", "image/jpeg"], points: List[AnnotatedPoint] = None, position: VectorXZ = None, forward: VectorXZ = None):
+    def __init__(self, data: str, media_type: Literal["image/png", "image/jpeg"], points: List[AnnotatedPoint] = None, position: VectorXZ = None, forward: VectorXZ = None, depth_map: Optional[List[Vector3]] = None):
         self.id = Image._next_id
         Image._next_id += 1
         self.data = data
@@ -24,6 +24,13 @@ class Image:
         self.points: List[AnnotatedPoint] = points or []
         self.position: VectorXZ = position
         self.forward: VectorXZ = forward
+        # Per-pixel world points, row-major, origin top-left. Misses are (1e6, 1e6, 1e6).
+        # Either None (absent) or length-checked against the image resolution.
+        if depth_map is not None:
+            w, h = self.size
+            if len(depth_map) != w * h:
+                raise ValueError(f"depth_map length {len(depth_map)} does not match image resolution {w}x{h} ({w*h} pixels)")
+        self.depth_map: Optional[List[Vector3]] = depth_map
 
     @property
     def size(self) -> tuple[int, int]:
@@ -57,6 +64,7 @@ class Image:
         img = img.resize((new_w, new_h), PILImage.LANCZOS)
         out = io.BytesIO()
         img.save(out, format="JPEG")
+        # Resize invalidates the depth map (it's keyed by original pixel grid), so drop it.
         return Image(data=base64.b64encode(out.getvalue()).decode("utf-8"), media_type="image/jpeg", points=self.points, position=self.position, forward=self.forward)
 
 
@@ -121,7 +129,14 @@ def decode_annotated_image(annotated_image: AnnotatedImage, coords: bool = False
     """Decode an AnnotatedImage from the robot, apply point annotations, and return an Image."""
     jpeg_bytes = base64.b64decode(annotated_image.imageJpegBase64)
     annotated_bytes = _annotate_jpeg(jpeg_bytes, annotated_image.points, coords=coords)
-    return Image(data=base64.b64encode(annotated_bytes).decode("utf-8"), media_type="image/jpeg", points=annotated_image.points, position=annotated_image.cameraPosition, forward=annotated_image.cameraForward)
+    return Image(
+        data=base64.b64encode(annotated_bytes).decode("utf-8"),
+        media_type="image/jpeg",
+        points=annotated_image.points,
+        position=annotated_image.cameraPosition,
+        forward=annotated_image.cameraForward,
+        depth_map=annotated_image.depthMap,
+    )
 
 
 ####################################################################################################

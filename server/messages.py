@@ -117,6 +117,11 @@ class VectorXZ(BaseModel):
     x: float
     z: float
 
+class Vector3(BaseModel):
+    x: float
+    y: float
+    z: float
+
 class AnnotatedPoint(BaseModel):
     id: int
     screenX: float
@@ -128,6 +133,10 @@ class AnnotatedImage(BaseModel):
     cameraPosition: VectorXZ
     cameraForward: VectorXZ
     points: List[AnnotatedPoint]
+    # Per-pixel world points, row-major, origin top-left. When present, length must equal the
+    # image's width * height. Points where no surface was hit (out of range or no collider) are
+    # encoded as (1e6, 1e6, 1e6).
+    depthMap: Optional[List[Vector3]] = None
 
 class ObservationsMessage(BaseModel):
     description: str
