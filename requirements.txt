@@ -5,3 +5,9 @@ scipy
 anthropic
 openai
 tiktoken
+pillow
+torch
+torchvision
+# SAM3 (server/brain/segmentation.py) needs the HuggingFace Transformers main branch;
+# the stable release pulls in a Triton (CUDA-only) dep that breaks on Apple Silicon.
+transformers @ git+https://github.com/huggingface/transformers
