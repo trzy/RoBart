@@ -30,13 +30,21 @@ class Brain: ObservableObject {
         case claude35Sonnet
         case claude37Sonnet20250219
         case claude37SonnetLatest
+        case claude45Haiku20251001
         case claude45Sonnet20250929
         case claude45SonnetLatest
         case claude45Opus20251101
         case claude45OpusLatest
+        case claude55Sonnet
+        case claude55Opus
         case gpt4o
         case gpt4Turbo
         case gpt5
+        case gpt55
+        case gpt56Terra
+        case gpt56Sol
+        case gpt6Sol
+        case gpt61Sol
     }
 
     enum DisplayState: String {
@@ -177,16 +185,24 @@ class Brain: ObservableObject {
             .claude35Sonnet: .claude35Sonnet,
             .claude37Sonnet20250219: .other("claude-3-7-sonnet-20250219"),
             .claude37SonnetLatest: .claude37Sonnet,
+            .claude45Haiku20251001: .other("claude-haiku-4-5-20251001"),
             .claude45Sonnet20250929: .other("claude-sonnet-4-5-20250929"),
             .claude45SonnetLatest: .other("claude-sonnet-4-5"),
             .claude45Opus20251101: .other("claude-opus-4-5-20251101"),
-            .claude45OpusLatest: .other("claude-opus-4-5")
+            .claude45OpusLatest: .other("claude-opus-4-5"),
+            .claude55Sonnet: .other("claude-sonnet-5-5"),
+            .claude55Opus: .other("claude-opus-5-5")
         ]
 
         let modelToOpenAIIdAndStopSupport: [Brain.Model: (String, Bool)] = [
             .gpt4o: (.gpt4_o, true),
             .gpt4Turbo: (.gpt4_turbo, true),
-            .gpt5: (.gpt5, false)   // GPT-5 does not support stop tokens
+            .gpt5: (.gpt5, false),  // GPT-5 does not support stop tokens
+            .gpt55: ("gpt-5.5", false),
+            .gpt56Terra: ("gpt-5.6-terra", false),
+            .gpt56Sol: ("gpt-5.6-sol", false),
+            .gpt6Sol: ("gpt-6-sol", false),
+            .gpt61Sol: ("gpt-6.1-sol", false)
         ]
 
         // Anthropic model?
@@ -216,16 +232,23 @@ class Brain: ObservableObject {
                 )
             )
 
-            if case let .text(responseText, _) = response.content[0] {
-                log("Response: \(responseText)")
-                let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)  // not needed for Claude but just in case...
-                let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
-                if responseThoughts.isEmpty {
-                    // This occasionally happens when there is an error or Claude thinks the
-                    // content is prohibited. We deliver its response verbatim.
-                    return [ FinalResponseThought(spokenWords: responseText) ]
+            if response.content.count > 0 {
+                if case let .text(responseText, _) = response.content[0] {
+                    log("Response: \(responseText)")
+                    let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)  // not needed for Claude but just in case...
+                    let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
+                    if responseThoughts.isEmpty {
+                        // This occasionally happens when there is an error or Claude thinks the
+                        // content is prohibited. We deliver its response verbatim.
+                        return [ FinalResponseThought(spokenWords: responseText) ]
+                    }
+                    return responseThoughts
                 }
-                return responseThoughts
+            }
+
+            if let stopReason = response.stopReason {
+                log("Error: Stopped because: \(stopReason)")
+                return [ FinalResponseThought(spokenWords: "Claude delivered no content and gave this reason: \(stopReason).")]
             }
 
             log("Error: No content!")

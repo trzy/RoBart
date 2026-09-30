@@ -57,7 +57,11 @@ func transcribeWithDeepgram(_ sampleData: Data) async -> String? {
         let (data, response) = try await URLSession.shared.upload(for: request, from: sampleData)
         guard let response = response as? HTTPURLResponse,
               (200...299).contains(response.statusCode) else {
-            log("Error: Upload failed")
+            if let response = response as? HTTPURLResponse {
+                log("Error: Upload failed with code \(response.statusCode)")
+            } else {
+                log("Error: Upload failed")
+            }
             return nil
         }
         do {
