@@ -289,12 +289,12 @@ class Brain: ObservableObject {
     }
 
     private func prune(_ history: [ThoughtRepresentable]) -> [ThoughtRepresentable] {
-        let numActionsToKeep = 2                // how many of the last actions objects to keep
-        let numObservationsToKeep = 5           // ... observations
-        let numPlansToKeep = 2                  // ... plans
-        let numMemoriesToKeep = 1               // ... memories
-        let numIntermediateResponsesToKeep = 0  // ... intermediate responses
-        let numThoughtsWithPhotosToKeep = 1     // how many thoughts with photos to keep (only photos are dropped, not thoughts)
+        let numActionsToKeep = Settings.shared.actionsHistory           // how many of the last actions objects to keep
+        let numObservationsToKeep = Settings.shared.observationsHistory // ... observations
+        let numPlansToKeep = Settings.shared.plansHistory               // ... plans
+        let numMemoriesToKeep = Settings.shared.memoriesHistory         // ... memories
+        let numIntermediateResponsesToKeep = 0                          // ... intermediate responses
+        let numThoughtsWithPhotosToKeep = Settings.shared.photosHistory // how many thoughts with photos to keep (only photos are dropped, not thoughts)
 
         var prunedHistory = history
 

@@ -50,6 +50,41 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var actionsHistory: Int = 2 {
+        didSet {
+            UserDefaults.standard.set(actionsHistory, forKey: Self.k_actionsHistoryKey)
+            log("Set: \(Self.k_actionsHistoryKey) = \(actionsHistory)")
+        }
+    }
+
+    @Published var observationsHistory: Int = 5 {
+        didSet {
+            UserDefaults.standard.set(observationsHistory, forKey: Self.k_observationsHistoryKey)
+            log("Set: \(Self.k_observationsHistoryKey) = \(observationsHistory)")
+        }
+    }
+
+    @Published var plansHistory: Int = 2 {
+        didSet {
+            UserDefaults.standard.set(plansHistory, forKey: Self.k_plansHistoryKey)
+            log("Set: \(Self.k_plansHistoryKey) = \(plansHistory)")
+        }
+    }
+
+    @Published var memoriesHistory: Int = 1 {
+        didSet {
+            UserDefaults.standard.set(memoriesHistory, forKey: Self.k_memoriesHistoryKey)
+            log("Set: \(Self.k_memoriesHistoryKey) = \(memoriesHistory)")
+        }
+    }
+
+    @Published var photosHistory: Int = 1 {
+        didSet {
+            UserDefaults.standard.set(photosHistory, forKey: Self.k_photosHistoryKey)
+            log("Set: \(Self.k_photosHistoryKey) = \(photosHistory)")
+        }
+    }
+
     @Published var anthropicAPIKey: String = "" {
         didSet {
             // API key is saved
@@ -114,6 +149,11 @@ class Settings: ObservableObject {
     private static let k_roleKey = "role"
     private static let k_watchKey = "watch"
     private static let k_modelKey = "model"
+    private static let k_actionsHistoryKey = "actions_history"
+    private static let k_observationsHistoryKey = "observations_history"
+    private static let k_plansHistoryKey = "plans_history"
+    private static let k_memoriesHistoryKey = "memories_history"
+    private static let k_photosHistoryKey = "photos_history"
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
@@ -136,6 +176,26 @@ class Settings: ObservableObject {
         if let value = UserDefaults.standard.string(forKey: Self.k_modelKey),
            let model = Brain.Model(rawValue: value) {
             self.model = model
+        }
+
+        if let history = UserDefaults.standard.object(forKey: Self.k_actionsHistoryKey) as? Int {
+            self.actionsHistory = history
+        }
+
+        if let history = UserDefaults.standard.object(forKey: Self.k_observationsHistoryKey) as? Int {
+            self.observationsHistory = history
+        }
+
+        if let history = UserDefaults.standard.object(forKey: Self.k_plansHistoryKey) as? Int {
+            self.plansHistory = history
+        }
+
+        if let history = UserDefaults.standard.object(forKey: Self.k_memoriesHistoryKey) as? Int {
+            self.memoriesHistory = history
+        }
+
+        if let history = UserDefaults.standard.object(forKey: Self.k_photosHistoryKey) as? Int {
+            self.photosHistory = history
         }
 
         if let value = UserDefaults.standard.string(forKey: Self.k_anthropicAPIKey) {

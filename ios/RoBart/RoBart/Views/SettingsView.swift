@@ -22,6 +22,28 @@
 
 import SwiftUI
 
+extension Binding {
+    static func convert<TInt, TFloat>(_ intBinding: Binding<TInt>) -> Binding<TFloat>
+    where TInt:   BinaryInteger,
+          TFloat: BinaryFloatingPoint{
+
+        Binding<TFloat> (
+            get: { TFloat(intBinding.wrappedValue) },
+            set: { intBinding.wrappedValue = TInt($0) }
+        )
+    }
+
+    static func convert<TFloat, TInt>(_ floatBinding: Binding<TFloat>) -> Binding<TInt>
+    where TFloat: BinaryFloatingPoint,
+          TInt:   BinaryInteger {
+
+        Binding<TInt> (
+            get: { TInt(floatBinding.wrappedValue) },
+            set: { floatBinding.wrappedValue = TFloat($0) }
+        )
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject private var _settings = Settings.shared
 
@@ -67,6 +89,91 @@ struct SettingsView: View {
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
                             Text("GPT-4o").tag(Brain.Model.gpt4o)
                         }
+
+                        VStack {
+                            Slider(
+                                value: .convert($_settings.actionsHistory),
+                                in: 1...20,
+                                step: 1
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Action History")
+                                Spacer()
+                                Text("\(_settings.actionsHistory)")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
+
+                        VStack {
+                            Slider(
+                                value: .convert($_settings.observationsHistory),
+                                in: 1...20,
+                                step: 1
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Observations History")
+                                Spacer()
+                                Text("\(_settings.observationsHistory)")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
+
+                        VStack {
+                            Slider(
+                                value: .convert($_settings.plansHistory),
+                                in: 1...20,
+                                step: 1
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Plan History")
+                                Spacer()
+                                Text("\(_settings.plansHistory)")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
+
+                        VStack {
+                            Slider(
+                                value: .convert($_settings.memoriesHistory),
+                                in: 1...20,
+                                step: 1
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Memory History")
+                                Spacer()
+                                Text("\(_settings.memoriesHistory)")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
+
+                        VStack {
+                            Slider(
+                                value: .convert($_settings.photosHistory),
+                                in: 1...20,
+                                step: 1
+                            )
+                            HStack {
+                                Spacer()
+                                Text("Photo History")
+                                Spacer()
+                                Text("\(_settings.photosHistory)")
+                                Spacer()
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: 600)
 
                         LabeledContent {
                             TextField("Anthropic API Key", text: $_settings.anthropicAPIKey, prompt: Text("..."))
