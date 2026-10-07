@@ -85,6 +85,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var attachReachablePointPhotos = false {
+        didSet {
+            UserDefaults.standard.set(attachReachablePointPhotos, forKey: Self.k_attachReachablePointPhotosKey)
+            log("Set: \(Self.k_attachReachablePointPhotosKey) = \(attachReachablePointPhotos)")
+        }
+    }
+
     @Published var photosHistory: Int = 1 {
         didSet {
             UserDefaults.standard.set(photosHistory, forKey: Self.k_photosHistoryKey)
@@ -169,6 +176,7 @@ class Settings: ObservableObject {
     private static let k_observationsHistoryKey = "observations_history"
     private static let k_plansHistoryKey = "plans_history"
     private static let k_memoriesHistoryKey = "memories_history"
+    private static let k_attachReachablePointPhotosKey = "attach_reachable_point_photos"
     private static let k_photosHistoryKey = "photos_history"
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
@@ -214,6 +222,10 @@ class Settings: ObservableObject {
 
         if let history = UserDefaults.standard.object(forKey: Self.k_memoriesHistoryKey) as? Int {
             self.memoriesHistory = history
+        }
+
+        if let attach = UserDefaults.standard.object(forKey: Self.k_attachReachablePointPhotosKey) as? Bool {
+            self.attachReachablePointPhotos = attach
         }
 
         if let history = UserDefaults.standard.object(forKey: Self.k_photosHistoryKey) as? Int {

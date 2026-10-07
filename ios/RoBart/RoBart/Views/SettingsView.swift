@@ -171,6 +171,8 @@ struct SettingsView: View {
                         .padding()
                         .frame(maxWidth: 600)
 
+                        Toggle("Attach Photos to Memories",isOn: $_settings.attachReachablePointPhotos)
+
                         VStack {
                             Slider(
                                 value: .convert($_settings.photosHistory),

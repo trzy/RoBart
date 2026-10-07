@@ -532,12 +532,14 @@ class Brain: ObservableObject {
 
         // Attach older photos that have navigable points
         if _annotationStyle == .navigablePoints {
-            let photos = producePhotosWithReachablePoints(from: photosByNavigablePoint)
-// Commenting out because Claude seems to complain more about copyright when we use more images.
-// Instead, we regurgitate descriptions of the waypoints from memory.
-//            for i in 0..<photos.count {
-//                captionedPhotos.append((photo: photos[i], caption: "\(photos[i].name) taken during a previous step but with reachable navigable points"))
-//            }
+            // Disabled by default because Claude seems to complain more about copyright when we use
+            // more images. Instead, we regurgitate descriptions of the waypoints from memory.
+            if Settings.shared.attachReachablePointPhotos {
+                let photos = producePhotosWithReachablePoints(from: photosByNavigablePoint)
+                for photo in photos {
+                    captionedPhotos.append((photo: photo, caption: "\(photo.name) taken during a previous step but with reachable navigable points"))
+                }
+            }
             if let memoryThought = history.reversed().first(where: { $0 is MemoryThought }) as? MemoryThought,
                let memories = decodeMemories(from: memoryThought.json) {
 
