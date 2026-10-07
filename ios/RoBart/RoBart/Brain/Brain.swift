@@ -45,6 +45,19 @@ class Brain: ObservableObject {
         case gpt56Sol
         case gpt6Sol
         case gpt61Sol
+        case mistralLarge4
+        case mistralLarge3
+        case mistralMedium35
+        case mistralSmall4
+    }
+
+    /// Reasoning effort for OpenAI and Mistral models. Model default omits the parameter.
+    enum ReasoningEffort: String {
+        case modelDefault
+        case off
+        case low
+        case medium
+        case high
     }
 
     enum DisplayState: String {
@@ -70,6 +83,7 @@ class Brain: ObservableObject {
 
     private let _anthropic = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
+    private let _mistral = OpenAI(configuration: .init(token: Settings.shared.mistralAPIKey, host: "api.mistral.ai"), middlewares: [ MistralResponseMiddleware() ])  // Mistral API is OpenAI-compatible
     private let _maxTokens = 2048
 
     private var _task: Task<Void, Never>?
@@ -194,15 +208,26 @@ class Brain: ObservableObject {
             .claude55Opus: .other("claude-opus-5-5")
         ]
 
-        let modelToOpenAIIdAndStopSupport: [Brain.Model: (String, Bool)] = [
-            .gpt4o: (.gpt4_o, true),
-            .gpt4Turbo: (.gpt4_turbo, true),
-            .gpt5: (.gpt5, false),  // GPT-5 does not support stop tokens
-            .gpt55: ("gpt-5.5", false),
-            .gpt56Terra: ("gpt-5.6-terra", false),
-            .gpt56Sol: ("gpt-5.6-sol", false),
-            .gpt6Sol: ("gpt-6-sol", false),
-            .gpt61Sol: ("gpt-6.1-sol", false)
+        // Model ID, stop token support, and the reasoning effort that turns reasoning off (nil if
+        // reasoning effort is not supported)
+        let modelToOpenAIIdStopSupportAndReasoningOff: [Brain.Model: (String, Bool, ChatQuery.ReasoningEffort?)] = [
+            .gpt4o: (.gpt4_o, true, nil),
+            .gpt4Turbo: (.gpt4_turbo, true, nil),
+            .gpt5: (.gpt5, false, .minimal),  // GPT-5 does not support stop tokens or "none" effort
+            .gpt55: ("gpt-5.5", false, .customValue("none")),
+            .gpt56Terra: ("gpt-5.6-terra", false, .customValue("none")),
+            .gpt56Sol: ("gpt-5.6-sol", false, .customValue("none")),
+            .gpt6Sol: ("gpt-6-sol", false, .customValue("none")),
+            .gpt61Sol: ("gpt-6.1-sol", false, .low)  // GPT-6.1 cannot disable reasoning; low is the minimum
+        ]
+
+        // Model ID and the reasoning effort that turns reasoning off (nil if reasoning effort is
+        // not supported)
+        let modelToMistralIdAndReasoningOff: [Brain.Model: (String, ChatQuery.ReasoningEffort?)] = [
+            .mistralLarge4: ("mistral-large-4-0", .customValue("none")),
+            .mistralLarge3: ("mistral-large-2512", nil),
+            .mistralMedium35: ("mistral-medium-2604", .customValue("none")),
+            .mistralSmall4: ("mistral-small-2603", .customValue("none"))
         ]
 
         // Anthropic model?
@@ -211,13 +236,42 @@ class Brain: ObservableObject {
         }
 
         // OpenAI model?
-        if let (model, supportsStop) = modelToOpenAIIdAndStopSupport[Settings.shared.model] {
-            return await submitToOpenAI(model: model, thoughts: thoughts, stopAt: stopAt, useStop: supportsStop)
+        if let (model, supportsStop, reasoningOff) = modelToOpenAIIdStopSupportAndReasoningOff[Settings.shared.model] {
+            let reasoningEffort = reasoningOff.flatMap { openAICompatibleReasoningEffort(off: $0) }
+            return await submitToOpenAI(client: _openAI, providerName: "GPT", model: model, thoughts: thoughts, stopAt: stopAt, useStop: supportsStop, reasoningEffort: reasoningEffort)
+        }
+
+        // Mistral model? (Uses OpenAI-compatible API)
+        if let (model, reasoningOff) = modelToMistralIdAndReasoningOff[Settings.shared.model] {
+            let reasoningEffort = reasoningOff.flatMap { openAICompatibleReasoningEffort(off: $0, onlyHigh: true) }
+            // Mistral applies stop sequences to thinking, too, which can end generation before the
+            // response is produced. Stop sequences may only be used when reasoning is off.
+            let isReasoning = reasoningOff != nil && Settings.shared.reasoningEffort != .off
+            return await submitToOpenAI(client: _mistral, providerName: "Mistral", model: model, thoughts: thoughts, stopAt: stopAt, useStop: !isReasoning, reasoningEffort: reasoningEffort)
         }
 
         // Unknown! Internal error.
         log("Error: Unknown model: \(Settings.shared.model)")
         return [ FinalResponseThought(spokenWords: "The requested AI model is unknown. I cannot handle the request. Please check the source code to ensure the model string is valid.")]
+    }
+
+    /// Maps the reasoning effort setting to an OpenAI-compatible `reasoning_effort` value.
+    /// - Parameter off: Value that disables reasoning for this model.
+    /// - Parameter onlyHigh: If true, any effort level maps to high (Mistral supports only none and high).
+    /// - Returns: Reasoning effort or nil to use the model's default.
+    private func openAICompatibleReasoningEffort(off: ChatQuery.ReasoningEffort, onlyHigh: Bool = false) -> ChatQuery.ReasoningEffort? {
+        switch Settings.shared.reasoningEffort {
+        case .modelDefault:
+            return nil
+        case .off:
+            return off
+        case .low:
+            return onlyHigh ? .high : .low
+        case .medium:
+            return onlyHigh ? .high : .medium
+        case .high:
+            return .high
+        }
     }
 
     private func submitToAnthropic(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
@@ -259,8 +313,8 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToOpenAI(model: String, thoughts: [ThoughtRepresentable], stopAt: [String], useStop: Bool) async -> [ThoughtRepresentable]? {
-        // Need to append extra instructions if we are using an OpenAI model lacking stop token support
+    private func submitToOpenAI(client: OpenAI, providerName: String, model: String, thoughts: [ThoughtRepresentable], stopAt: [String], useStop: Bool, reasoningEffort: ChatQuery.ReasoningEffort? = nil) async -> [ThoughtRepresentable]? {
+        // Need to append extra instructions if we are using a model lacking stop token support
         let systemPrompt = Prompts.system + (useStop == false ? Prompts.systemFooterForModelsWithoutStopSupport : "")
 
         // Submit
@@ -269,9 +323,14 @@ class Brain: ObservableObject {
             let query = ChatQuery(
                 messages: [ .system(.init(content: .textContent(systemPrompt))) ] + thoughts.toOpenAIUserMessages(),
                 model: model,
+                reasoningEffort: reasoningEffort,
                 stop: (stopAt.isEmpty || !useStop) ? nil : .stringList(stopAt)
             )
-            let response = try await _openAI.chats(query: query)
+            let response = try await client.chats(query: query)
+
+            if let reasoning = response.choices[0].message.reasoning {
+                log("Reasoning: \(reasoning)")
+            }
 
             if let responseText = response.choices[0].message.content {
                 log("Response: \(responseText)")
@@ -281,7 +340,7 @@ class Brain: ObservableObject {
             }
 
             log("Error: No content!")
-            return [ FinalResponseThought(spokenWords: "An error occurred and GPT delivered no content in its response.") ]
+            return [ FinalResponseThought(spokenWords: "An error occurred and \(providerName) delivered no content in its response.") ]
         } catch {
             log("Error: \(error.localizedDescription)")
             return [ FinalResponseThought(spokenWords: "The following error occurred: \(error.localizedDescription)")]

@@ -88,6 +88,19 @@ struct SettingsView: View {
                             Text("GPT-5").tag(Brain.Model.gpt5)
                             Text("GPT-4 Turbo").tag(Brain.Model.gpt4Turbo)
                             Text("GPT-4o").tag(Brain.Model.gpt4o)
+                            Text("Mistral Large 4").tag(Brain.Model.mistralLarge4)
+                            Text("Mistral Large 3").tag(Brain.Model.mistralLarge3)
+                            Text("Mistral Medium 3.5").tag(Brain.Model.mistralMedium35)
+                            Text("Mistral Small 4").tag(Brain.Model.mistralSmall4)
+                        }
+
+                        // Only applies to OpenAI and Mistral models
+                        Picker("Reasoning (GPT/Mistral)", selection: $_settings.reasoningEffort) {
+                            Text("Model Default").tag(Brain.ReasoningEffort.modelDefault)
+                            Text("Off").tag(Brain.ReasoningEffort.off)
+                            Text("Low").tag(Brain.ReasoningEffort.low)
+                            Text("Medium").tag(Brain.ReasoningEffort.medium)
+                            Text("High").tag(Brain.ReasoningEffort.high)
                         }
 
                         VStack {
@@ -187,6 +200,13 @@ struct SettingsView: View {
                                 .multilineTextAlignment(.trailing)
                         } label: {
                             Text("OpenAI API Key")
+                        }
+
+                        LabeledContent {
+                            TextField("Mistral API Key", text: $_settings.mistralAPIKey, prompt: Text("..."))
+                                .multilineTextAlignment(.trailing)
+                        } label: {
+                            Text("Mistral API Key")
                         }
 
                         LabeledContent {

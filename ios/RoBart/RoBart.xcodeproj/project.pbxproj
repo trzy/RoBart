@@ -37,6 +37,7 @@
 		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC26CF682C9BE68E00ACC82E /* BlockParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF672C9BE68E00ACC82E /* BlockParser.swift */; };
 		CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF692C9BE89A00ACC82E /* Thoughts.swift */; };
+		CC4D1A022EA0000000ACC82E /* MistralResponseMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */; };
 		CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6C2C9CA06B00ACC82E /* Actions.swift */; };
 		CC26CF6F2C9CE98500ACC82E /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */; };
 		CC26CF762C9D14D100ACC82E /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = CC26CF752C9D14D100ACC82E /* OpenAI */; };
@@ -229,6 +230,7 @@
 		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC26CF672C9BE68E00ACC82E /* BlockParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockParser.swift; sourceTree = "<group>"; };
 		CC26CF692C9BE89A00ACC82E /* Thoughts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thoughts.swift; sourceTree = "<group>"; };
+		CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MistralResponseMiddleware.swift; sourceTree = "<group>"; };
 		CC26CF6C2C9CA06B00ACC82E /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
 		CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		CC26CF772CA1D51800ACC82E /* FollowPerson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPerson.swift; sourceTree = "<group>"; };
@@ -700,6 +702,7 @@
 				CC26CF632C9B6CB800ACC82E /* AnnotatingCamera.swift */,
 				CC26CF672C9BE68E00ACC82E /* BlockParser.swift */,
 				CC26CF692C9BE89A00ACC82E /* Thoughts.swift */,
+				CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */,
 				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
 				CC26CF822CAA5D5100ACC82E /* Map.swift */,
 				CC26CF842CAA611D00ACC82E /* Memory.swift */,
@@ -1187,6 +1190,7 @@
 				CCA9A10D2C62D77A00B0401C /* MotionEstimator.swift in Sources */,
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
 				CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */,
+				CC4D1A022EA0000000ACC82E /* MistralResponseMiddleware.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CC55DB9C2CADFAB200E3AF65 /* VideoRecorder.swift in Sources */,
 				CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */,

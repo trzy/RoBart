@@ -50,6 +50,13 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var reasoningEffort: Brain.ReasoningEffort = .modelDefault {
+        didSet {
+            UserDefaults.standard.set(reasoningEffort.rawValue, forKey: Self.k_reasoningEffortKey)
+            log("Set: \(Self.k_reasoningEffortKey) = \(reasoningEffort)")
+        }
+    }
+
     @Published var actionsHistory: Int = 2 {
         didSet {
             UserDefaults.standard.set(actionsHistory, forKey: Self.k_actionsHistoryKey)
@@ -101,6 +108,14 @@ class Settings: ObservableObject {
         }
     }
 
+    @Published var mistralAPIKey: String = "" {
+        didSet {
+            // API key is saved
+            UserDefaults.standard.set(mistralAPIKey, forKey: Self.k_mistralAPIKey)
+            log("Set: \(Self.k_mistralAPIKey) = <redacted>")
+        }
+    }
+
     @Published var deepgramAPIKey: String = "" {
         didSet {
             // API key is saved
@@ -149,6 +164,7 @@ class Settings: ObservableObject {
     private static let k_roleKey = "role"
     private static let k_watchKey = "watch"
     private static let k_modelKey = "model"
+    private static let k_reasoningEffortKey = "reasoning_effort"
     private static let k_actionsHistoryKey = "actions_history"
     private static let k_observationsHistoryKey = "observations_history"
     private static let k_plansHistoryKey = "plans_history"
@@ -156,6 +172,7 @@ class Settings: ObservableObject {
     private static let k_photosHistoryKey = "photos_history"
     private static let k_anthropicAPIKey = "anthropic_api_key"
     private static let k_openAIAPIKey = "openai_api_key"
+    private static let k_mistralAPIKey = "mistral_api_key"
     private static let k_deepgramAPIKey = "deepgram_api_key"
     private static let k_followDistanceKey = "follow_distance"
     private static let k_maxPersonDistanceKey = "max_person_distance"
@@ -176,6 +193,11 @@ class Settings: ObservableObject {
         if let value = UserDefaults.standard.string(forKey: Self.k_modelKey),
            let model = Brain.Model(rawValue: value) {
             self.model = model
+        }
+
+        if let value = UserDefaults.standard.string(forKey: Self.k_reasoningEffortKey),
+           let reasoningEffort = Brain.ReasoningEffort(rawValue: value) {
+            self.reasoningEffort = reasoningEffort
         }
 
         if let history = UserDefaults.standard.object(forKey: Self.k_actionsHistoryKey) as? Int {
@@ -204,6 +226,10 @@ class Settings: ObservableObject {
 
         if let value = UserDefaults.standard.string(forKey: Self.k_openAIAPIKey) {
             self.openAIAPIKey = value
+        }
+
+        if let value = UserDefaults.standard.string(forKey: Self.k_mistralAPIKey) {
+            self.mistralAPIKey = value
         }
 
         if let value = UserDefaults.standard.string(forKey: Self.k_deepgramAPIKey) {
