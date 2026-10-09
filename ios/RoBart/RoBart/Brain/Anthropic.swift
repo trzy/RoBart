@@ -78,19 +78,66 @@ class Anthropic {
         }
     }
 
+    enum Thinking: Encodable {
+        enum Display: String, Encodable {
+            case summarized
+            case omitted
+        }
+
+        /// Model decides when and how much to think. Display controls whether thinking blocks
+        /// contain a summary or are empty (the default on newer models).
+        case adaptive(display: Display?)
+
+        /// Turns thinking off (Sonnet 5.5 only). Accepts no other fields and requires effort of
+        /// high or below.
+        case betweenTools
+
+        private enum CodingKeys: String, CodingKey {
+            case type
+            case display
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case .adaptive(let display):
+                try container.encode("adaptive", forKey: .type)
+                try container.encodeIfPresent(display, forKey: .display)
+            case .betweenTools:
+                try container.encode("between_tools", forKey: .type)
+            }
+        }
+    }
+
+    enum Effort: String, Encodable {
+        case low
+        case medium
+        case high
+        case xhigh
+        case max
+    }
+
+    struct OutputConfig: Encodable {
+        let effort: Effort?
+    }
+
     struct MessageRequest: Encodable {
         let model: String
         let maxTokens: Int
         let system: String?
         let messages: [Message]
         let stopSequences: [String]?
+        let thinking: Thinking?
+        let outputConfig: OutputConfig?
 
-        init(model: String, maxTokens: Int, system: String? = nil, messages: [Message], stopSequences: [String]? = nil) {
+        init(model: String, maxTokens: Int, system: String? = nil, messages: [Message], stopSequences: [String]? = nil, thinking: Thinking? = nil, effort: Effort? = nil) {
             self.model = model
             self.maxTokens = maxTokens
             self.system = system
             self.messages = messages
             self.stopSequences = stopSequences
+            self.thinking = thinking
+            self.outputConfig = effort.map { OutputConfig(effort: $0) }
         }
 
         private enum CodingKeys: String, CodingKey {
@@ -99,6 +146,8 @@ class Anthropic {
             case system
             case messages
             case stopSequences = "stop_sequences"
+            case thinking
+            case outputConfig = "output_config"
         }
     }
 

@@ -94,13 +94,14 @@ struct SettingsView: View {
                             Text("Mistral Small 4").tag(Brain.Model.mistralSmall4)
                         }
 
-                        // Only applies to OpenAI and Mistral models
-                        Picker("Reasoning (GPT/Mistral)", selection: $_settings.reasoningEffort) {
+                        // Only applies to models that support reasoning effort
+                        Picker("Reasoning", selection: $_settings.reasoningEffort) {
                             Text("Model Default").tag(Brain.ReasoningEffort.modelDefault)
                             Text("Off").tag(Brain.ReasoningEffort.off)
                             Text("Low").tag(Brain.ReasoningEffort.low)
                             Text("Medium").tag(Brain.ReasoningEffort.medium)
                             Text("High").tag(Brain.ReasoningEffort.high)
+                            Text("Extra High").tag(Brain.ReasoningEffort.extraHigh)
                         }
 
                         VStack {

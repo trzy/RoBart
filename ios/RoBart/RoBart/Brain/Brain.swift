@@ -50,13 +50,14 @@ class Brain: ObservableObject {
         case mistralSmall4
     }
 
-    /// Reasoning effort for OpenAI and Mistral models. Model default omits the parameter.
+    /// Reasoning effort for models that support it. Model default omits the parameter.
     enum ReasoningEffort: String {
         case modelDefault
         case off
         case low
         case medium
         case high
+        case extraHigh
     }
 
     enum DisplayState: String {
@@ -194,17 +195,19 @@ class Brain: ObservableObject {
     private func submitToAI(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
         setDisplayState(to: .thinking)
 
-        let modelToAnthropicId: [Brain.Model: String] = [
-            .claude35Sonnet: "claude-3-5-sonnet-latest",
-            .claude37Sonnet20250219: "claude-3-7-sonnet-20250219",
-            .claude37SonnetLatest: "claude-3-7-sonnet-latest",
-            .claude45Haiku20251001: "claude-haiku-4-5-20251001",
-            .claude45Sonnet20250929: "claude-sonnet-4-5-20250929",
-            .claude45SonnetLatest: "claude-sonnet-4-5",
-            .claude45Opus20251101: "claude-opus-4-5-20251101",
-            .claude45OpusLatest: "claude-opus-4-5",
-            .claude55Sonnet: "claude-sonnet-5-5",
-            .claude55Opus: "claude-opus-5-5"
+        // Model ID and how thinking is turned off (nil if effort and adaptive thinking are not
+        // supported)
+        let modelToAnthropicIdAndThinkingOff: [Brain.Model: (String, AnthropicThinkingOff?)] = [
+            .claude35Sonnet: ("claude-3-5-sonnet-latest", nil),
+            .claude37Sonnet20250219: ("claude-3-7-sonnet-20250219", nil),
+            .claude37SonnetLatest: ("claude-3-7-sonnet-latest", nil),
+            .claude45Haiku20251001: ("claude-haiku-4-5-20251001", nil),
+            .claude45Sonnet20250929: ("claude-sonnet-4-5-20250929", nil),
+            .claude45SonnetLatest: ("claude-sonnet-4-5", nil),
+            .claude45Opus20251101: ("claude-opus-4-5-20251101", nil),
+            .claude45OpusLatest: ("claude-opus-4-5", nil),
+            .claude55Sonnet: ("claude-sonnet-5-5", .betweenTools),
+            .claude55Opus: ("claude-opus-5-5", .lowEffort)  // Opus 5.5 cannot disable thinking; low is the minimum
         ]
 
         // Model ID, stop token support, and the reasoning effort that turns reasoning off (nil if
@@ -230,8 +233,9 @@ class Brain: ObservableObject {
         ]
 
         // Anthropic model?
-        if let model = modelToAnthropicId[Settings.shared.model] {
-            return await submitToAnthropic(model: model, thoughts: thoughts, stopAt: stopAt)
+        if let (model, thinkingOff) = modelToAnthropicIdAndThinkingOff[Settings.shared.model] {
+            let (thinking, effort) = thinkingOff.map { anthropicThinkingAndEffort(off: $0) } ?? (nil, nil)
+            return await submitToAnthropic(model: model, thoughts: thoughts, stopAt: stopAt, thinking: thinking, effort: effort)
         }
 
         // OpenAI model?
@@ -270,10 +274,48 @@ class Brain: ObservableObject {
             return onlyHigh ? .high : .medium
         case .high:
             return .high
+        case .extraHigh:
+            return .high  // xhigh not supported by OpenAI-compatible models
         }
     }
 
-    private func submitToAnthropic(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
+    /// How the reasoning effort "off" setting is handled for Claude models with adaptive thinking.
+    private enum AnthropicThinkingOff {
+        /// Thinking can be disabled with `between_tools` thinking.
+        case betweenTools
+
+        /// Thinking cannot be disabled; low effort is the minimum.
+        case lowEffort
+    }
+
+    /// Maps the reasoning effort setting to Claude adaptive thinking and effort. Thinking
+    /// summaries are requested whenever thinking is on so they can be logged.
+    /// - Parameter off: How to handle the setting that disables reasoning for this model.
+    /// - Returns: Thinking configuration and effort, or nil effort to use the model's default.
+    private func anthropicThinkingAndEffort(off: AnthropicThinkingOff) -> (Anthropic.Thinking?, Anthropic.Effort?) {
+        let summarized = Anthropic.Thinking.adaptive(display: .summarized)
+        switch Settings.shared.reasoningEffort {
+        case .modelDefault:
+            return (summarized, nil)
+        case .off:
+            switch off {
+            case .betweenTools:
+                return (.betweenTools, nil)
+            case .lowEffort:
+                return (summarized, .low)
+            }
+        case .low:
+            return (summarized, .low)
+        case .medium:
+            return (summarized, .medium)
+        case .high:
+            return (summarized, .high)
+        case .extraHigh:
+            return (summarized, .xhigh)
+        }
+    }
+
+    private func submitToAnthropic(model: String, thoughts: [ThoughtRepresentable], stopAt: [String], thinking: Anthropic.Thinking? = nil, effort: Anthropic.Effort? = nil) async -> [ThoughtRepresentable] {
         do {
             let response = try await _anthropic.createMessage(
                 Anthropic.MessageRequest(
@@ -281,9 +323,15 @@ class Brain: ObservableObject {
                     maxTokens: _maxTokens,
                     system: Prompts.system,
                     messages: [ thoughts.toAnthropicMessage(role: .user) ],
-                    stopSequences: stopAt.isEmpty ? nil : stopAt
+                    stopSequences: stopAt.isEmpty ? nil : stopAt,
+                    thinking: thinking,
+                    effort: effort
                 )
             )
+
+            for case let .thinking(summary) in response.content where !summary.isEmpty {
+                log("Reasoning: \(summary)")
+            }
 
             if response.stopReason == "refusal" {
                 let category = response.stopDetails?.category ?? "unspecified"
