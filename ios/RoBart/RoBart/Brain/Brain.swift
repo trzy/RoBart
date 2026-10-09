@@ -23,7 +23,6 @@
 import Combine
 import Foundation
 import OpenAI
-import SwiftAnthropic
 
 class Brain: ObservableObject {
     enum Model: String {
@@ -81,7 +80,7 @@ class Brain: ObservableObject {
     private let _camera = AnnotatingCamera()
     private let _annotationStyle: AnnotatingCamera.Annotation = .navigablePoints
 
-    private let _anthropic = AnthropicServiceFactory.service(apiKey: Settings.shared.anthropicAPIKey, betaHeaders: nil)
+    private let _anthropic = Anthropic(apiKey: Settings.shared.anthropicAPIKey)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
     private let _mistral = OpenAI(configuration: .init(token: Settings.shared.mistralAPIKey, host: "api.mistral.ai"), middlewares: [ MistralResponseMiddleware() ])  // Mistral API is OpenAI-compatible
     private let _maxTokens = 2048
@@ -195,17 +194,17 @@ class Brain: ObservableObject {
     private func submitToAI(thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable]? {
         setDisplayState(to: .thinking)
 
-        let modelToAnthropicId: [Brain.Model: SwiftAnthropic.Model] = [
-            .claude35Sonnet: .claude35Sonnet,
-            .claude37Sonnet20250219: .other("claude-3-7-sonnet-20250219"),
-            .claude37SonnetLatest: .claude37Sonnet,
-            .claude45Haiku20251001: .other("claude-haiku-4-5-20251001"),
-            .claude45Sonnet20250929: .other("claude-sonnet-4-5-20250929"),
-            .claude45SonnetLatest: .other("claude-sonnet-4-5"),
-            .claude45Opus20251101: .other("claude-opus-4-5-20251101"),
-            .claude45OpusLatest: .other("claude-opus-4-5"),
-            .claude55Sonnet: .other("claude-sonnet-5-5"),
-            .claude55Opus: .other("claude-opus-5-5")
+        let modelToAnthropicId: [Brain.Model: String] = [
+            .claude35Sonnet: "claude-3-5-sonnet-latest",
+            .claude37Sonnet20250219: "claude-3-7-sonnet-20250219",
+            .claude37SonnetLatest: "claude-3-7-sonnet-latest",
+            .claude45Haiku20251001: "claude-haiku-4-5-20251001",
+            .claude45Sonnet20250929: "claude-sonnet-4-5-20250929",
+            .claude45SonnetLatest: "claude-sonnet-4-5",
+            .claude45Opus20251101: "claude-opus-4-5-20251101",
+            .claude45OpusLatest: "claude-opus-4-5",
+            .claude55Sonnet: "claude-sonnet-5-5",
+            .claude55Opus: "claude-opus-5-5"
         ]
 
         // Model ID, stop token support, and the reasoning effort that turns reasoning off (nil if
@@ -274,32 +273,41 @@ class Brain: ObservableObject {
         }
     }
 
-    private func submitToAnthropic(model: SwiftAnthropic.Model, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
+    private func submitToAnthropic(model: String, thoughts: [ThoughtRepresentable], stopAt: [String]) async -> [ThoughtRepresentable] {
         do {
             let response = try await _anthropic.createMessage(
-                MessageParameter(
+                Anthropic.MessageRequest(
                     model: model,
-                    messages: [ thoughts.toAnthropicMessage(role: .user) ],
                     maxTokens: _maxTokens,
-                    system: .text(Prompts.system),
+                    system: Prompts.system,
+                    messages: [ thoughts.toAnthropicMessage(role: .user) ],
                     stopSequences: stopAt.isEmpty ? nil : stopAt
                 )
             )
 
-            if response.content.count > 0 {
-                if case let .text(responseText, _) = response.content[0] {
-                    log("Response: \(responseText)")
-                    let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)  // not needed for Claude but just in case...
-                    let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
-                    if responseThoughts.isEmpty {
-                        // This occasionally happens when there is an error or Claude thinks the
-                        // content is prohibited. We deliver its response verbatim.
-                        return [ FinalResponseThought(spokenWords: responseText) ]
-                    }
-                    return responseThoughts
-                }
+            if response.stopReason == "refusal" {
+                let category = response.stopDetails?.category ?? "unspecified"
+                let explanation = response.stopDetails?.explanation ?? "no explanation given"
+                log("Error: Refused (category: \(category)): \(explanation)")
+                log("Raw response: \(response.rawResponseString)")
+                return [ FinalResponseThought(spokenWords: "Claude refused to respond. Category: \(category). Explanation: \(explanation)") ]
             }
 
+            // Text may be preceded by thinking blocks, so gather all text blocks
+            let responseText = response.text
+            if !responseText.isEmpty {
+                log("Response: \(responseText)")
+                let trimmedResponseText = truncateText(text: responseText, stopAt: stopAt)  // not needed for Claude but just in case...
+                let responseThoughts = parseBlocks(from: trimmedResponseText).toThoughts()
+                if responseThoughts.isEmpty {
+                    // This occasionally happens when there is an error or Claude thinks the
+                    // content is prohibited. We deliver its response verbatim.
+                    return [ FinalResponseThought(spokenWords: responseText) ]
+                }
+                return responseThoughts
+            }
+
+            log("Raw response: \(response.rawResponseString)")
             if let stopReason = response.stopReason {
                 log("Error: Stopped because: \(stopReason)")
                 return [ FinalResponseThought(spokenWords: "Claude delivered no content and gave this reason: \(stopReason).")]

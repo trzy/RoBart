@@ -37,7 +37,6 @@
 		CC26CF662C9B7BDE00ACC82E /* simd_float2+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */; };
 		CC26CF682C9BE68E00ACC82E /* BlockParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF672C9BE68E00ACC82E /* BlockParser.swift */; };
 		CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF692C9BE89A00ACC82E /* Thoughts.swift */; };
-		CC4D1A022EA0000000ACC82E /* MistralResponseMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */; };
 		CC26CF6D2C9CA06B00ACC82E /* Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6C2C9CA06B00ACC82E /* Actions.swift */; };
 		CC26CF6F2C9CE98500ACC82E /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */; };
 		CC26CF762C9D14D100ACC82E /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = CC26CF752C9D14D100ACC82E /* OpenAI */; };
@@ -57,6 +56,8 @@
 		CC38DE3D2C7D23B5003EEBDE /* ParticipantRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */; };
 		CC38DE3F2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */; };
 		CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC38DE402C7D9E05003EEBDE /* WeakRef.swift */; };
+		CC4D1A022EA0000000ACC82E /* MistralResponseMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */; };
+		CC4D1A042EA0000000ACC82E /* Anthropic.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4D1A032EA0000000ACC82E /* Anthropic.swift */; };
 		CC55DB9C2CADFAB200E3AF65 /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */; };
 		CC7C1CB12C76F336003BFA0B /* JSONMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */; };
 		CC7C1CB32C76F35E003BFA0B /* AsyncTCPConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */; };
@@ -106,7 +107,6 @@
 		CCA9A1442C62FAC500B0401C /* DPadHoverboardControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1432C62FAC500B0401C /* DPadHoverboardControlView.swift */; };
 		CCA9A1462C62FD1300B0401C /* Clamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9A1452C62FD1300B0401C /* Clamp.swift */; };
 		CCFF51252C960D60007F27D7 /* FollowPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCFF51242C960D60007F27D7 /* FollowPath.swift */; };
-		CCFF51282C98BDD2007F27D7 /* SwiftAnthropic in Frameworks */ = {isa = PBXBuildFile; productRef = CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */; };
 		CCFF51FC2C98DC55007F27D7 /* throw_delegate.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51AE2C98DC55007F27D7 /* throw_delegate.h */; };
 		CCFF51FD2C98DC55007F27D7 /* attributes.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B02C98DC55007F27D7 /* attributes.h */; };
 		CCFF51FE2C98DC55007F27D7 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = CCFF51B12C98DC55007F27D7 /* config.h */; };
@@ -230,7 +230,6 @@
 		CC26CF652C9B7BDE00ACC82E /* simd_float2+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "simd_float2+Extensions.swift"; sourceTree = "<group>"; };
 		CC26CF672C9BE68E00ACC82E /* BlockParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockParser.swift; sourceTree = "<group>"; };
 		CC26CF692C9BE89A00ACC82E /* Thoughts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thoughts.swift; sourceTree = "<group>"; };
-		CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MistralResponseMiddleware.swift; sourceTree = "<group>"; };
 		CC26CF6C2C9CA06B00ACC82E /* Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Actions.swift; sourceTree = "<group>"; };
 		CC26CF6E2C9CE98500ACC82E /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		CC26CF772CA1D51800ACC82E /* FollowPerson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPerson.swift; sourceTree = "<group>"; };
@@ -251,6 +250,8 @@
 		CC38DE3C2C7D23B5003EEBDE /* ParticipantRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantRenderer.swift; sourceTree = "<group>"; };
 		CC38DE3E2C7D4E96003EEBDE /* CollaborativeMappingStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollaborativeMappingStateView.swift; sourceTree = "<group>"; };
 		CC38DE402C7D9E05003EEBDE /* WeakRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakRef.swift; sourceTree = "<group>"; };
+		CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MistralResponseMiddleware.swift; sourceTree = "<group>"; };
+		CC4D1A032EA0000000ACC82E /* Anthropic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Anthropic.swift; sourceTree = "<group>"; };
 		CC55DB9B2CADFAB200E3AF65 /* VideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		CC7C1CB02C76F336003BFA0B /* JSONMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONMessage.swift; sourceTree = "<group>"; };
 		CC7C1CB22C76F35E003BFA0B /* AsyncTCPConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncTCPConnection.swift; sourceTree = "<group>"; };
@@ -389,7 +390,6 @@
 				CCA9A1402C62E5B800B0401C /* ARKit.framework in Frameworks */,
 				CCFF523D2C98DD3D007F27D7 /* WebRTCVAD.framework in Frameworks */,
 				CCA9A13E2C62E5A900B0401C /* RealityKit.framework in Frameworks */,
-				CCFF51282C98BDD2007F27D7 /* SwiftAnthropic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -703,6 +703,7 @@
 				CC26CF672C9BE68E00ACC82E /* BlockParser.swift */,
 				CC26CF692C9BE89A00ACC82E /* Thoughts.swift */,
 				CC4D1A012EA0000000ACC82E /* MistralResponseMiddleware.swift */,
+				CC4D1A032EA0000000ACC82E /* Anthropic.swift */,
 				CC26CF6C2C9CA06B00ACC82E /* Actions.swift */,
 				CC26CF822CAA5D5100ACC82E /* Map.swift */,
 				CC26CF842CAA611D00ACC82E /* Memory.swift */,
@@ -1014,7 +1015,6 @@
 			);
 			name = RoBart;
 			packageProductDependencies = (
-				CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */,
 				CC26CF752C9D14D100ACC82E /* OpenAI */,
 			);
 			productName = Robart;
@@ -1071,7 +1071,6 @@
 			);
 			mainGroup = CCA9A0EF2C62D35E00B0401C;
 			packageReferences = (
-				CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */,
 				CC26CF742C9D14D000ACC82E /* XCRemoteSwiftPackageReference "OpenAI" */,
 			);
 			productRefGroup = CCA9A0F92C62D35E00B0401C /* Products */;
@@ -1191,6 +1190,7 @@
 				CC38DE412C7D9E05003EEBDE /* WeakRef.swift in Sources */,
 				CC26CF6A2C9BE89A00ACC82E /* Thoughts.swift in Sources */,
 				CC4D1A022EA0000000ACC82E /* MistralResponseMiddleware.swift in Sources */,
+				CC4D1A042EA0000000ACC82E /* Anthropic.swift in Sources */,
 				CCA9A1102C62D7F600B0401C /* UtilNamespace.swift in Sources */,
 				CC55DB9C2CADFAB200E3AF65 /* VideoRecorder.swift in Sources */,
 				CC8C395B2C90F4380040559F /* FindPath.cpp in Sources */,
@@ -1654,14 +1654,6 @@
 				minimumVersion = 0.3.0;
 			};
 		};
-		CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jamesrochabrun/SwiftAnthropic";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.2.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1669,11 +1661,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CC26CF742C9D14D000ACC82E /* XCRemoteSwiftPackageReference "OpenAI" */;
 			productName = OpenAI;
-		};
-		CCFF51272C98BDD2007F27D7 /* SwiftAnthropic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CCFF51262C98BDD2007F27D7 /* XCRemoteSwiftPackageReference "SwiftAnthropic" */;
-			productName = SwiftAnthropic;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

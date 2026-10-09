@@ -25,13 +25,12 @@
 //
 
 import OpenAI
-import SwiftAnthropic
 
 protocol ThoughtRepresentable {
     static var tag: String { get }
     var photos: [AnnotatingCamera.Photo] { get }
     func humanReadableContent() -> String
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject]
+    func anthropicContent() -> [Anthropic.Content]
     func openAIContent() -> [ChatQuery.ChatCompletionMessageParam.UserMessageParam.Content]
     func withPhotosRemoved() -> ThoughtRepresentable
 }
@@ -54,15 +53,15 @@ extension Array where Element == ThoughtRepresentable {
     /// Converts an array of `ThoughtRepresentable` objects to a single `Message` object with the
     /// given role, for use with Claude.
     /// - Parameter role: Message role.
-    /// - Returns: A `Message` object for use with Claude via SwiftAnthropic.
-    func toAnthropicMessage(role: MessageParameter.Message.Role) -> MessageParameter.Message {
-        return MessageParameter.Message(role: role, content: .list(self.toAnthropicContentObjects()))
+    /// - Returns: A `Message` object for use with Claude.
+    func toAnthropicMessage(role: Anthropic.Message.Role) -> Anthropic.Message {
+        return Anthropic.Message(role: role, content: self.toAnthropicContentObjects())
     }
 
-    /// Converts an array of `ThoughtRepresentable` objects into an array of `ContentObject`, for
+    /// Converts an array of `ThoughtRepresentable` objects into an array of `Anthropic.Content`, for
     /// use with Claude.
-    /// - Returns: Array of `ContentObject` objects for use with Claude via SwiftAnthropic.
-    fileprivate func toAnthropicContentObjects() -> [MessageParameter.Message.Content.ContentObject] {
+    /// - Returns: Array of `Anthropic.Content` objects for use with Claude.
+    fileprivate func toAnthropicContentObjects() -> [Anthropic.Content] {
         return self.flatMap { $0.anthropicContent() }
     }
 
@@ -189,11 +188,11 @@ struct HumanInputThought: ThoughtRepresentable {
         return content
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
-        var content: [MessageParameter.Message.Content.ContentObject] = [ .text("\(openingTag)\(_spokenWords)") ]
+    func anthropicContent() -> [Anthropic.Content] {
+        var content: [Anthropic.Content] = [ .text("\(openingTag)\(_spokenWords)") ]
         if let photo = _photo {
             content.append(.text("\n\(photo.name):"))
-            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: photo.annotatedJPEGBase64)))
+            content.append(.jpeg(base64Data: photo.annotatedJPEGBase64))
         }
         content.append(.text(closingTag))
         return content
@@ -252,14 +251,14 @@ struct ObservationsThought: ThoughtRepresentable {
         return content
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
-        var content: [MessageParameter.Message.Content.ContentObject] = [ .text(openingTag) ]
+    func anthropicContent() -> [Anthropic.Content] {
+        var content: [Anthropic.Content] = [ .text(openingTag) ]
         if let text = _text {
             content.append(.text(text))
         }
         for captionedPhoto in _captionedPhotos {
             content.append(.text("\n\(captionedPhoto.caption):"))
-            content.append(.image(.init(type: .base64, mediaType: .jpeg, data: captionedPhoto.photo.annotatedJPEGBase64)))
+            content.append(.jpeg(base64Data: captionedPhoto.photo.annotatedJPEGBase64))
         }
         content.append(.text(closingTag))
         return content
@@ -305,7 +304,7 @@ struct MemoryThought: ThoughtRepresentable {
         return "\(openingTag)\(_jsonText)\(closingTag)"
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+    func anthropicContent() -> [Anthropic.Content] {
         return [ .text("\(openingTag)\(_jsonText)\(closingTag)") ]
     }
 
@@ -327,7 +326,7 @@ struct PlanThought: ThoughtRepresentable {
         return "\(openingTag)\(_text)\(closingTag)"
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+    func anthropicContent() -> [Anthropic.Content] {
         return [ .text("\(openingTag)\(_text)\(closingTag)") ]
     }
 
@@ -351,7 +350,7 @@ struct ActionsThought: ThoughtRepresentable {
         return "\(openingTag)\(_jsonText)\(closingTag)"
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+    func anthropicContent() -> [Anthropic.Content] {
         return [ .text(humanReadableContent()) ]
     }
 
@@ -375,7 +374,7 @@ struct IntermediateResponseThought: ThoughtRepresentable {
         return "\(openingTag)\(_spokenWords)\(closingTag)"
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+    func anthropicContent() -> [Anthropic.Content] {
         return [ .text(humanReadableContent()) ]
     }
 
@@ -399,7 +398,7 @@ struct FinalResponseThought: ThoughtRepresentable {
         return "\(openingTag)\(_spokenWords)\(closingTag)"
     }
 
-    func anthropicContent() -> [MessageParameter.Message.Content.ContentObject] {
+    func anthropicContent() -> [Anthropic.Content] {
         return [ .text(humanReadableContent()) ]
     }
 
