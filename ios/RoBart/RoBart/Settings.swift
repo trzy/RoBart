@@ -42,7 +42,7 @@ class Settings: ObservableObject {
         }
     }
 
-    @Published var model: Brain.Model = .claude35Sonnet {
+    @Published var model: Brain.Model = .claude55Opus {
         didSet {
             // Model is saved
             UserDefaults.standard.set(model.rawValue, forKey: Self.k_modelKey)

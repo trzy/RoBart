@@ -26,9 +26,6 @@ import OpenAI
 
 class Brain: ObservableObject {
     enum Model: String {
-        case claude35Sonnet
-        case claude37Sonnet20250219
-        case claude37SonnetLatest
         case claude45Haiku20251001
         case claude45Sonnet20250929
         case claude45SonnetLatest
@@ -84,7 +81,6 @@ class Brain: ObservableObject {
     private let _anthropic = Anthropic(apiKey: Settings.shared.anthropicAPIKey)
     private let _openAI = OpenAI(apiToken: Settings.shared.openAIAPIKey)
     private let _mistral = OpenAI(configuration: .init(token: Settings.shared.mistralAPIKey, host: "api.mistral.ai"), middlewares: [ MistralResponseMiddleware() ])  // Mistral API is OpenAI-compatible
-    private let _maxTokens = 2048
 
     private var _task: Task<Void, Never>?
     private var _video = FirstPersonVideo()
@@ -198,9 +194,6 @@ class Brain: ObservableObject {
         // Model ID and how thinking is turned off (nil if effort and adaptive thinking are not
         // supported)
         let modelToAnthropicIdAndThinkingOff: [Brain.Model: (String, AnthropicThinkingOff?)] = [
-            .claude35Sonnet: ("claude-3-5-sonnet-latest", nil),
-            .claude37Sonnet20250219: ("claude-3-7-sonnet-20250219", nil),
-            .claude37SonnetLatest: ("claude-3-7-sonnet-latest", nil),
             .claude45Haiku20251001: ("claude-haiku-4-5-20251001", nil),
             .claude45Sonnet20250929: ("claude-sonnet-4-5-20250929", nil),
             .claude45SonnetLatest: ("claude-sonnet-4-5", nil),
@@ -320,7 +313,7 @@ class Brain: ObservableObject {
             let response = try await _anthropic.createMessage(
                 Anthropic.MessageRequest(
                     model: model,
-                    maxTokens: _maxTokens,
+                    maxTokens: 64000,   // maximum output of Claude 4.5 models (5.5 is 128K)
                     system: Prompts.system,
                     messages: [ thoughts.toAnthropicMessage(role: .user) ],
                     stopSequences: stopAt.isEmpty ? nil : stopAt,
